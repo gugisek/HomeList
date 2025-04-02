@@ -1,0 +1,214 @@
+:root {
+  --text: #5cf6c8;
+}
+
+* {
+    scroll-behavior: smooth;
+  }
+  
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 7px;
+    background: #fff;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #3d3d3d;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #000;
+  }
+
+  .typing-text {
+    border-right: 2px solid;
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    /* Usunięcie niepotrzebnego efektu płynnego */
+    animation: blink 0.75s step-end infinite alternate;
+}
+
+@keyframes blink {
+    50% {
+        border-color: transparent;
+    }
+}
+
+.menu {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .menu.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .bg-zoom {
+    background-size: auto 120%;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .bg-zoom:hover {
+    background-size: auto 100%;
+  }
+
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+  
+    z-index: 1;
+  }
+
+  .sidenav-button-active {
+    --tw-shadow-color: #c4b5fd;
+      --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
+      box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+      color: #fff!important;
+      background-color: rgb(103, 255, 128);
+  }
+
+  .lds-dual-ring {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+  }
+  .lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 6px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+  }
+  @keyframes lds-dual-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Chrome, Safari, Edge, Opera */
+#hide_arrows::-webkit-outer-spin-button,
+#hide_arrows::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+#hide_arrows[type=number] {
+  -moz-appearance: textfield;
+}
+
+
+input[type="checkbox"] {
+  /* Ukryj domyślny wygląd pola wyboru */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  /* Ustaw niestandardowy rozmiar pola wyboru */
+  width: 20px;
+  height: 20px;
+  /* Dodaj niestandardowy wygląd */
+  border: 1px solid #3d3d3d; /* Kolor obramowania */
+  border-radius: 4px; /* Zakrąglenie */
+  position: relative;
+  background-color: #fdfdfd; /* Kolor tła */
+}
+
+input[type="checkbox"]:focus {
+  /* Zaznaczenie koloru obramowania po zaznaczeniu */
+  border-color: #8b5cf6;
+  outline: none;
+  --tw-ring-inset: inset;
+  --tw-ring-offset-width: 0px;
+}
+
+/* Styl dla tła pola wyboru (checkbox) po zaznaczeniu */
+input[type="checkbox"]:checked::before {
+  content: "";
+  display: block;
+  position: absolute;
+  /* Zaznaczenie koloru tła po zaznaczeniu */
+  background-color: #8b5cf6;
+  /* Ustawienie rozmiaru tła */
+  width: 14px;
+  height: 14px;
+  /* Pozycjonowanie tła */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 2px; /* Zakrąglenie tła */
+}
+
+input[type="checkbox"]::before:focus {
+  /* Zaznaczenie koloru obramowania po zaznaczeniu */
+  border-color: #8b5cf6;
+  outline: none;
+  --tw-ring-inset: inset;
+}
+
+
+select {
+
+  /* styling */
+  display: inline-block;
+  font: inherit;
+  line-height: 1.5em;
+  padding: 0.5em 3.5em 0.5em 1em;
+
+  /* reset */
+
+  margin: 0;      
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+@keyframes shrink-width {
+  from {
+      width: 100%;
+  }
+  to {
+      width: 0%;
+  }
+}
+
+/* Ukrywamy ikonę checkmark i podpis domyślnie */
+section > div > span:nth-child(3) {
+  display: none;
+}
+
+/* Pokazujemy ikonę checkmark i podpis po kliknięciu */
+section.active > div > span:nth-child(3) {
+  display: flex;
+}
+
+/* Ukrywamy ikonę koszyka i podpis po kliknięciu */
+section.active > div > span:nth-child(2) {
+  display: none;
+}
