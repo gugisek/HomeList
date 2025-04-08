@@ -8,7 +8,7 @@ include '../security.php';
 
 $name = $_POST['name'];
 $description = $_POST['description'];
-$deadline = empty($_POST['deadline']) ? null : $_POST['deadline'];
+$deadline = empty($_POST['deadline']) ? '0000-00-00 00:00:00' : $_POST['deadline'];
 $list = $_POST['list'];
 
 if ($name != "" && $list != "") {
