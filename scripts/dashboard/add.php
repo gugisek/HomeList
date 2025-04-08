@@ -8,7 +8,7 @@ include '../security.php';
 
 $name = $_POST['name'];
 $description = $_POST['description'];
-$deadline = $_POST['deadline'];
+$deadline = empty($_POST['deadline']) ? null : $_POST['deadline'];
 $list = $_POST['list'];
 
 if ($name != "" && $list != "") {
@@ -17,6 +17,8 @@ if ($name != "" && $list != "") {
     
         $creator_id = $_SESSION['login_id'];
         $create_date = date('Y-m-d H:i:s');
+        //jeżeli deadline jest pusty to ustaw na poprawną datę zerową dla sql
+
         $sql = "INSERT INTO list_elements (title, description, deadline_date, list_id, status_id, creator_id, create_date) VALUES ('$name', '$description', '$deadline', '$list', '1', '$creator_id', '$create_date')";
         if (mysqli_query($conn, $sql)) {
             $id = mysqli_insert_id($conn);

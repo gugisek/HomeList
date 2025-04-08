@@ -9,7 +9,8 @@ include '../security.php';
 $element_id = $_POST['element_id'];
 $name = $_POST['name'];
 $description = $_POST['description'];
-$deadline = $_POST['deadline'];
+$deadline = empty($_POST['deadline']) ? null : $_POST['deadline'];
+
 
 if ($name != "" && $element_id != "") {
     
@@ -18,15 +19,12 @@ if ($name != "" && $element_id != "") {
         $result_old = mysqli_query($conn, $sql_old);
         $row_old = mysqli_fetch_assoc($result_old);
 
-        if($deadline != "") {
-            $date = new DateTime($deadline);
-            $formatted = $date->format('Y-m-d H:i:s');
-        } else {
-            $formatted = null;
+        if($row_old['deadline_date'] == '0000-00-00 00:00:00'){
+            $row_old['deadline_date'] = null;
         }
         
 
-        if($row_old['title'] != $name || $row_old['description'] != $description || $row_old['deadline_date'] != $formatted) {
+        if($row_old['title'] != $name || $row_old['description'] != $description || $row_old['deadline_date'] != $deadline) {
             
             $sql = "UPDATE list_elements SET title = '$name', description = '$description', deadline_date = '$deadline' WHERE id = '$element_id'";
             if (mysqli_query($conn, $sql)) {
