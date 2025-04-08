@@ -48,7 +48,7 @@
         });
     // Zapisz URL w localStorage
     //przetłumaczenie site na tekst normalny
-    var nazwa = "System zarządzania czasem pracy"
+    var nazwa = "Lista ToDo w Twoim domu!";
 
     if(site == 'dashboard'){
       nazwa = "Strona główna"
@@ -71,7 +71,7 @@
     }else if(site == 'devices'){
       nazwa = "Urządzenia"
     }
-    document.title = nazwa + " - EmployeeRfid - RGBpc.pl";
+    document.title = nazwa + " - HomeList - RGBpc.pl";
 
     localStorage.setItem("PanelSite", site);
     localStorage.setItem("PanelSiteGet", get);

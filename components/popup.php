@@ -10,7 +10,7 @@
             ?>
    class="z-[60] fixed scale-0 top-0 left-0 w-full h-full">
     <div class="flex flex-col gap-8 items-center justify-center w-full h-full px-2">
-      <div onclick="event.cancelBubble=true;" class="bg-white shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-4 px-4 gap-4 rounded-[25px] sm:px-6  -xl">
+      <div onclick="event.cancelBubble=true;" class="bg-white shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[25px] sm:px-6 sm:py-6  -xl">
         <div class="w-full flex flex-row justify-end z-10">
             <button 
             <?php
@@ -20,8 +20,8 @@
               echo 'onclick="popup'.$name_in_scripts.'CloseConfirm()"';
             }
             ?>
-             type="button" class="rounded-md text-gray-800 hover:text-gray-400 flex flex-row gap-2 text-sm items-center duration-150 focus:outline-none focus:ring-2 ring-violet-600 focus:ring-offset-2">
-                <span class="sr-only">Zamknij</span>Zamknij
+             type="button" class="rounded-md text-gray-800 hover:text-gray-400 flex flex-row gap-2 text-sm items-center duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
+                <!-- <span class="sr-only">Zamknij</span>Zamknij -->
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -41,7 +41,7 @@
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
         <div class="relative transform overflow-hidden rounded-[25px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-violet-600 focus:ring-offset-2">
+            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
               <span class="sr-only">Zamknij</span>
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -76,7 +76,7 @@
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
         <div class="relative transform overflow-hidden rounded-[25px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-            <button onclick="popup<?=$name_in_scripts?>Delete()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-violet-600 focus:ring-offset-2">
+            <button onclick="popup<?=$name_in_scripts?>Delete()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
               <span class="sr-only">Zamknij</span>
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -97,9 +97,21 @@
             </div>
           </div>
           <form action="<?=$delete_path?>" method="POST" class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <input type="hidden" name="id" id="id_for_delete_<?=$name_in_scripts?>" value="<?=$id?>">
-              <button class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm sm:ml-3 ring-inset ring-1 ring-[#3d3d3d] hover:ring-red-500 hover:bg-red-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Usuń</button>
-              <button onclick="popup<?=$name_in_scripts?>Delete()" type="button" class="sm:mt-0 mt-3 active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Anuluj</button>
+                <input type="hidden" name="id" id="id_for_delete_<?=$name_in_scripts?>" value="">
+          <?php
+          if($delete_v2 == 'true'){
+            echo '
+                <a onclick="'.$name_in_scripts.'Delete()" class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm sm:ml-3 ring-inset ring-1 ring-[#3d3d3d] hover:ring-red-500 hover:bg-red-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Usuń</a>
+                <a onclick="popup'.$name_in_scripts.'Delete()" type="button" class="sm:mt-0 mt-3 active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Anuluj</a>
+            ';
+          }else{
+            echo '
+            
+                <button class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm sm:ml-3 ring-inset ring-1 ring-[#3d3d3d] hover:ring-red-500 hover:bg-red-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Usuń</button>
+                <button onclick="popup'.$name_in_scripts.'Delete()" type="button" class="sm:mt-0 mt-3 active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Anuluj</button>
+            ';
+          }
+          ?>
           </form>
         </div>
       </div>

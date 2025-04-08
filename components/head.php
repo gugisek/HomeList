@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title> HomeList - <?=$title?></title>
 <!-- meta description -->
-<meta name="description" content="EmployeeRfid - system zarządzania czasem pracy pracowników na podstawie danych z kart RFID, powered by RGBpc.pl">
+<meta name="description" content="HomeList - listy ToDo w Twoim domu oraz w telefonie, działa z Home Assistant, powered by RGBpc.pl">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" href="img/favicon.png" type="image/png">
