@@ -2,7 +2,7 @@
     
 </section>
 <div class="flex items-center justify-center">
-<section style="box-shadow: 0px 8px 24px 0px rgba(66, 68, 90, 1);" class="bg-[#3d3d3d] font-[poppins] xs:scale-100 scale-90 text-white rounded-2xl absolute sm:bottom-10 bottom-4 flex items-center justify-center">
+<section style="box-shadow: 0px 8px 24px 0px rgba(66, 68, 90, 1);" class="bg-[#3d3d3d] font-[poppins] xs:scale-100 scale-90 text-white rounded-2xl fixed sm:bottom-10 bottom-4 flex items-center justify-center">
     <section id="more_menu" class="min-w-[200px] absolute bottom-14 z-10 bg-[#3d3d3d] scale-y-0 w-full flex flex-col py-3 rounded-2xl duration-150">
         <a class="flex gap-2 py-3 px-6 hover:scale-105 active:scale-95 cursor-pointer hover:bg-gray-300 hover:text-gray-800 duration-150 rounded-2xl">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">

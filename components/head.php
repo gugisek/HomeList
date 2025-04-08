@@ -15,3 +15,7 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <!-- <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" /> -->
+
+<meta name="theme-color" content="#3d3d3d">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
