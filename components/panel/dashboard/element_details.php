@@ -24,7 +24,7 @@ if(mysqli_num_rows($result) > 0) {
         echo '<span class="text-sm text-red-500">Deadline: '.$date.'</span>';
     }
     ?>
-    <p class="pt-4 text-wrap break-all"><?=$row['description']?></p>
+    <p class="pt-4 text-wrap"><?=$row['description']?></p>
     <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center mb-4 w-full">Dodano <?=date_format(date_create($row['create_date']), "H:i d.m")?> przez <?=$row['name']?> <?=$row['sur_name']?></a>
     
     <div class=" flex gap-2">
