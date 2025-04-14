@@ -140,7 +140,7 @@ input[type="checkbox"] {
 
 input[type="checkbox"]:focus {
   /* Zaznaczenie koloru obramowania po zaznaczeniu */
-  border-color: #8b5cf6;
+  border-color: #4ade80;
   outline: none;
   --tw-ring-inset: inset;
   --tw-ring-offset-width: 0px;
@@ -152,7 +152,7 @@ input[type="checkbox"]:checked::before {
   display: block;
   position: absolute;
   /* Zaznaczenie koloru tła po zaznaczeniu */
-  background-color: #8b5cf6;
+  background-color: #4ade80;
   /* Ustawienie rozmiaru tła */
   width: 14px;
   height: 14px;
@@ -165,7 +165,7 @@ input[type="checkbox"]:checked::before {
 
 input[type="checkbox"]::before:focus {
   /* Zaznaczenie koloru obramowania po zaznaczeniu */
-  border-color: #8b5cf6;
+  border-color: #4ade80;
   outline: none;
   --tw-ring-inset: inset;
 }
@@ -211,4 +211,16 @@ section.active > div > span:nth-child(3) {
 /* Ukrywamy ikonę koszyka i podpis po kliknięciu */
 section.active > div > span:nth-child(2) {
   display: none;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+}
+
+.accordion-content.open {
+  opacity: 1;
+  max-height: 500px; /* powinno być większe niż maksymalna wysokość elementu */
 }

@@ -9,19 +9,19 @@
     </div>
     <section class="flex flex-col gap-4">
         <div class="grid grid-cols-7 text-sm text-gray-600 font-[poppins] bg-white rounded-2xl ring-1 ring-black ring-opacity-5 shadow-xl mt-4">
-            <div class="font-medium py-5 pl-4 pr-3 sm:pl-6">
+            <div class="font-medium py-5 pl-4 pr-3 sm:pl-6 lg:col-span-2 sm:col-span-3 col-span-5">
                 Użytkownik
             </div>
-            <div class="col-span-3 font-medium py-5 pl-4 pr-3 sm:pl-6">
+            <div class="col-span-2 font-medium py-5 pl-4 pr-3 sm:pl-6 lg:block hidden">
                 Opis
             </div>
-            <div class="font-medium py-5 pl-4 pr-3 sm:pl-6">
-                Status konta
+            <div class="font-medium py-5 pl-4 pr-3 sm:pl-6 sm:col-span-1 col-span-2 sm:block hidden">
+                Konto
             </div>
-            <div class="font-medium py-5 pl-4 pr-3 sm:pl-6">
+            <div class="font-medium py-5 pl-4 pr-3 sm:pl-6 sm:col-span-1 col-span-2">
                 Rola
             </div>
-            <div class="font-medium py-5 pl-4 pr-3 sm:pl-6">
+            <div class="font-medium py-5 pl-4 pr-3 sm:pl-6 lg:col-span-1 col-span-2 sm:block hidden">
                 Aktywność
             </div>
         </div>
@@ -59,7 +59,7 @@
                                     }
                                     echo '
                                     <div onclick="openPopupUsers('.$row['id'].')" class="grid grid-cols-7 rounded-2xl hover:bg-gray-200 duration-150 active:scale-95 cursor-pointer">
-                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6">
+                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 col-span-5 sm:col-span-3 lg:col-span-2">
                                             <div class="flex items-center">
                                                 <div class="h-10 w-10 mr-2 flex-shrink-0">
                                                 <img class="h-10 w-10 border border-black/10 rounded-full object-cover" src="img/users_images/'.$row['profile_picture'].'" alt="">
@@ -70,16 +70,16 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-span-3 font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center">
+                                        <div class="col-span-2 font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center lg:block hidden">
                                             '.$row['description'].'
                                         </div>
-                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 flex items-center">
+                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 flex items-center sm:col-span-1 col-span-2 sm:block hidden">
                                             <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 capitalize text-'.$row['status_color'].'-800 bg-'.$row['status_color'].'-100">'.$row['status'].'</span>
                                         </div>
-                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center">
+                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center sm:col-span-1 col-span-2">
                                             '.$row['role'].'
                                         </div>
-                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center">
+                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center lg:col-span-1 col-span-2 sm:block hidden">
                                             '.substr($login_date, 0).'
                                         </div>
                                     </div>

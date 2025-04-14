@@ -64,7 +64,7 @@
       nazwa = "Zamówienia"
     }else if(site == 'docs'){
       nazwa = "Dokumentacja"
-    }else if(site == 'archive'){
+    }else if(site == 'logs'){
       nazwa = "Archiwum zamian"
     }else if(site == 'settings'){
       nazwa = "Ustawienia"

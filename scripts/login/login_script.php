@@ -1,7 +1,19 @@
 <?php
 include '../conn_db.php';
 $login_sha = $_POST['email'];
-$password_sha = hash('sha256', $_POST['password']);
+//jeżeli jest cookie z hasłem to pobieramy hasło z posta bez szyfrowania
+if (isset($_COOKIE['password'])) {
+    $password_sha = $_POST['password'];
+} else {
+    //jeżeli nie ma cookie to hasło jest szyfrowane
+    $password_sha = hash('sha256', $_POST['password']);
+}
+
+$remember = isset($_POST['remember-me']);
+
+echo $login_sha.'<br>';
+echo $password_sha.'<br>';
+
 $sql = "SELECT * FROM users WHERE login = '".$login_sha."' AND pswd = '".$password_sha."'";
 $result = mysqli_query($conn, $sql);
 if(mysqli_num_rows($result) > 0)
@@ -18,6 +30,12 @@ if(mysqli_num_rows($result) > 0)
         $sql = "UPDATE users SET last_log = NOW() WHERE id = '".$login_id."'";
         mysqli_query($conn, $sql);
         
+        // jeżeli użytkownik zaznaczył zapamiętaj mnie to ustawiamy cookie na 30 dni
+        if ($remember) {
+            // Ustaw cookie na 30 dni
+            setcookie('login_sha', $login_sha, time() + (30 * 24 * 60 * 60), "/");
+            setcookie('password', $password_sha, time() + (30 * 24 * 60 * 60), "/"); // Uwaga: niezalecane
+        }
 
         session_start();
         $_SESSION['logged'] = true;
@@ -34,6 +52,14 @@ if(mysqli_num_rows($result) > 0)
     }
     else
     {
+        if (isset($_COOKIE['login_sha'])) {
+            unset($_COOKIE['login_sha']); // Unset the cookie
+            setcookie('login_sha', '', time() - 3600, '/'); // Set the expiration date to one hour ago
+        }
+        if (isset($_COOKIE['password'])) {
+            unset($_COOKIE['password']); // Unset the cookie
+            setcookie('password', '', time() - 3600, '/'); // Set the expiration date to one hour ago
+        }
         session_start();
         $_SESSION['alert_type'] = "warning";
         $_SESSION['alert'] = 'Konto nieaktywne, zablokowane lub wyłączone.<br><br> Skontaktuj się z administratorem.';
@@ -42,9 +68,18 @@ if(mysqli_num_rows($result) > 0)
 }
 else
 {
+    //usuwanie cookie jeżeli są błędne dane logowania
+    if (isset($_COOKIE['login_sha'])) {
+        unset($_COOKIE['login_sha']); // Unset the cookie
+        setcookie('login_sha', '', time() - 3600, '/'); // Set the expiration date to one hour ago
+    }
+    if (isset($_COOKIE['password'])) {
+        unset($_COOKIE['password']); // Unset the cookie
+        setcookie('password', '', time() - 3600, '/'); // Set the expiration date to one hour ago
+    }
     session_start();
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert'] = 'Nieprawidłowy login lub hasło.';
     header('Location: ../../login.php');
 }
-?>
+ ?>

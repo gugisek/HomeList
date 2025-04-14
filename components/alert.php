@@ -65,7 +65,7 @@ if(isset($_SESSION['alert'])){
     }
   echo '
     function alertClose() {
-      document.querySelector(".pointer-events-none").classList.add("opacity-0","-mt-24");
+      document.querySelector(".pointer-events-none").classList.add("opacity-0","-translate-y-4", "scale-95");
     }
     function alert_time() {
       var alert_time = document.getElementById("alert_time");
