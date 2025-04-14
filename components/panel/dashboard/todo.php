@@ -38,9 +38,11 @@ if ($list == "archive"){
     
     include '../../../scripts/conn_db.php';
     if($list=="archive"){
+      session_start();
+      $user_id = $_SESSION['login_id'];
         //warunek taki, że aby pokazywało elementy ze statusem zrobione oraz te, które mają done_date większe niż 1 dzień temu
-        $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, users.name FROM `list_elements` left join users on users.id=list_elements.creator_id 
-                WHERE list_elements.status_id = 2 and list_elements.done_date < DATE_SUB(NOW(), INTERVAL 1 DAY)
+        $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, users.name FROM `list_elements` left join users on users.id=list_elements.creator_id left join lists on lists.id=list_elements.list_id 
+                WHERE lists.owner_id = $user_id and list_elements.status_id = 2 and list_elements.done_date < DATE_SUB(NOW(), INTERVAL 1 DAY)
                 ORDER BY 
                 NULLIF(`done_date`, '0000-00-00 00:00:00') IS NULL,
                 `done_date` DESC,
@@ -108,7 +110,7 @@ if ($list == "archive"){
       }
       
     }else{
-    $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, users.name FROM `list_elements` left join users on users.id=list_elements.creator_id 
+    $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, users.name, users.profile_picture FROM `list_elements` left join users on users.id=list_elements.creator_id 
             WHERE `list_id` = '$list_id' and (list_elements.status_id != 2 or (list_elements.status_id = 2 and list_elements.done_date > DATE_SUB(NOW(), INTERVAL 1 DAY)))
             ORDER BY 
             NULLIF(`deadline_date`, '0000-00-00 00:00:00') IS NULL,
@@ -140,7 +142,9 @@ if ($list == "archive"){
                                         </h2>
                                     </div>
                                     <div class="mt-2 flex items-center gap-x-2.5 text-xs leading-5 text-gray-400">
-                                        <p class="truncate"><span class="sm:inline hidden">Dodane przez </span>'.$row['name'].'</p>
+                                        <p class="truncate"><span class="sm:inline hidden">Dodane przez </span>
+                                        
+                                        '.$row['name'].'</p>
                                         <svg viewBox="0 0 2 2" class="h-0.5 w-0.5 flex-none fill-gray-300">
                                         <circle cx="1" cy="1" r="1" />
                                         </svg>';
