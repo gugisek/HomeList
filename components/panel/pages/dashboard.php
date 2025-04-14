@@ -50,7 +50,7 @@
                 while($row = mysqli_fetch_assoc($result))
                     {
                         echo '
-                            <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="'.$row['id'].' hover:scale-105 active:scale-95 cursor-pointer hover:shadow-xl hover:text-gray-800 focus:scale-95 px-6 py-3 hover:bg-gray-300 duration-150 ';
+                            <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="list_'.$row['id'].' hover:scale-105 active:scale-95 cursor-pointer hover:shadow-xl hover:text-gray-800 focus:scale-95 px-6 py-3 hover:bg-gray-300 duration-150 ';
                             if($i == 0){
                                 $first = $row['id'];
                                 echo 'rounded-l-2xl';
@@ -121,7 +121,7 @@
       removeButtons[i].classList.remove("bg-gray-300");
         removeButtons[i].classList.remove("text-gray-800");
     }
-    var activeButtons = document.querySelectorAll("." + link.split('=')[1]);
+    var activeButtons = document.querySelectorAll(".list_" + link.split('=')[1]);
     for(var i = 0; i < activeButtons.length; i++) {  
       activeButtons[i].classList.add("bg-gray-300");
         activeButtons[i].classList.add("text-gray-800");
