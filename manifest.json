@@ -1,0 +1,21 @@
+{
+    "name": "HomeList - RGBpc.pl",
+    "short_name": "HomeList",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#3d3d3d",
+    "icons": [
+      {
+        "src": "img/icon_192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "img/icon_512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
+  
