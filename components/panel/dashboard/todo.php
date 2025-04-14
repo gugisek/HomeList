@@ -6,7 +6,7 @@ if ($list == "archive"){
   $list_id = 0;
   $list_name = "archive";
 }else{
-  $sql = "SELECT * FROM `lists` WHERE `name` = '$list'";
+  $sql = "SELECT * FROM `lists` WHERE `id` = '$list'";
   $result = mysqli_query($conn, $sql);
   if(mysqli_num_rows($result) > 0)
       {
