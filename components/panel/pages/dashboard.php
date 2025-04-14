@@ -52,7 +52,7 @@
                         echo '
                             <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="'.$row['id'].' hover:scale-105 active:scale-95 cursor-pointer hover:shadow-xl hover:text-gray-800 focus:scale-95 px-6 py-3 hover:bg-gray-300 duration-150 ';
                             if($i == 0){
-                                $first = $row['name'];
+                                $first = $row['id'];
                                 echo 'rounded-l-2xl';
                             }
                             echo '">'.$row['full_name'].'</a>
