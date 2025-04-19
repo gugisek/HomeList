@@ -1,4 +1,12 @@
 <?php
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => 'homelist.rgbpc.pl', // lub domena twojej strony
+    'secure' => true, // wymagane przy SameSite=None
+    'httponly' => true,
+    'samesite' => 'None',
+]);
 include '../conn_db.php';
 $login_sha = $_POST['email'];
 //jeżeli jest cookie z hasłem to pobieramy hasło z posta bez szyfrowania
@@ -16,8 +24,10 @@ echo $password_sha.'<br>';
 
 $sql = "SELECT * FROM users WHERE login = '".$login_sha."' AND pswd = '".$password_sha."'";
 $result = mysqli_query($conn, $sql);
+
 if(mysqli_num_rows($result) > 0)
 {
+
     $sql = "SELECT users.status_id, users.profile_picture, users.name, users.sur_name, status_privileges.login, users.id, user_roles.role, user_roles.dashboard FROM users join user_status on users.status_id=user_status.id join status_privileges on status_privileges.id=user_status.privileges join user_roles on user_roles.id=users.role_id WHERE users.login = '".$login_sha."' AND pswd = '".$password_sha."'";
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_assoc($result);
@@ -26,6 +36,7 @@ if(mysqli_num_rows($result) > 0)
     $login_id = $row['id'];
     if($login == 1)
     {
+        
 
         $sql = "UPDATE users SET last_log = NOW() WHERE id = '".$login_id."'";
         mysqli_query($conn, $sql);
@@ -36,14 +47,7 @@ if(mysqli_num_rows($result) > 0)
             setcookie('login_sha', $login_sha, time() + (30 * 24 * 60 * 60), "/");
             setcookie('password', $password_sha, time() + (30 * 24 * 60 * 60), "/"); // Uwaga: niezalecane
         }
-        session_set_cookie_params([
-            'lifetime' => 0,
-            'path' => '/',
-            'domain' => 'homelist.rgbpc.pl', // lub domena twojej strony
-            'secure' => true, // wymagane przy SameSite=None
-            'httponly' => true,
-            'samesite' => 'None',
-        ]);
+        
         
         session_start();
         
@@ -58,7 +62,7 @@ if(mysqli_num_rows($result) > 0)
         $_SESSION['alert_type'] = 'success';
         $_SESSION['profile_picture'] = $row['profile_picture'];
 
-        header('Location: ../../index.php');
+        //header('Location: ../../index.php');
     }
     else
     {
@@ -73,7 +77,7 @@ if(mysqli_num_rows($result) > 0)
         session_start();
         $_SESSION['alert_type'] = "warning";
         $_SESSION['alert'] = 'Konto nieaktywne, zablokowane lub wyłączone.<br><br> Skontaktuj się z administratorem.';
-        header('Location: ../../login.php');
+        //header('Location: ../../login.php');
     }
 }
 else
@@ -90,6 +94,6 @@ else
     session_start();
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert'] = 'Nieprawidłowy login lub hasło.';
-    header('Location: ../../login.php');
+    //header('Location: ../../login.php');
 }
  ?>
