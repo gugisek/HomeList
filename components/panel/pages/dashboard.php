@@ -18,11 +18,11 @@
             </svg>
             <span>Wprowadź kod listy</span>
         </a>
-        <a class="flex gap-2 py-3 px-6 hover:scale-105 active:scale-95 cursor-pointer hover:bg-gray-300 hover:text-gray-800 duration-150 rounded-2xl">
+        <a onclick="openPopupEditLists()" class="flex gap-2 py-3 px-6 hover:scale-105 active:scale-95 cursor-pointer hover:bg-gray-300 hover:text-gray-800 duration-150 rounded-2xl">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
             </svg>
-            <span>Zmień kolejność</span>
+            <span>Edytuj listy</span>
         </a>
         <a onclick="moreMenuClose();openDetailTab(`todo`,`list=archive`)" id="nav_button_details" class="archive flex gap-2 py-3 px-6 hover:scale-105 active:scale-95 cursor-pointer hover:bg-gray-300 hover:text-gray-800 duration-150 rounded-2xl">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -37,6 +37,9 @@
             <span>Zamknij</span>
         </a>
     </section>
+    <div id="todo-nav">
+
+    
     <?php
     include '../../../scripts/conn_db.php';
     session_start();
@@ -45,22 +48,16 @@
     $result = mysqli_query($conn, $sql);
         if(mysqli_num_rows($result) > 0)
              {
-                $i = 0;
-                $lenght = mysqli_num_rows($result);
-                while($row = mysqli_fetch_assoc($result))
-                    {
-                        echo '
-                            <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="list_'.$row['id'].' hover:scale-105 active:scale-95 cursor-pointer hover:shadow-xl hover:text-gray-800 focus:scale-95 px-6 py-3 hover:bg-gray-300 duration-150 ';
-                            if($i == 0){
-                                $first = $row['id'];
-                                echo 'rounded-l-2xl';
-                            }
-                            echo '">'.$row['full_name'].'</a>
-                        ';
-                        $i++;
-                    }
+                
+                while($row = mysqli_fetch_assoc($result)) {
+                    echo '
+                        <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="list_'.$row['id'].' transform inline-block hover:scale-105 active:scale-95 cursor-pointer hover:shadow-xl hover:text-gray-800 focus:scale-95 px-6 py-3 hover:bg-gray-300 duration-150 ';
+                    echo '">'.$row['full_name'].'</a>';
+                    
+                }
                 }
     ?>
+    </div>
     <a onclick="moreMenu()" id="nav_button_details" class="rounded-r-2xl hover:scale-105 cursor-pointer active:scale-95 hover:shadow-xl hover:text-gray-800 focus:scale-95 px-6 py-3 hover:bg-gray-300 duration-150">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
@@ -70,6 +67,38 @@
     </section>
 </div>
 <input type="hidden" id="list_hold">
+
+<script>
+    const userId = "<?php echo $_SESSION['login_id']; ?>";
+    const storageKey = "todoOrder_" + userId;
+
+
+    function applyTodoNavOrder(body) {
+    const container = document.getElementById(body);
+    const savedOrder = JSON.parse(localStorage.getItem(storageKey));
+    if (!savedOrder || !Array.isArray(savedOrder)) return;
+
+    savedOrder.forEach(id => {
+        const el = container.querySelector(`.list_${id}`);
+        if (el) container.appendChild(el);
+    });
+}
+
+applyTodoNavOrder('todo-nav');
+fixRoundedCorners();
+
+function fixRoundedCorners() {
+    const container = document.getElementById("todo-nav");
+    const items = container.querySelectorAll("a");
+
+    
+    if (items.length > 0) {
+        items[0].classList.add("rounded-l-2xl");
+    }
+}
+
+
+</script>
 
 <script>
     function moreMenu() {
@@ -90,7 +119,17 @@
 </script>
 
 <script>
-    openDetailTab('todo', 'list=<?=$first?>');
+    
+    function openFirstList(){
+        const container = document.getElementById("todo-nav");
+        const savedOrder = JSON.parse(localStorage.getItem(storageKey));
+
+        var first_list = savedOrder[0];
+
+        openDetailTab('todo', 'list='+first_list);        
+    }
+
+    openFirstList();
 
     function openDetailTab(site, link) {
     document.getElementById("list_hold").value = link.split('=')[1];
@@ -359,5 +398,14 @@ $delete_path = 'scripts/dashboard/delete.php';
 $delete_v2 = 'true';
 $path = 'components/panel/dashboard/element_edit.php';
 $close="";
+include "../../popup.php";
+?>
+
+<?php 
+$name_in_scripts = 'EditLists';
+$delete_path = '';
+$delete_v2 = 'true';
+$path = 'components/panel/dashboard/lists_edit.php';
+$close="true";
 include "../../popup.php";
 ?>
