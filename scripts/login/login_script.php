@@ -62,7 +62,7 @@ if(mysqli_num_rows($result) > 0)
         $_SESSION['alert_type'] = 'success';
         $_SESSION['profile_picture'] = $row['profile_picture'];
 
-        //header('Location: ../../index.php');
+        header('Location: ../../index.php');
     }
     else
     {
@@ -77,7 +77,7 @@ if(mysqli_num_rows($result) > 0)
         session_start();
         $_SESSION['alert_type'] = "warning";
         $_SESSION['alert'] = 'Konto nieaktywne, zablokowane lub wyłączone.<br><br> Skontaktuj się z administratorem.';
-        //header('Location: ../../login.php');
+        header('Location: ../../login.php');
     }
 }
 else
@@ -94,6 +94,6 @@ else
     session_start();
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert'] = 'Nieprawidłowy login lub hasło.';
-    //header('Location: ../../login.php');
+    header('Location: ../../login.php');
 }
  ?>
