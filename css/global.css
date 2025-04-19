@@ -224,3 +224,7 @@ section.active > div > span:nth-child(2) {
   opacity: 1;
   max-height: 500px; /* powinno być większe niż maksymalna wysokość elementu */
 }
+
+.draggable-item {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
