@@ -36,7 +36,17 @@ if(mysqli_num_rows($result) > 0)
             setcookie('login_sha', $login_sha, time() + (30 * 24 * 60 * 60), "/");
             setcookie('password', $password_sha, time() + (30 * 24 * 60 * 60), "/"); // Uwaga: niezalecane
         }
-
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => 'homelist.rgbpc.pl', // lub domena twojej strony
+            'secure' => true, // wymagane przy SameSite=None
+            'httponly' => true,
+            'samesite' => 'None',
+        ]);
+        
+        session_start();
+        
         session_start();
         $_SESSION['logged'] = true;
         $_SESSION['user'] = $name;
