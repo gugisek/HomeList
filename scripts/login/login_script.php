@@ -43,9 +43,29 @@ if(mysqli_num_rows($result) > 0)
         
         // jeżeli użytkownik zaznaczył zapamiętaj mnie to ustawiamy cookie na 30 dni
         if ($remember) {
-            // Ustaw cookie na 30 dni
-            setcookie('login_sha', $login_sha, time() + (30 * 24 * 60 * 60), "/");
-            setcookie('password', $password_sha, time() + (30 * 24 * 60 * 60), "/"); // Uwaga: niezalecane
+            // 30 dni
+            $expiry = time() + (30 * 24 * 60 * 60);
+
+            // Zapisz login SHA
+            setcookie('login_sha', $login_sha, [
+                'expires' => $expiry,
+                'path' => '/',
+                'domain' => 'homelist.rgbpc.pl',
+                'secure' => true,       // Wymagane przy SameSite=None
+                'httponly' => true,
+                'samesite' => 'None'    // <- TO JEST KLUCZ
+            ]);
+
+            // NIEZALECANE, ale jeśli już używasz password (zaszyfrowany)
+            setcookie('password', $password_sha, [
+                'expires' => $expiry,
+                'path' => '/',
+                'domain' => 'homelist.rgbpc.pl',
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'None'
+            ]);
+
         }
         
         

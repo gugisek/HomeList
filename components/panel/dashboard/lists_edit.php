@@ -91,6 +91,8 @@ function saveOrder() {
         .map(el => el.dataset.id);
     localStorage.setItem(storageKey, JSON.stringify(order));
     console.log("Order saved:", order);
+    applyTodoNavOrder('todo-nav');
+fixRoundedCorners();
 }
 
 function applySavedOrder() {

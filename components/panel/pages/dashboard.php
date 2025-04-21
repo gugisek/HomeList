@@ -37,7 +37,7 @@
             <span>Zamknij</span>
         </a>
     </section>
-    <div id="todo-nav">
+    <div id="todo-nav" class="contents">
 
     
     <?php
@@ -91,6 +91,10 @@ function fixRoundedCorners() {
     const container = document.getElementById("todo-nav");
     const items = container.querySelectorAll("a");
 
+    //remove all rounded classes
+    items.forEach(item => {
+        item.classList.remove("rounded-l-2xl", "rounded-r-2xl");
+    });
     
     if (items.length > 0) {
         items[0].classList.add("rounded-l-2xl");
@@ -120,14 +124,31 @@ function fixRoundedCorners() {
 
 <script>
     
-    function openFirstList(){
-        const container = document.getElementById("todo-nav");
-        const savedOrder = JSON.parse(localStorage.getItem(storageKey));
+    function openFirstList() {
+    const container = document.getElementById("todo-nav");
+    const savedOrder = JSON.parse(localStorage.getItem(storageKey));
 
-        var first_list = savedOrder[0];
+    let firstListId;
 
-        openDetailTab('todo', 'list='+first_list);        
+    if (savedOrder && Array.isArray(savedOrder) && savedOrder.length > 0) {
+        // Kolejność z localStorage
+        firstListId = savedOrder[0];
+    } else {
+        // Brak zapisanej kolejności – bierzemy pierwszą listę z DOM
+        const firstElement = container.querySelector("a[class*='list_']");
+        if (firstElement) {
+            const match = firstElement.className.match(/list_(\d+)/);
+            if (match) {
+                firstListId = match[1];
+            }
+        }
     }
+
+    if (firstListId) {
+        openDetailTab('todo', 'list=' + firstListId);
+    }
+}
+
 
     openFirstList();
 
