@@ -34,7 +34,7 @@ include 'components/head.php'; ?>
 ?>
 <?php
 if (!isset($_SESSION['logged']) && isset($_COOKIE['remember_me'])) {
-    include '../conn_db.php';
+    include 'scripts/conn_db.php';
 
     [$selector, $token] = explode(':', $_COOKIE['remember_me']);
     $stmt = $conn->prepare("SELECT * FROM remember_tokens WHERE selector = ?");
