@@ -148,7 +148,7 @@ if ($list == "archive"){
                                         <div class="h-2 w-2 rounded-full bg-current"></div>
                                         </div>
                                         <h2 class="min-w-0 text-sm font-semibold leading-6">
-                                        <a href="#" class="flex gap-x-2">
+                                        <a class="flex gap-x-2">
                                             <span class="truncate ';
                                             if($row['status_id'] == 2) echo 'line-through text-gray-500';
                                             echo '">'.$row['title'].'</span>
