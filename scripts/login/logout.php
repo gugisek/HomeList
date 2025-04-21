@@ -1,29 +1,18 @@
-<?php 
+<?php
 session_start();
 session_unset();
 session_destroy();
 
-// Wyloguj użytkownika (usuń cookies)
-$cookies_to_clear = ['login_sha', 'password'];
-foreach ($cookies_to_clear as $cookie) {
-    if (isset($_COOKIE[$cookie])) {
-        setcookie($cookie, '', [
-            'expires' => time() - 3600,
-            'path' => '/',
-            'domain' => 'homelist.rgbpc.pl',
-            'secure' => true,
-            'httponly' => true,
-            'samesite' => 'None'
-        ]);
-    }
+// Usuń remember_me token
+if (isset($_COOKIE['remember_me'])) {
+    include '../conn_db.php';
+    [$selector] = explode(':', $_COOKIE['remember_me']);
+    $stmt = $conn->prepare("DELETE FROM remember_tokens WHERE selector = ?");
+    $stmt->bind_param("s", $selector);
+    $stmt->execute();
+
+    setcookie("remember_me", "", time() - 3600, "/");
 }
 
-// Komunikat o wylogowaniu
-session_start();
-$_SESSION['alert_type'] = "success";
-$_SESSION['alert'] = 'Wylogowano pomyślnie.';
-
-// Przekierowanie
 header('Location: ../../login.php');
-exit;
 ?>
