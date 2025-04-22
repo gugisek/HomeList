@@ -228,3 +228,7 @@ section.active > div > span:nth-child(2) {
 .draggable-item {
     transition: transform 0.2s ease, opacity 0.2s ease;
 }
+
+.border_important {
+    border-bottom: 2px solid #4ade80 !important;
+}

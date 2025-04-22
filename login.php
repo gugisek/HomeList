@@ -60,7 +60,7 @@ if (isset($_COOKIE['remember_me'])) {
             $_SESSION['alert'] = 'Zalogowano pomyślnie.';
             $_SESSION['alert_type'] = 'success';
             $_SESSION['profile_picture'] = $row2['profile_picture'];
-
+            header('Location: login.php');
         } else {
             // Token nieważny – usuń
             setcookie("remember_me", "", time() - 3600, "/");

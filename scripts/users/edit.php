@@ -23,7 +23,7 @@ if ($name != "" && $sur_name != "" && $email != "" && $role != "" && $id != "" &
     $row_old = mysqli_fetch_assoc($result_old);
 
     if ($row_old['name'] != $name || $row_old['sur_name'] != $sur_name || $row_old['mail'] != $email || $row_old['role_id'] != $role || $row_old['description'] != $description || $row_old['status_id'] != $status_id) {
-        $sql = "UPDATE users SET name='$name', sur_name='$sur_name', mail='$email', role_id=$role, description='$description', status_id=$status_id WHERE id=$id;";
+        $sql = "UPDATE users SET name='$name', sur_name='$sur_name', mail='$email', login='$email', role_id=$role, description='$description', status_id=$status_id WHERE id=$id;";
         echo $sql;
         if (mysqli_query($conn, $sql)) {
 
