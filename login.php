@@ -15,24 +15,6 @@ include 'components/head.php'; ?>
 </head>
 <body>
 <?php
-// if (isset($_COOKIE['login_sha']) && isset($_COOKIE['password'])) {
-//     // Automatyczne logowanie – dane z ciasteczek
-//     $login = $_COOKIE['login_sha'];
-//     $password = $_COOKIE['password'];
-
-//     // Przekierowanie do logowania z przekazaniem danych metodą POST
-//     echo '
-//     <form id="autoLogin" method="post" action="scripts/login/login_script.php" style="display:none;">
-//         <input type="hidden" name="email" value="'.htmlspecialchars($login).'">
-//         <input type="hidden" name="password" value="'.htmlspecialchars($password).'">
-//     </form>
-//     <script>
-//         document.getElementById("autoLogin").submit();
-//     </script>';
-//     exit;
-// }
-?>
-<?php
 if (isset($_COOKIE['remember_me'])) {
     include 'scripts/conn_db.php';
 
@@ -60,7 +42,7 @@ if (isset($_COOKIE['remember_me'])) {
             $_SESSION['alert'] = 'Zalogowano pomyślnie.';
             $_SESSION['alert_type'] = 'success';
             $_SESSION['profile_picture'] = $row2['profile_picture'];
-            header('Location: login.php');
+            header('Location: panel.php');
         } else {
             // Token nieważny – usuń
             setcookie("remember_me", "", time() - 3600, "/");
