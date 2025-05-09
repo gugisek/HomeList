@@ -647,6 +647,77 @@ function copyClip(input) {
     navigator.clipboard.writeText(copyText.value);
     showAlert('success', 'Skopiowano kod do schowka!');
 }
+
+
+function updateListName() {
+    // Pobranie danych z pól formularza
+    var id = document.getElementById('edit_list_id').value;
+    var name = document.getElementById('edit_list_name').value;
+    const postData = new FormData();
+    postData.append('id', id);
+    postData.append('name', name);
+
+    // Pokazanie kółka ładowania
+    var delivery_loading = document.getElementById('info_list_loading');
+    delivery_loading.innerHTML = "<div class='w-full duartion-150 flex items-center justify-center z-[999]'><div class='z-[30] fixed bg-black/90 p-4 mt-40 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
+
+    // Wysyłanie żądania POST do skryptu PHP
+    fetch('scripts/dashboard/list_edit.php', {
+        method: 'POST',
+        body: postData
+    })
+
+    .then(response => response.text())
+    .then(text => {
+        // Rozbijanie tekstu na fragmenty JSON-owe
+        const rawJsonParts = text.trim().split(/(?<=\})\s*(?=\{)/); // Dzielenie na podstawie zakończenia jednego JSON-a i początku następnego
+
+        const jsonObjects = rawJsonParts.map(jsonString => {
+            try {
+                return JSON.parse(jsonString);  // Parsowanie każdego fragmentu jako JSON
+            } catch (e) {
+                console.error('Błąd parsowania JSON:', e, 'Fragment:', jsonString);
+                return null;
+            }
+        }).filter(obj => obj !== null);
+
+        var i = 1;
+
+        jsonObjects.forEach(data => {
+            if (data.status) {  // Jeśli dane posiadają status
+                switch (data.status) {
+                    case 'success':
+                        showAlert('success', data.message);
+                        if(i==1){
+                          
+                          popupInfoListsOpenClose();
+                          openPanelSite(`dashboard`)
+                        }
+                        break;
+                    case 'error':
+                        showAlert('error', data.message);
+                        break;
+                    case 'warning':
+                        showAlert('warning', data.message);
+                        break;
+                    default:
+                        showAlert('error', 'Nieznany status odpowiedzi');
+                }
+            }
+            i = i+1;
+        });
+    })
+    .catch(error => {
+        showAlert('error', 'Wystąpił problem połączenia z serwerem');
+        console.error('Błąd:', error);
+    })
+
+    .finally(() => {
+         delivery_loading.innerHTML = ""; // Ukrycie kółka ładowania po zakończeniu żądania
+    });
+}
+
+
 </script>
 
 <?php 

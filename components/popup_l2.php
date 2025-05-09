@@ -36,7 +36,7 @@
 </section>
 
 <section id="popup<?=$name_in_scripts?>CloseBg" class="fixed z-[85] backdrop-blur-lg h-0 opacity-0 top-0 left-0 w-full h-full bg-[#0000009f] transition-opacity duration-300"></section>
-  <section id="popup<?=$name_in_scripts?>Close" onclick="popup<?=$name_in_scripts?>CloseConfirm()" class="z-[70] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
+  <section id="popup<?=$name_in_scripts?>Close" onclick="popup<?=$name_in_scripts?>CloseConfirm()" class="z-[90] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
     <div class="flex items-center justify-center w-full h-full px-2">
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
         <div class="relative transform overflow-hidden rounded-[25px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
@@ -71,7 +71,7 @@
   </section>
 
 <section id="popup<?=$name_in_scripts?>DeleteBg" class="fixed z-[85] backdrop-blur-lg	h-0 opacity-0 top-0 left-0 w-full h-full bg-[#0000009f] transition-opacity duration-300"></section>
-  <section id="popup<?=$name_in_scripts?>Delete" onclick="popup<?=$name_in_scripts?>Delete()" class="z-[70] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
+  <section id="popup<?=$name_in_scripts?>Delete" onclick="popup<?=$name_in_scripts?>Delete()" class="z-[90] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
     <div class="flex items-center justify-center w-full h-full px-2">
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
         <div class="relative transform overflow-hidden rounded-[25px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
