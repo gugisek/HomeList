@@ -137,7 +137,7 @@ $total_pages = ceil($total_records / 20);
                         <form action="panel.php?page=archiwum&action=" method="GET">
                             <input type="hidden" name="page" value="archiwum">
                             <input type="hidden" name="action" value="">
-                            <input id="hide_arrows" onchange="openPageArchive(this.value)" type="number" class=" px-2 rounded-md mx-1 text-center font-light outline-none focus:drop-shadow-[0_3px_10px_rgba(100,0,255,1)] border border-black/10 transition-all duration-300" name="page_id" value="<?=$page_id?>" max="<?=$total_pages?>" min="1"> 
+                            <input id="hide_arrows" onchange="openPageArchive(this.value)" type="number" class=" px-2 rounded-md mx-1 text-center font-light outline-none focus:drop-shadow-[0_3px_10px_rgba(55,254,37,1)] border border-black/10 transition-all duration-300" name="page_id" value="<?=$page_id?>" max="<?=$total_pages?>" min="1"> 
                         </form>
                         <form onclick="openPageArchive('<?php if($page_id < $total_pages) {echo $page_id + 1;}else {echo $page_id;} ?>')" class="flex items-center">
                             <input type="hidden" name="page" value="archiwum">

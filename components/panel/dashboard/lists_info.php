@@ -34,8 +34,32 @@ $row = mysqli_fetch_assoc($result);
                 </div>
             </div>
         </div>
+        
         ';
         }
+
+        if($row['invite_id'] != null and $row['owner_id'] == $_SESSION['login_id']) {
+            echo '
+            <div class="mt-4 flex md:flex-row flex-col gap-2">
+                <div class="w-full">
+                    <label for="edit_list_name" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900">Osoby mające dostęp</label>
+                    
+                </div>
+            </div>
+            ';
+            $sql2 = "SELECT concat(users.name, ' ', users.sur_name) as 'full_usr_name' FROM list_invities join users on users.id=list_invities.user_id WHERE list_invities.list_id = $list_id;";
+            $result2 = mysqli_query($conn, $sql2);
+            if(mysqli_num_rows($result2) > 0)
+                {
+                    while($row2 = mysqli_fetch_assoc($result2))
+                        {
+                            echo '<div class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75V4.5m0 15.75v-2.25m7.5-7.5h-2.25M4.5 12H6.75m11.25 7.5L18 18m-12-12L6 6m12 0L18 6m-12 0L6 6m12 0l1.5-1.5M4.5 18l1.5-1.5M4.5 6l1.5-1.5M18 18l1.5-1.5" />
+                            </svg><span class="text-sm font-medium">'.$row2['full_usr_name'].'</span></div>';
+                        }
+                }
+        }
+
         ?>
         <div class="mt-6 sm:mt-6 mb-2 flex flex-row items-center gap-2">
             
