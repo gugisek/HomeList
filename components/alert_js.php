@@ -1,4 +1,4 @@
-<div id="alertsContainer" class="fixed z-[99] inset-0 min-h-[300vh] flex flex-col items-center space-y-4 px-4 py-6 sm:items-end sm:p-6 pointer-events-none"></div>
+<div id="alertsContainer" class="fixed z-[99] inset-0 min-h-screen sm:mb-[70px] mb-[50px] sm:ml-[80px] flex flex-col mt-[-800px] justify-end items-center space-y-4 px-4 py-6 sm:items-center sm:p-6 pointer-events-none"></div>
 
 <script>
     function closeAlertWithAnimation(alertDiv) {
@@ -74,7 +74,7 @@
         alertDiv.classList.remove('opacity-1', 'translate-y-0', 'scale-100');
         alertDiv.classList.add('opacity-0', '-translate-y-4', 'scale-95');
         setTimeout(() => alertDiv.remove(), 300); // Dodatkowy czas na zakończenie animacji
-    }, 5000);
+    }, 5000); // 5000ms = 5 sekund
 }
 
 

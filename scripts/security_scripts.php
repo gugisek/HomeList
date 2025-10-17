@@ -39,10 +39,16 @@
           }
       }
   }else{
-    $_SESSION['alert'] = 'Hola hola! Nie masz dostępu do tej strony. Zaloguj się!';
-    $_SESSION['alert_type'] = 'warning';
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+    header('Content-Type: application/json'); // Nagłówek JSON
 
-    header('Location: ../../login.php');
+    echo json_encode([
+        'status' => 'warning',
+        'message' => 'Niewprowadzono zmian, sesja wygasła.'
+    ]);
+
     exit();
   }
   }
