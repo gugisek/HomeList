@@ -74,7 +74,7 @@
         alertDiv.classList.remove('opacity-1', 'translate-y-0', 'scale-100');
         alertDiv.classList.add('opacity-0', '-translate-y-4', 'scale-95');
         setTimeout(() => alertDiv.remove(), 300); // Dodatkowy czas na zakończenie animacji
-    }, 5000); // 5000ms = 5 sekund
+    }, 4930); // 5000ms = 5 sekund
 }
 
 

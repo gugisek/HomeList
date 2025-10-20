@@ -89,8 +89,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
             </div>
+            
             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
               <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Usuń rekord z bazy danych</h3>
+              <div id="delete_loading" class="hidden w-full duration-150 flex items-center justify-center z-[999]"><div class="z-[30] fixed bg-black/90 p-4 mt-40 rounded-2xl"><div class="lds-dual-ring"></div></div></div>
               <div class="mt-2">
                 <p class="text-sm text-gray-700">Czy na pewno chcesz usunąć ten rekord z bazy danych? Nie ma możliwości przywrócenia tych danych.</p>
               </div>
@@ -101,8 +103,8 @@
           <?php
           if($delete_v2 == 'true'){
             echo '
-                <a onclick="'.$name_in_scripts.'Delete()" class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm sm:ml-3 ring-inset ring-1 ring-[#3d3d3d] hover:ring-red-500 hover:bg-red-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Usuń</a>
-                <a onclick="popup'.$name_in_scripts.'Delete()" type="button" class="sm:mt-0 mt-3 active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Anuluj</a>
+                <a onclick="'.$name_in_scripts.'Delete()" class="active:scale-95 cursor-pointer mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm sm:ml-3 ring-inset ring-1 ring-[#3d3d3d] hover:ring-red-500 hover:bg-red-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Usuń</a>
+                <a onclick="popup'.$name_in_scripts.'Delete()" type="button" class="sm:mt-0 mt-3 cursor-pointer active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Anuluj</a>
             ';
           }else{
             echo '
@@ -178,12 +180,87 @@
 </script>
 
 <script>
-    function popup<?=$name_in_scripts?>Delete() {
-        var popup = document.getElementById("popup<?=$name_in_scripts?>Delete")
-        var popupBg = document.getElementById("popup<?=$name_in_scripts?>DeleteBg")
-        popupBg.classList.toggle("opacity-0")
-        popupBg.classList.toggle("h-0")
-        popup.classList.toggle("scale-0")
-        popup.classList.add("duration-200")
-    }
+  <?php
+          if($delete_v2 == 'true'){
+            echo '
+                function '.$name_in_scripts.'Delete() {
+                    var id = document.getElementById("id_for_delete_'.$name_in_scripts.'").value;
+                    var delete_confirm = `true`;
+                      const postData = new FormData();
+                      postData.append(`id`, id);
+                      postData.append(`delete_confirm`, delete_confirm);
+
+                      // Pokazanie kółka ładowania
+                      var delivery_loading = document.getElementById(`delete_loading`);
+                      delivery_loading.classList.remove("hidden");
+                      // Wysyłanie żądania POST do skryptu PHP
+                      fetch(`'.$delete_path.'`, {
+                          method: `POST`,
+                          body: postData
+                      })
+
+                      .then(response => response.text())
+                      .then(text => {
+                          // Rozbijanie tekstu na fragmenty JSON-owe
+                          const rawJsonParts = text.trim().split(/(?<=\})\s*(?=\{)/); // Dzielenie na podstawie zakończenia jednego JSON-a i początku następnego
+
+                          const jsonObjects = rawJsonParts.map(jsonString => {
+                              try {
+                                  return JSON.parse(jsonString);  // Parsowanie każdego fragmentu jako JSON
+                              } catch (e) {
+                                  console.error(`Błąd parsowania JSON:`, e, `Fragment:`, jsonString);
+                                  return null;
+                              }
+                          }).filter(obj => obj !== null);
+
+                          var i = 1;
+
+                          jsonObjects.forEach(data => {
+                              if (data.status) {  // Jeśli dane posiadają status
+                                  switch (data.status) {
+                                      case `success`:
+                                          showAlert(`success`, data.message);
+                                          if(i==1){
+                                            
+                                            popup'.$name_in_scripts.'Delete();
+                                            openPanelSite(`dashboard`);
+                                          }
+                                          break;
+                                      case `error`:
+                                          showAlert(`error`, data.message);
+                                          break;
+                                      case `warning`:
+                                          showAlert(`warning`, data.message);
+                                          break;
+                                      default:
+                                          showAlert(`error`, `Nieznany status odpowiedzi`);
+                                  }
+                              }
+                              i = i+1;
+                          });
+                      })
+                      .catch(error => {
+                          showAlert(`error`, `Wystąpił problem połączenia z serwerem`);
+                          console.error(`Błąd:`, error);
+                      })
+
+                      .finally(() => {
+                         delivery_loading.innerHTML = ""; // Ukrycie kółka ładowania po zakończeniu żądania
+                      });
+
+                }
+            ';
+          }
+          ?>
+            function popup<?=$name_in_scripts?>Delete() {
+                var popup = document.getElementById("popup<?=$name_in_scripts?>Delete")
+                var popupBg = document.getElementById("popup<?=$name_in_scripts?>DeleteBg")
+                popupBg.classList.toggle("opacity-0")
+                popupBg.classList.toggle("h-0")
+                popup.classList.toggle("scale-0")
+                popup.classList.add("duration-200")
+            }
+          
+  
+    
 </script>

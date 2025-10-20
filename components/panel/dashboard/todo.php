@@ -141,9 +141,25 @@ if ($list == "archive"){
                                     <div class="min-w-0 flex-auto">
                                     <div class="flex items-center gap-x-3">
                                         <div class="flex-none rounded-full p-1 ';
-                                        if($row['status_id'] == 1) echo 'text-gray-500 bg-gray-600/10';
-                                        else if($row['status_id'] == 2) echo 'text-green-400 bg-green-400/10';
-                                        else if($row['status_id'] == 3) echo 'text-sky-400 bg-sky-400/10';
+                                        if($row['deadline_date'] != "" && $row['deadline_date'] != "0000-00-00 00:00:00"){
+                                          if($row['deadline_date'] < date('Y-m-d H:i:s') && $row['status_id'] != 2){
+                                            echo 'text-red-400 bg-red-400/10 animate-ping';
+                                          }else if($row['deadline_date'] < date('Y-m-d H:i:s', strtotime('+2 days')) && $row['status_id'] != 2){
+                                            echo 'text-rose-400 bg-rose-400/10 animate-pulse';
+                                          }else if($row['deadline_date'] < date('Y-m-d H:i:s', strtotime('+7 days')) && $row['status_id'] != 2){
+                                            echo 'text-yellow-400 bg-yellow-400/10';
+                                            //jeżeli jest po deadline
+                                          }else{
+                                              if($row['status_id'] == 2) echo 'text-green-400 bg-green-400/10';
+                                              else if($row['status_id'] == 3) echo 'text-sky-400 bg-sky-400/10';
+                                              else echo 'text-gray-400 bg-gray-400/10';
+                                            }
+                                        }else{
+                                          if($row['status_id'] == 2) echo 'text-green-400 bg-green-400/10';
+                                          else if($row['status_id'] == 3) echo 'text-sky-400 bg-sky-400/10';
+                                          else echo 'text-gray-400 bg-gray-400/10';
+                                        }
+                                        
                                         echo '">
                                         <div class="h-2 w-2 rounded-full bg-current"></div>
                                         </div>
