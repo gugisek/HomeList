@@ -56,7 +56,7 @@ if (isset($_COOKIE['remember_me'])) {
     <?php include 'components/alert.php'; ?>
     <?php include 'components/alert_js_front.php'; ?>
     <?php include 'components/landing_page/nav.php'; ?>
-    <?php include 'components/login/login_form.php'; ?>
+    <?php include 'components/login/register_form.php'; ?>
     <?php include 'components/footer.php'; ?>
     <script>
         AOS.init();

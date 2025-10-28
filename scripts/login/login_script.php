@@ -13,7 +13,7 @@ $login_sha = $_POST['email'];
 $password_sha = hash('sha256', $_POST['password']);
 $remember = isset($_POST['remember-me']);
 
-$sql = "SELECT users.status_id, users.profile_picture, users.name, users.sur_name, status_privileges.login, users.id, user_roles.role, user_roles.dashboard FROM users join user_status on users.status_id=user_status.id join status_privileges on status_privileges.id=user_status.privileges join user_roles on user_roles.id=users.role_id WHERE users.login = '".$login_sha."' AND pswd = '".$password_sha."'";
+$sql = "SELECT users.status_id, users.profile_picture, users.name, users.sur_name, status_privileges.login, users.id, user_roles.role, users.role_id, user_roles.dashboard FROM users join user_status on users.status_id=user_status.id join status_privileges on status_privileges.id=user_status.privileges join user_roles on user_roles.id=users.role_id WHERE users.login = '".$login_sha."' AND pswd = '".$password_sha."'";
 $result = mysqli_query($conn, $sql);
 
 if (mysqli_num_rows($result) > 0) {
@@ -33,6 +33,7 @@ if (mysqli_num_rows($result) > 0) {
         $_SESSION['login'] = $login_sha;
         $_SESSION['login_id'] = $login_id;
         $_SESSION['role'] = $row['role'];
+        $_SESSION['role_id'] = $row['role_id'];
         $_SESSION['dashboard'] = $row['dashboard'];
         $_SESSION['alert'] = 'Zalogowano pomyślnie.';
         $_SESSION['alert_type'] = 'success';
@@ -62,7 +63,7 @@ if (mysqli_num_rows($result) > 0) {
             ]);
         }
 
-        header('Location: ../../index.php');
+        header('Location: ../../panel.php');
     } else {
         session_start();
         $_SESSION['alert_type'] = "warning";
