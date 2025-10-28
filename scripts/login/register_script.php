@@ -17,7 +17,7 @@ if ($login_sha != "" || $password_sha != "" || $name != "") {
     $sql = "Select * from users where login = '" . $login_sha . "'";
     $result = mysqli_query($conn, $sql);
     if (mysqli_num_rows($result) == 0) {
-        $sql = "INSERT INTO users (login, pswd, role_id, status_id, create_date, name) VALUES ('$login_sha', '" . $password_sha . "', '3', '1', NOW(), '" . $name . "')";
+        $sql = "INSERT INTO users (login, pswd, role_id, status_id, create_date, name, sur_name) VALUES ('$login_sha', '" . $password_sha . "', '3', '1', NOW(), '" . $name . "', '')";
         if (mysqli_query($conn, $sql)) {
             session_start();
             $_SESSION['alert_type'] = "success";
