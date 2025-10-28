@@ -46,7 +46,7 @@ if ($login_sha != "" || $password_sha != "" || $name != "") {
                 $object_type="List";
                 $action_type = '2';
                 $desc = 'Dodano listę';
-                include "../log_stripped_without_conn.php";
+                include "../log.php";
                 //log
 
             }     
