@@ -53,6 +53,6 @@ $user_id = $_SESSION['login_id'];
 
     <div class="mt-6 sm:mt-6 mb-1 flex flex-row-reverse items-center gap-2">
         <button onclick="moveElement()" class="active:scale-95 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl bg-sky-400 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-sky-200">Przenieś</button>
-        <button onclick="popupEditElementCloseConfirm()" type="button" class="active:scale-95 duration-150 inline-flex w-full justify-center rounded-2xl px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150">Nie zapisuj</button>
+        <button onclick="popupMoveElementOpenClose()" type="button" class="active:scale-95 duration-150 inline-flex w-full justify-center rounded-2xl px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150">Nie zapisuj</button>
     </div>
 </section>

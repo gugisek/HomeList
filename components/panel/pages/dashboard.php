@@ -812,7 +812,7 @@ $name_in_scripts = 'MoveElement';
 $delete_path = '';
 $delete_v2 = 'true';
 $path = 'components/panel/dashboard/element_move.php';
-$close="";
+$close="true";
 include "../../popup.php";
 ?>
 
