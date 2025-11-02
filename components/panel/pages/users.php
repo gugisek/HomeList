@@ -70,16 +70,16 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-span-2 font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center lg:block hidden">
+                                        <div class="col-span-2 font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 items-center lg:flex hidden">
                                             '.$row['description'].'
                                         </div>
-                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 flex items-center sm:col-span-1 col-span-2 sm:block hidden">
+                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 items-center sm:col-span-1 col-span-2 sm:flex hidden">
                                             <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 capitalize text-'.$row['status_color'].'-800 bg-'.$row['status_color'].'-100">'.$row['status'].'</span>
                                         </div>
                                         <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center sm:col-span-1 col-span-2">
                                             '.$row['role'].'
                                         </div>
-                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center lg:col-span-1 col-span-2 sm:block hidden">
+                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 items-center lg:col-span-1 col-span-2 sm:flex hidden">
                                             '.substr($login_date, 0).'
                                         </div>
                                     </div>
