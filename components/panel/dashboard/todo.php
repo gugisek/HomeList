@@ -158,9 +158,7 @@ if ($list == "archive"){
                                         }
                                         echo ' relative flex my-2 py-4 items-center justify-between gap-4 sm:px-4 px-0 rounded-2xl bg-white/60 hover:shadow-md transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] cursor-pointer">
                                   <div class="flex items-center gap-4 min-w-0">
-                                    <div class="flex items-center justify-center h-3 w-3 rounded-full transition-colors
-                                    
-                                    ';
+                                    <div class="flex items-center justify-center h-3 min-w-3 rounded-full transition-colors ';
                                         if($row['deadline_date'] != "" && $row['deadline_date'] != "0000-00-00 00:00:00"){
                                           if($row['deadline_date'] < date('Y-m-d H:i:s') && $row['status_id'] != 2){
                                             echo 'bg-red-400/80 group-hover:bg-red-400 animate-ping';

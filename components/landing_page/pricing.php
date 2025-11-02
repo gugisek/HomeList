@@ -6,11 +6,11 @@
         <p data-aos="fade-up" data-aos-delay="200" class="mx-auto mt-4 max-w-2xl text-center text-lg leading-8 text-gray-600">Chętnie nasza aplikacja internetowa usprawni Ci zadania.</p>
         <div class="mt-16 flex justify-center">
           <fieldset data-aos="fade-up" data-aos-delay="300" class="grid grid-cols-2 gap-x-1 rounded-full bg-gray-800/60 p-1 text-center text-xs font-semibold leading-5 text-white">
-            <label onclick="rocznie()" id="rocznie" class="transition-all duration-150 theme-bg cursor-pointer rounded-full px-2.5 py-1">
+            <label onclick="rocznie()" id="rocznie" class="transition-all duration-150 theme-bg cursor-pointer rounded-full hover:bg-green-400/30 px-2.5 py-1">
               <input type="radio" name="frequency" value="monthly" class="sr-only">
               <span>Rocznie</span>
             </label>
-            <label onclick="zawsze()" id="zawsze" class="transition-all duration-150 cursor-pointer rounded-full px-2.5 py-1">
+            <label onclick="zawsze()" id="zawsze" class="transition-all duration-150 cursor-pointer rounded-full hover:bg-green-400/30 px-2.5 py-1">
               <input type="radio" name="frequency" value="annually" class="sr-only">
               <span>Na zawsze</span>
             </label>
@@ -30,7 +30,7 @@
                   <p id="rozliczanie" class="text-gray-400">Rozliczane rocznie</p>
                 </div>
               </div>
-              <a href="register.php" aria-describedby="tier-starter" class="rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-white/10 theme-bg-hover transition-all duration-150 focus-visible:outline-white">Przejdź do GitHub</a>
+              <a href="register.php" aria-describedby="tier-starter" class="rounded-xl hover:scale-[1.02] active:scale-95 duration-150 py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-white/10 theme-bg-hover transition-all duration-150 focus-visible:outline-white">Przejdź do GitHub</a>
             </div>
             <div class="mt-8 flow-root sm:mt-10">
               <ul role="list" class="-my-2 divide-y border-t text-sm leading-6 lg:border-t-0 divide-white/5 border-white/5 text-white">
@@ -38,25 +38,25 @@
                   <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Tworzenie zajęć
+                  Dostęp do kodu źródłowego
                 </li>
                 <li class="flex gap-x-3 py-2">
                   <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Zarządzanie uczniami na zajęciach
+                  Możliwość zgłaszania błędów
                 </li>
                 <li class="flex gap-x-3 py-2">
                   <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Wybieranie sal lekcyjnych i budynków
+                  Propozycje nowych funkcji
                 </li>
                 <li class="flex gap-x-3 py-2">
                   <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Statystyki nauczyciela
+                  Współtworzenie projektu
                 </li>
               </ul>
             </div>
@@ -75,35 +75,40 @@
                   <p id="rozliczanie" class="text-gray-500">Rozliczane rocznie</p>
                 </div>
               </div>
-              <a href="register.php" aria-describedby="tier-scale" class="rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 theme-bg theme-bg-hover transition-all duration-150 shadow-sm focus-visible:outline-indigo-600">Zarejestruj się</a>
+              <a href="register.php" aria-describedby="tier-scale" class="rounded-xl hover:scale-[1.02] active:scale-95 duration-150 py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 theme-bg theme-bg-hover transition-all duration-150 shadow-sm focus-visible:outline-indigo-600">Zarejestruj się</a>
             </div>
             <div class="mt-8 flow-root sm:mt-10">
               <ul role="list" class="-my-2 divide-y border-t text-sm leading-6 lg:border-t-0 divide-gray-900/5 border-gray-900/5 text-gray-600">
                 <li class="flex gap-x-3 py-2">
-                  <svg class="h-6 w-5 flex-none text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <svg class="h-6 w-5 flex-none text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Zapisywanie się na zajęcia
+                  Tworzenie i zarządzanie listami zadań
                 </li>
                 <li class="flex gap-x-3 py-2">
-                  <svg class="h-6 w-5 flex-none text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <svg class="h-6 w-5 flex-none text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Pełna kontrola nad swoim kontem
+                  Współpraca z innymi użytkownikami
                 </li>
                 <li class="flex gap-x-3 py-2">
-                  <svg class="h-6 w-5 flex-none text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <svg class="h-6 w-5 flex-none text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Możliwość ustawienia własnego tła!
+                  Powiadomienia o terminach (wkrótce!)
                 </li>
                 <li class="flex gap-x-3 py-2">
-                  <svg class="h-6 w-5 flex-none text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <svg class="h-6 w-5 flex-none text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Statystyki ucznia
+                  Integracja z WordPress
                 </li>
-                
+                <li class="flex gap-x-3 py-2">
+                  <svg class="h-6 w-5 flex-none text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                  </svg>
+                  Integracja z kalendarzem Google (wkrótce!)
+                </li>
               </ul>
             </div>
           </div>
@@ -121,7 +126,7 @@
                   <p id="rozliczanie" class="text-gray-400">Rozliczane rocznie</p>
                 </div>
               </div>
-              <a href="#kontakt" aria-describedby="tier-growth" class="rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-white/10 theme-bg-hover transition-all duration-150 focus-visible:outline-white">Kontakt</a>
+              <a href="#kontakt" aria-describedby="tier-growth" class="rounded-xl hover:scale-[1.02] active:scale-95 duration-150 py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-white/10 theme-bg-hover transition-all duration-150 focus-visible:outline-white">Kontakt</a>
             </div>
             <div class="mt-8 flow-root sm:mt-10">
               <ul role="list" class="-my-2 divide-y border-t text-sm leading-6 lg:border-t-0 divide-white/5 border-white/5 text-white">
@@ -129,31 +134,25 @@
                   <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Zarządznie uczniami i nauczycielami
+                  Instalacja na własnym serwerze
                 </li>
                 <li class="flex gap-x-3 py-2">
                   <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Wiele budynków szkolnych
+                  Pełne wsparcie techniczne
                 </li>
                 <li class="flex gap-x-3 py-2">
                   <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Generowanie zaproszeń
+                  Pełna personalizacja aplikacji
                 </li>
                 <li class="flex gap-x-3 py-2">
                   <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                   </svg>
-                  Statystyki szkoły
-                </li>
-                <li class="flex gap-x-3 py-2">
-                  <svg class="h-6 w-5 flex-none text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
-                  </svg>
-                  Dodawanie klas i przedmiotów szkolnych
+                  Wsparcie dla baz danych MySQL
                 </li>
               </ul>
             </div>

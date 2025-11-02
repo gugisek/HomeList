@@ -5,7 +5,7 @@
         <h2 data-aos="fade-right" data-aos-delay="100" class="text-3xl z-10 font-bold leading-10 tracking-tight text-gray-800">Często zadawane pytania</h2>
         <p data-aos="fade-right" data-aos-delay="200" class="mt-4 text-base leading-7 text-gray-600">Nie możesz znaleść odpopwiedzi na swoje pytanie? <br/><a href="#contact" class="theme-text theme-text-hover duration-150 transition-all">Skontaktuj</a> się z nami, by rozwiać wszystkie wątpliwości.</p>
       </div>
-      <div class="mt-10 lg:col-span-7 lg:mt-0 bg-black/70 py-2 px-8 rounded-xl">
+      <div class="mt-10 lg:col-span-7 lg:mt-0 bg-black/70 py-2 px-8 rounded-2xl">
         <dl class="divide-y divide-white/10">
 
         <?php
@@ -18,7 +18,7 @@
         <div data-aos="fade-left" data-aos-delay="'.$i.'00" data-aos-anchor-placement="center-bottom" class="z-[999]">
           <dt class="text-lg">
             <!-- Expand/collapse question button -->
-            <button type="button" class="py-5 flex w-full items-start justify-between text-left text-gray-300" aria-controls="faq-'.$row['id'].'" aria-expanded="false">
+            <button type="button" class="hover:scale-[1.01] active:scale-[0.98] duration-150 py-5 flex w-full items-start justify-between text-left text-gray-300" aria-controls="faq-'.$row['id'].'" aria-expanded="false">
               <span class="font-medium text-gray-200">'.$row['question'].'</span>
               <span class="ml-6 flex h-7 items-center">
                 <svg class="rotate-0 duration-300 h-6 w-6 transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
