@@ -211,14 +211,27 @@ fixRoundedCorners();
     }
 
     if (firstListId) {
+        if(localStorage.getItem("current_todo") === null){
         openDetailTab('todo', 'list=' + firstListId);
+        }else{
+        openDetailTabReload();
+        }
     }
 }
 
 
     openFirstList();
 
-    function openDetailTab(site, link) {
+    function openDetailTab(site, link, restore_scroll = null) {
+
+        if(restore_scroll === 'restore_scroll'){
+                //pobranie wartości scrolla przed odświeżeniem od elementu html o tagu html
+                var body_scroll = document.getElementsByTagName("html")[0];
+                var scrollPosition = body_scroll.scrollTop;
+                console.log("Current scroll position: " + scrollPosition);
+
+        }
+
     document.getElementById("list_hold").value = link.split('=')[1];
     var body = document.getElementById("dashboard_body");
     body.innerHTML = "<div data-aos='fade-up' data-aos-delay='100' class='w-full duartion-150 flex items-center mt-[20vh] justify-center z-[999]'><div class='z-[30] bg-black/90 p-4 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
@@ -252,7 +265,28 @@ fixRoundedCorners();
       activeButtons[i].classList.add("bg-gray-300");
         activeButtons[i].classList.add("text-gray-800");
     }
+
+    localStorage.setItem("current_todo", link);
+    if(restore_scroll === 'restore_scroll'){
+        // Przywrócenie pozycji scrolla po odświeżeniu
+        // poczekaj 150ms na animacje
+        setTimeout(() => {
+            body_scroll.scrollTop = scrollPosition;
+            console.log("Restored scroll position: " + scrollPosition);
+        }, 500);
+    }
 }
+
+    function openDetailTabReload() {
+    var current_todo = localStorage.getItem("current_todo");
+    if (current_todo) {
+        openDetailTab('todo', current_todo);
+        
+    }
+}
+
+    
+
 </script>
 <script>
     function updateElement() {

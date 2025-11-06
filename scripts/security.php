@@ -39,7 +39,7 @@
           }
       }
   }else{
-    $_SESSION['alert'] = 'Hola hola! Nie masz dostępu do tej strony. Zaloguj się!';
+    $_SESSION['alert'] = 'Hola hola! Zaloguj się!';
     $_SESSION['alert_type'] = 'warning';
 
     header('Location: ../../login.php');

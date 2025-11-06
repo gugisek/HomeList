@@ -8,7 +8,7 @@
 
 
   <section style="background-image: url('ximg/users_images/pp-1_1734508643.png');"  class="lg:ml-20 bg-fixed bg-cover bg-center">
-      <aside id="panelBody" class=" inset-y-0 w-full min-h-screen overflow-y-auto border-r border-gray-200 bg-gray-50/90 px-4 py-6 sm:px-6 lg:px-8 block">
+      <aside id="panelBody" class=" inset-y-0 w-full min-h-screen overflow-y-visible border-r border-gray-200 bg-gray-50/90 px-4 pb-6 sm:px-6 lg:px-8 block">
      
      </aside>
 
@@ -50,9 +50,9 @@
     // Zapisz URL w localStorage
     //przetłumaczenie site na tekst normalny
     var nazwa = "Lista ToDo w Twoim domu!";
-
+console.log(site);
     if(site == 'dashboard'){
-      nazwa = "Strona główna"
+      nazwa = "Twoja lista zadań"
     } else if(site == 'users'){
       nazwa = "Użytkownicy"
     } else if(site == 'requests'){
@@ -63,15 +63,22 @@
       nazwa = "Stan magazynowy"
     }else if(site == 'orders'){
       nazwa = "Zamówienia"
-    }else if(site == 'docs'){
-      nazwa = "Dokumentacja"
+    }else if(site == 'faq'){
+      nazwa = "Pytania na stronie głównej"
     }else if(site == 'logs'){
       nazwa = "Archiwum zamian"
     }else if(site == 'settings'){
       nazwa = "Ustawienia"
-    }else if(site == 'devices'){
-      nazwa = "Urządzenia"
     }
+
+    if(site != 'dashboard'){
+      var panelBody=document.getElementById('panelBody');
+      panelBody.classList.add('py-4');
+    }else{
+      var panelBody=document.getElementById('panelBody');
+      panelBody.classList.remove('py-4');
+    }
+
     document.title = nazwa + " - HomeList - RGBpc.pl";
 
     localStorage.setItem("PanelSite", site);

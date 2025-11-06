@@ -120,6 +120,7 @@ if(mysqli_num_rows($result) > 0) {
     var delivery_loading = document.getElementById('element_loading');
     delivery_loading.innerHTML = "<div class='w-full duartion-150 flex items-center justify-center z-[999]'><div class='z-[30] fixed bg-black/90 p-4 mt-40 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
 
+
     // Wysyłanie żądania POST do skryptu PHP
     fetch('scripts/dashboard/update_status.php', {
         method: 'POST',
@@ -150,7 +151,7 @@ if(mysqli_num_rows($result) > 0) {
                         if(i==1){
                           var list = document.getElementById("list_hold").value;
                           popupDetailsElementOpenClose();
-                          openDetailTab('todo', 'list='+list);
+                          openDetailTab('todo', 'list='+list, 'restore_scroll');
                         }
                         break;
                     case 'error':

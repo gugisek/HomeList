@@ -20,7 +20,7 @@ if ($list == "archive"){
   }
 }
 ?>
-<section id="dashboard_body" data-aos="fade-up" data-aos-delay="100">
+<section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-50 pt-6 bg-white/10 backdrop-saturate-150 backdrop-blur-sm aos-init aos-animate">
     <div class="flex items-center justify-between">
         <div class="text-gray-400">
             <span class="font-medium text-2xl text-black font-[poppins]"><?=$list_full_name?></span>
@@ -32,6 +32,7 @@ if ($list == "archive"){
         </div>
     </div>
 </section>
+
 <section class="mt-2" data-aos="fade-right" data-aos-delay="150">
 <ul role="list" class=" h-full">
     <?php
