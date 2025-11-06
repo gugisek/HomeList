@@ -89,7 +89,7 @@
       </nav>
       <div>
             <a id="nav_button" class="profile" onclick="openPanelSite(`profile`)">
-              <img src="img/users_images/<?php if(isset($_SESSION['profile_picture'])) {echo $_SESSION['profile_picture'];} else {echo 'default2.png';} ?>" alt="" class="object-cover border border-black/30 size-12 mb-2 rounded-xl  hover:shadow-xl shadow-green-300 hover:scale-105 active:scale-90 duration-150 cursor-pointer">
+              <img src="img/users_images/<?php if(isset($_SESSION['profile_picture'])) {echo $_SESSION['profile_picture'];} else {echo 'default.png';} ?>" alt="" class="object-cover border border-black/30 size-12 mb-2 rounded-xl  hover:shadow-xl shadow-green-300 hover:scale-105 active:scale-90 duration-150 cursor-pointer">
             </a>
             <a id="nav_button" href="scripts/login/logout.php" class=" cursor-pointer text-gray-800 hover:text-white hover:bg-green-300 hover:shadow-xl shadow-sky-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 text-sm leading-6 font-semibold">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">

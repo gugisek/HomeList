@@ -6,7 +6,7 @@ $list_name = $_GET['id'];
     <input type="hidden" id="add_element_list_name" value="<?=$list_name?>">
     <div class="-mt-[42px] flex items-center justify-between">
         <h1 class="text-lg font-semibold font-[poppins]">Dodaj zadanie</h1>
-        <a class="flex items-center z-10 gap-2 bg-green-400 rounded-xl mr-9 p-1 px-3 text-white hover:bg-green-500 duration-150 text-xs" onclick="addElement()">
+        <a class="flex items-center z-10 gap-2 bg-green-400 cursor-pointer rounded-xl mr-9 p-1 px-3 text-white hover:bg-green-500 duration-150 text-xs" onclick="addElement()">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
@@ -27,7 +27,7 @@ $list_name = $_GET['id'];
         <div class="w-full">
             <label for="add_element_deadline" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900">Deadline</label>
             <div class="mt-2">
-                <input name="add_element_deadline" id="add_element_deadline" type="datetime-local" value="" placeholder="" class="border rounded-xl py-1.5 w-full px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:font-normal focus:text-white">
+                <input name="add_element_deadline" id="add_element_deadline" type="datetime-local" value="" placeholder="" class="border cursor-pointer rounded-xl py-1.5 w-full px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:font-normal focus:text-white">
             </div>
         </div>
     </div>

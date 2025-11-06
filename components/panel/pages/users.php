@@ -98,6 +98,7 @@
 <?php 
 $name_in_scripts = 'Users';
 $delete_path = 'scripts/users/delete.php';
+$delete_v2 = '';
 $path = 'components/panel/users/users_edit.php';
 $docs_text = 'Edycja użytkownika';
 $docs_path = 'users_docs_add';
@@ -106,6 +107,7 @@ include "../../popup.php";
 <?php 
 $name_in_scripts = 'UsersAdd';
 $delete_path = '';
+$delete_v2 = '';
 $path = 'components/panel/users/users_add.php';
 $docs_text = '';
 $docs_path = '';
