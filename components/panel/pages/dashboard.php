@@ -60,6 +60,12 @@ session_start();
                 </svg>
                 <span>Archiwum</span>
             </a>
+            <a href="scripts/login/logout.php" id="nav_button_details" class="archive flex gap-2 py-3 px-6 hover:scale-105 active:scale-95 cursor-pointer hover:bg-gray-300 hover:text-gray-800 duration-150 rounded-2xl">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"></path>
+                </svg>
+                <span>Wyloguj</span>
+            </a>
             <a onclick="moreMenu()" class="flex gap-2 py-3 px-6 hover:scale-105 active:scale-95 cursor-pointer hover:bg-gray-300 hover:text-gray-800 duration-150 rounded-2xl">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
