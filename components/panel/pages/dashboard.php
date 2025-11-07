@@ -236,6 +236,8 @@ fixRoundedCorners();
                 var scrollPosition = body_scroll.scrollTop;
                 console.log("Current scroll position: " + scrollPosition);
 
+        }else {
+            var body_scroll = document.getElementsByTagName("html")[0];
         }
 
     document.getElementById("list_hold").value = link.split('=')[1];
@@ -280,6 +282,14 @@ fixRoundedCorners();
             body_scroll.scrollTop = scrollPosition;
             console.log("Restored scroll position: " + scrollPosition);
         }, 500);
+    }else {
+        //scroll to top
+        //poczekaj 150ms na animacje
+        setTimeout(() => {
+            body_scroll.scrollTop = 0; // For Safari
+            body_scroll.scrollTo(0, 0); // For Chrome, Firefox, IE and Opera
+            console.log("Restored scroll position: " + 0);
+        }, 100);
     }
 }
 
