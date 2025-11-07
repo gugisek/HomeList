@@ -289,7 +289,7 @@ fixRoundedCorners();
             body_scroll.scrollTop = 0; // For Safari
             body_scroll.scrollTo(0, 0); // For Chrome, Firefox, IE and Opera
             console.log("Restored scroll position: " + 0);
-        }, 100);
+        }, 10);
     }
 }
 
