@@ -28,9 +28,9 @@
       <!-- <div class="fixed inset-0 z-50"></div> -->
       <div id="sidenav_mobile" class="right-[-100%] transition-all duration-150 fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-[#fdfdfd] px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-white/10">
         <div class="flex items-center justify-between">
-          <a href="/" class="-m-1.5 p-1.5 px-4">
-          <img data-aos="fade-down" data-aos-delay="100" class="h-8 w-auto" src="public/img/logo_long.png" alt="">
-        </a>
+          <a href="/" class="-m-1.5 p-1.5 px-4 flex items-center gap-2">
+            <img  class="h-8 w-auto" src="img/icon_512.png" alt=""><span class="font-[poppins]">HomeList</span>
+          </a>
           <button onclick="openNavToggle()" type="button" class="-m-2.5 rounded-md p-2.5 text-gray-400">
             <span class="sr-only">Close menu</span>
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
@@ -41,15 +41,23 @@
         <div class="mt-6 flow-root">
           <div class="-my-6 divide-y divide-gray-500/25">
             <div class="space-y-2 py-6">
-              <a onclick="openNavToggle()" href="#produkt" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-violet-600/30 active:scale-95 transition-all duration-150">Produkt</a>
-              <a onclick="openNavToggle()" href="#oferta" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-violet-600/30 active:scale-95 transition-all duration-150">Oferta</a>
-              <a onclick="openNavToggle()" href="#pytania" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-violet-600/30 active:scale-95 transition-all duration-150">Pytania</a>
-              <a onclick="openNavToggle()" href="#kontakt" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-violet-600/30 active:scale-95 transition-all duration-150">Kontakt</a>
+              <a onclick="openNavToggle()" href="#produkt" class="-mx-3 block rounded-2xl px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-green-300/30 active:scale-95 transition-all duration-150">Produkt</a>
+              <a onclick="openNavToggle()" href="#oferta" class="-mx-3 block rounded-2xl px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-green-300/30 active:scale-95 transition-all duration-150">Oferta</a>
+              <a onclick="openNavToggle()" href="#pytania" class="-mx-3 block rounded-2xl px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-green-300/30 active:scale-95 transition-all duration-150">Pytania</a>
+              <a onclick="openNavToggle()" href="#kontakt" class="-mx-3 block rounded-2xl px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-green-300/30 active:scale-95 transition-all duration-150">Kontakt</a>
             </div>
             <div class="py-6">
-              <a href="login.php" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-800 hover:bg-violet-600/30">Zaloguj się</a>
+              <a href="login.php" class="-mx-3 block rounded-2xl active:scale-95 duration-150 px-3 py-2.5 text-base font-semibold leading-7 text-gray-800 hover:bg-green-300/30">Zaloguj się</a>
             </div>
           </div>
+          <img src="img/logo2.png" alt="" class="mb-14">
+  
+                <div class="mx-auto max-w-7xl overflow-hidden">
+                    <p class="mt-10 text-center text-xs leading-5 text-gray-500">2025 HomeList <?php include 'version.php'?> - designed and build by <a href="https://github.com/gugisek" target="_blank" class="text-gray-800 hover:text-blue-600 duration-150">gugisek</a> <br/>
+                    powered by <a href="https://rgbpc.pl/" target="_blank" class="theme-text-hover duration-300"><span class="text-red-600">R</span><span class="text-green-600">G</span><span class="text-blue-600">B</span>pc.pl</a>
+                    </p>
+                </div>
+   
         </div>
       </div>
     </div>

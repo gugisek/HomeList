@@ -20,7 +20,7 @@ if ($list == "archive"){
   }
 }
 ?>
-<section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-50 pt-6 bg-white/10 backdrop-saturate-150 backdrop-blur-sm aos-init aos-animate">
+<section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -ml-2 -mr-2 px-2 from-white via-white/70 via-70% to-white/0 ">
     <div class="flex items-center justify-between">
         <div class="text-gray-400">
             <span class="font-medium text-2xl text-black font-[poppins]"><?=$list_full_name?></span>
