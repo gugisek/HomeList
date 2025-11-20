@@ -17,7 +17,7 @@
 
     // Tworzymy element alertu
     const alertDiv = document.createElement('div');
-    alertDiv.className = `pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 opacity-0 transform -translate-y-4 scale-95 duration-300 ease-out`;
+    alertDiv.className = `pointer-events-auto w-full max-w-sm overflow-hidden rounded-xl bg-white dark:bg-[#2f2f2f] shadow-lg ring-1 ring-black ring-opacity-5 opacity-0 transform -translate-y-4 scale-95 duration-300 ease-out`;
     
     let alertColor, alertIcon;
     if (type === "success") {
@@ -42,11 +42,11 @@
             <div class="flex items-center">
                 <div class="flex-shrink-0">${alertIcon}</div>
                 <div class="ml-3 w-0 flex-1 pt-0.5">
-                    <p class="text-sm font-bold text-gray-900">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
-                    <p class="text-sm text-gray-800">${message}</p>
+                    <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
+                    <p class="text-sm text-gray-800 dark:text-gray-400">${message}</p>
                 </div>
                 <div class="ml-4 flex flex-shrink-0">
-                    <button type="button" class="inline-flex rounded-md bg-white text-gray-400 hover:text-white hover:bg-gray-600 duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2" onclick="closeAlertWithAnimation(this.closest('.pointer-events-auto'))">
+                    <button type="button" class="inline-flex rounded-md bg-white dark:bg-[#2f2f2f] text-gray-400 hover:text-white hover:bg-gray-600 duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2" onclick="closeAlertWithAnimation(this.closest('.pointer-events-auto'))">
                         <span class="sr-only">Close</span>
                         <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
@@ -55,7 +55,7 @@
                 </div>
             </div>
         </div>
-        <div class="transition-all duration-[5000ms] h-1 border${alertColor} bg-gray-200">
+        <div class="transition-all duration-[5000ms] h-1 border${alertColor} bg-gray-200 dark:bg-[#3a3a3a]">
             <div class="h-full w-full bg${alertColor} animate-[shrink-width_5s_linear]"></div>
         </div>
     `;

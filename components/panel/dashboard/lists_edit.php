@@ -1,8 +1,8 @@
 <div class="-mt-[43px]">
 <div id="element_loading"></div>
-    <h1 class="font-[poppins] font-semibold text-lg pr-8">Edytuj listy</h1>
+    <h1 class="font-[poppins] font-semibold text-lg pr-8 dark:text-gray-200">Edytuj listy</h1>
     <p class="pt-4 text-wrap"></p>
-    <div id="items-container" class="flex flex-col divide-y divide-gray-300">
+    <div id="items-container" class="flex flex-col divide-y divide-gray-300 dark:text-gray-200 dark:divide-[#3d3d3d]">
         <?php
         session_start();
         include '../../../scripts/conn_db.php';

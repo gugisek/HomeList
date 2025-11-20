@@ -8,7 +8,7 @@ include 'scripts/security.php';
 $title = "panel WSZM";
 include 'components/head.php'; ?>    
 </head>
-<body id="overflow_body">
+<body id="overflow_body" class="dark:bg-[#3d3d3d]">
     <?php include 'components/alert.php'; ?>
     <?php include 'components/alert_js.php'; ?>
     <?php include 'components/panel/panel_body.php'; ?>

@@ -20,12 +20,12 @@ if ($list == "archive"){
   }
 }
 ?>
-<section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -ml-2 -mr-2 px-2 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0 ">
+<section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -ml-2 -mr-2 px-2 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0  dark:from-[#3d3d3d] via-[#3d3d3d]/70 via-70% to-[#3d3d3d]/0">
     <div class="flex items-center justify-between">
         <div class="text-gray-400">
-            <span class="font-medium text-2xl text-black font-[poppins]"><?=$list_full_name?></span>
+            <span class="font-medium text-2xl text-black dark:text-white font-[poppins]"><?=$list_full_name?></span>
         </div>
-        <div onclick="openPopupElementAdd('<?=$list_id?>')"  class="<?php if($list == "archive"){echo 'hidden ';}?> hover:text-white hover:bg-green-400 hover:shadow-xl shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
+        <div onclick="openPopupElementAdd('<?=$list_id?>')"  class="<?php if($list == "archive"){echo 'hidden ';}?> hover:text-white hover:bg-green-400 dark:text-white hover:shadow-xl shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -57,17 +57,17 @@ if ($list == "archive"){
               $grouped[$done_date_key][] = $row;
           }
       
-          echo '<div class="bg-white">
+          echo '<div class="bg-white dark:bg-[#3d3d3d]">
                   <div class="mx-auto max-w-7xl px-6 pb-12 sm:pb-16 lg:px-8 lg:py-20">
                     <div class="mx-auto max-w-4xl divide-y divide-gray-900/10">
-                      <dl class="space-y-6 divide-y divide-gray-900/10">';
+                      <dl class="space-y-6 divide-y divide-gray-900/10 dark:divide-[#525252]">';
       
           $index = 0;
           foreach ($grouped as $date => $records) {
               $formattedDate = strftime('%d.%m.%Y', strtotime($date)); // np. "Środa 28.04.2024"
               echo '<div class="pt-6">
                       <dt>
-                        <button type="button" onclick="toggleAccordion(\'faq-'.$index.'\', this)" class="flex w-full items-start justify-between text-left text-gray-900" aria-controls="faq-'.$index.'" aria-expanded="false">
+                        <button type="button" onclick="toggleAccordion(\'faq-'.$index.'\', this)" class="flex w-full items-start justify-between text-left text-gray-900 dark:text-gray-200" aria-controls="faq-'.$index.'" aria-expanded="false">
                           <span class="text-base font-semibold leading-7">';
                           //przetłumaczenie dnia tygodnia
                           $day = strftime('%A', strtotime($date));
@@ -79,7 +79,7 @@ if ($list == "archive"){
                           else if($day == "Saturday") $day = "Sobota";
                           else if($day == "Sunday") $day = "Niedziela";
                           echo $day.' '.$formattedDate.' ('.count($records).')</span>
-                          <span class="ml-6 flex h-7 items-center">
+                          <span class="ml-6 flex h-7 items-center dark:text-gray-200">
                             <svg class="plus-icon h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
                             </svg>
@@ -93,7 +93,7 @@ if ($list == "archive"){
                         <ul class="list-disc ml-5 space-y-2">';
               
               foreach ($records as $row) {
-                  echo '<li onclick="openPopupDetailsElement('.$row['id'].')" class="cursor-pointer hover:text-green-400 text-sm">';
+                  echo '<li onclick="openPopupDetailsElement('.$row['id'].')" class="cursor-pointer hover:text-green-400 dark:text-gray-200 duration-150 text-sm">';
                   echo htmlspecialchars($row['title']);
                   echo '</li>';
               }
@@ -157,7 +157,7 @@ if ($list == "archive"){
                                           else if($row['status_id'] == 3) echo 'border-sky-400/20';
                                           else echo 'border-black/10';
                                         }
-                                        echo ' relative flex my-2 py-4 items-center justify-between gap-4 sm:px-4 px-0 rounded-2xl bg-white/60 sm:hover:shadow-md transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] cursor-pointer">
+                                        echo ' relative flex my-2 py-4 items-center justify-between gap-4 sm:px-4 px-4 sm:mx-0 -mx-4 rounded-2xl bg-white/60 dark:bg-[#3a3a3a] sm:hover:shadow-md transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] cursor-pointer">
                                   <div class="flex items-center gap-4 min-w-0">
                                     <div class="flex items-center justify-center h-3 min-w-3 rounded-full transition-colors ';
                                         if($row['deadline_date'] != "" && $row['deadline_date'] != "0000-00-00 00:00:00"){
@@ -182,9 +182,9 @@ if ($list == "archive"){
                                     
                                     "></div>
                                     <div class="min-w-0 flex flex-col">
-                                      <h2 class="text-sm font-medium text-gray-800 truncate group-hover:text-gray-900 transition-colors">
+                                      <h2 class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate group-hover:text-gray-900 dark:group-hover:text-gray-300 transition-colors">
                                         <span class="truncate ';
-                                            if($row['status_id'] == 2) echo 'line-through text-gray-600';
+                                            if($row['status_id'] == 2) echo 'line-through text-gray-600 dark:text-gray-500';
                                             echo '">'.$row['title'].'</span>
                                       </h2>
                                       <div class="flex items-center gap-2 text-xs text-gray-400 mt-1">
@@ -215,10 +215,10 @@ if ($list == "archive"){
                                     
                                       <!-- Prawa sekcja -->
                                     <div class="flex items-center gap-3 flex-none">
-                                      <span class="px-2 py-1 rounded-full text-xs font-medium ';
-                                    if($row['status_id'] == 1) echo 'text-gray-500 bg-gray-100 group-hover:bg-gray-200 ';
-                                    else if($row['status_id'] == 2) echo 'text-green-500 bg-green-100 group-hover:bg-green-200 ';
-                                    else if($row['status_id'] == 3) echo 'text-sky-500 bg-sky-100 group-hover:bg-sky-200 ';
+                                      <span class="px-2 py-1 flex items-center justify-center rounded-full text-xs font-medium ';
+                                    if($row['status_id'] == 1) echo 'text-gray-500 bg-gray-100 dark:bg-black/20 dark:border-gray-600 dark:border group-hover:bg-gray-200 ';
+                                    else if($row['status_id'] == 2) echo 'text-green-500 bg-green-100 dark:bg-green-400/20 dark:border-green-600 dark:border group-hover:bg-green-200 ';
+                                    else if($row['status_id'] == 3) echo 'text-sky-500 bg-sky-100 dark:bg-sky-400/20 dark:border-sky-600 dark:border group-hover:bg-sky-200 ';
                                     echo 'transition-colors">
                                         ';
                                     if($row['status_id'] == 1) echo 'Oczekuje';
@@ -244,10 +244,10 @@ if ($list == "archive"){
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mx-auto h-12 w-12 text-green-400">
                                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
                                 </svg>
-                                <h3 class="mt-2 text-sm font-semibold text-gray-900">Wszystko zrobione!</h3>
-                                <p class="mt-1 text-sm text-gray-500">Dodaj nowe zadania na tej liście i będą tu widoczne.</p>
+                                <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-200">Wszystko zrobione!</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Dodaj nowe zadania na tej liście i będą tu widoczne.</p>
                                 <div class="mt-6">
-                                  <button onclick="openPopupElementAdd(`'.$list_id.'`)" type="button" class="inline-flex items-center rounded-full bg-[#3d3d3d] px-4 py-2 text-sm text-white shadow-sm hover:bg-green-400 hover:scale-105 active:scale-95 duration-150 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                  <button onclick="openPopupElementAdd(`'.$list_id.'`)" type="button" class="inline-flex items-center rounded-full bg-[#3d3d3d] dark:bg-[#2f2f2f] px-4 py-2 text-sm text-white shadow-sm hover:bg-green-400 hover:scale-105 active:scale-95 duration-150 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                                     <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                       <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                                     </svg>

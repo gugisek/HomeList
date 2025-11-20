@@ -6,7 +6,7 @@ session_start();
 </section>
 <section onclick="moreMenu()" id="more_menu_bg" class="bg-black/40 z-[2] fixed top-0 left-0 h-screen w-screen hidden duration-150"></section>
 <div id="lists" class="flex items-center justify-center z-50">
-<section style="box-shadow: 0px 8px 24px 0px rgba(66, 68, 90, 1);" class="bg-[#3d3d3d] font-[poppins] z-50 xs:scale-100 scale-90 text-white rounded-2xl fixed sm:bottom-10 bottom-4 flex items-center justify-center">
+<section style="box-shadow: 0px 8px 24px 0px rgba(66, 68, 90, 1);" class="bg-[#3d3d3d] dark:bg-[#2f2f2f] font-[poppins] z-50 xs:scale-100 scale-90 text-white rounded-2xl fixed sm:bottom-10 bottom-4 flex items-center justify-center">
     <section id="more_menu" class="min-w-[200px] absolute bottom-14 z-[99] scale-y-0 w-full flex flex-col gap-2 duration-150">
         <?php
         include '../../../scripts/conn_db.php';
@@ -21,7 +21,7 @@ session_start();
                     if ($ilosc <= 3) {
                         echo 'hidden';
                     }
-                    echo ' bg-[#3d3d3d] rounded-2xl py-3">';
+                    echo ' bg-[#3d3d3d] dark:bg-[#2f2f2f] rounded-2xl py-3">';
                     while($row = mysqli_fetch_assoc($result)) {
                         echo '<a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="lists_main_nav list_'.$row['id'].' flex gap-2 py-3 px-4 mx-2 hover:scale-105 active:scale-95 cursor-pointer hover:bg-gray-300 hover:text-gray-800 duration-150 rounded-2xl ';
                         if ($i <= 2) {
@@ -35,7 +35,7 @@ session_start();
                     echo '</div>';
                 }
         ?>
-        <div class="bg-[#3d3d3d] rounded-2xl py-3">
+        <div class="bg-[#3d3d3d] dark:bg-[#2f2f2f] rounded-2xl py-3">
             <a onclick="moreMenuClose();openPopupAddLists();" class="flex gap-2 py-3 px-6 hover:scale-105 active:scale-95 cursor-pointer hover:bg-gray-300 hover:text-gray-800 duration-150 rounded-2xl">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />

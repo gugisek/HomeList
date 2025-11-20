@@ -6,23 +6,41 @@
     scroll-behavior: smooth;
   }
   
+/* LIGHT MODE */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 7px;
+  background: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3d3d3d;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #000;
+}
+
+
+/* DARK MODE — automatycznie zgodnie z systemem */
+@media (prefers-color-scheme: dark) {
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 7px;
-    background: #fff;
-  }
-  
-  ::-webkit-scrollbar-thumb {
     background: #3d3d3d;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    background-clip: padding-box;
-    transition: all 0.3s ease-in-out;
   }
-  
+
+  ::-webkit-scrollbar-thumb {
+    background: #777;
+  }
+
   ::-webkit-scrollbar-thumb:hover {
-    background: #000;
+    background: #999;
   }
+}
+
 
   .typing-text {
     border-right: 2px solid;

@@ -10,7 +10,7 @@
             ?>
    class="z-[60] fixed scale-0 top-0 left-0 w-full h-full">
     <div class="flex flex-col gap-8 items-center justify-center w-full h-full px-2">
-      <div onclick="event.cancelBubble=true;" class="bg-white shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[25px] sm:px-6 sm:py-6  -xl">
+      <div onclick="event.cancelBubble=true;" class="bg-white dark:bg-[#2f2f2f] shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[25px] sm:px-6 sm:py-6  -xl">
         <div class="w-full flex flex-row justify-end z-10">
             <button 
             <?php
@@ -20,7 +20,7 @@
               echo 'onclick="popup'.$name_in_scripts.'CloseConfirm()"';
             }
             ?>
-             type="button" class="rounded-md text-gray-800 hover:text-gray-400 flex flex-row gap-2 text-sm items-center duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
+             type="button" class="rounded-md text-gray-800 hover:text-gray-400 dark:text-white flex flex-row gap-2 text-sm items-center duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
                 <!-- <span class="sr-only">Zamknij</span>Zamknij -->
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -39,7 +39,7 @@
   <section id="popup<?=$name_in_scripts?>Close" onclick="popup<?=$name_in_scripts?>CloseConfirm()" class="z-[70] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
     <div class="flex items-center justify-center w-full h-full px-2">
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
-        <div class="relative transform overflow-hidden rounded-[25px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+        <div class="relative transform overflow-hidden rounded-[25px] bg-white dark:bg-[#2f2f2f] px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
             <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
               <span class="sr-only">Zamknij</span>
@@ -55,15 +55,15 @@
               </svg>
             </div>
             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-              <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Masz niezapisane zmiany</h3>
+              <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white" id="modal-title">Masz niezapisane zmiany</h3>
               <div class="mt-2">
-                <p class="text-sm text-gray-700">Czy na pewno chcesz wyjść mając niezapisane zmiany? Nie ma możliwości przywrócenia tych zmian.</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">Czy na pewno chcesz wyjść mając niezapisane zmiany? Nie ma możliwości przywrócenia tych zmian.</p>
               </div>
             </div>
           </div>
           <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Zostań</button>
-            <button onclick="popup<?=$name_in_scripts?>OpenClose();popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Nie zapisuj</button>
+            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 inline-flex w-full justify-center rounded-full bg-[#3d3d3d] dark:bg-gray-200 dark:text-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Zostań</button>
+            <button onclick="popup<?=$name_in_scripts?>OpenClose();popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 dark:text-white dark:ring-gray-200 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Nie zapisuj</button>
           </div>
         </div>
       </div>

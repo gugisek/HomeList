@@ -8,7 +8,7 @@
 
 
   <section style="background-image: url('ximg/users_images/pp-1_1734508643.png');"  class="lg:ml-20 bg-fixed bg-cover bg-center">
-      <aside id="panelBody" class=" inset-y-0 w-full min-h-screen overflow-y-visible border-r border-gray-200 bg-gray-50/90 px-4 pb-6 sm:px-6 lg:px-8 block">
+      <aside id="panelBody" class=" inset-y-0 w-full min-h-screen overflow-y-visible bg-gray-50/90 dark:bg-[#3d3d3d] px-4 pb-6 sm:px-6 lg:px-8 block">
      
      </aside>
 
