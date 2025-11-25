@@ -701,6 +701,79 @@ function codeList() {
         delivery_loading.innerHTML = ""; // Ukrycie kółka ładowania po zakończeniu żądania
     });
 }
+
+function copyElement() {
+    // Pobranie danych z pól formularza
+    var name = document.getElementById('add_element_name').value;
+    var description = document.getElementById('add_element_description').value;
+    var deadline = document.getElementById('add_element_deadline').value;
+    var list = document.getElementById('add_element_list_name').value;
+    const postData = new FormData();
+    postData.append('name', name);
+    postData.append('description', description);
+    postData.append('deadline', deadline);
+    postData.append('list', list);
+
+    // Pokazanie kółka ładowania
+    var delivery_loading = document.getElementById('add_element_loading');
+    delivery_loading.innerHTML = "<div class='w-full duartion-150 flex items-center justify-center z-[999]'><div class='z-[30] fixed bg-black/90 p-4 mt-40 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
+
+    // Wysyłanie żądania POST do skryptu PHP
+    fetch('scripts/dashboard/add.php', {
+        method: 'POST',
+        body: postData
+    })
+
+    .then(response => response.text())
+    .then(text => {
+        // Rozbijanie tekstu na fragmenty JSON-owe
+        const rawJsonParts = text.trim().split(/(?<=\})\s*(?=\{)/); // Dzielenie na podstawie zakończenia jednego JSON-a i początku następnego
+
+        const jsonObjects = rawJsonParts.map(jsonString => {
+            try {
+                return JSON.parse(jsonString);  // Parsowanie każdego fragmentu jako JSON
+            } catch (e) {
+                console.error('Błąd parsowania JSON:', e, 'Fragment:', jsonString);
+                return null;
+            }
+        }).filter(obj => obj !== null);
+
+        var i = 1;
+
+        jsonObjects.forEach(data => {
+            if (data.status) {  // Jeśli dane posiadają status
+                switch (data.status) {
+                    case 'success':
+                        showAlert('success', data.message);
+                        if(i==1){
+                          var list = document.getElementById("list_hold").value;
+                          popupCopyElementOpenClose();
+                          openDetailTab('todo', 'list='+list);
+                        }
+                        break;
+                    case 'error':
+                        showAlert('error', data.message);
+                        break;
+                    case 'warning':
+                        showAlert('warning', data.message);
+                        break;
+                    default:
+                        showAlert('error', 'Nieznany status odpowiedzi');
+                }
+            }
+            i = i+1;
+        });
+    })
+    .catch(error => {
+        showAlert('error', 'Wystąpił problem połączenia z serwerem');
+        console.error('Błąd:', error);
+    })
+
+    .finally(() => {
+        delivery_loading.innerHTML = ""; // Ukrycie kółka ładowania po zakończeniu żądania
+    });
+}
+
 </script>
 <script>
     function EditElementDelete() {
@@ -898,6 +971,15 @@ include "../../popup.php";
 ?>
 
 <?php 
+$name_in_scripts = 'CopyElement';
+$delete_path = '';
+$delete_v2 = 'true';
+$path = 'components/panel/dashboard/element_add.php';
+$close="";
+include "../../popup_variables.php";
+?>
+
+<?php 
 $name_in_scripts = 'CodeLists';
 $delete_path = '';
 $delete_v2 = 'true';
@@ -914,3 +996,4 @@ $path = 'components/panel/dashboard/lists_info.php';
 $close="true";
 include "../../popup_l2.php";
 ?>
+

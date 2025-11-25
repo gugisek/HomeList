@@ -1,14 +1,14 @@
 <section data-aos="fade-up" data-aos-delay="100">
     <div class="flex items-center justify-between">
-        <span class="font-medium text-2xl text-black">Konta użytkowników</span>
-        <div onclick="openPopupUsersAdd()"  class="hover:text-white hover:bg-green-500 hover:shadow-xl shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
+        <span class="font-medium text-2xl text-black dark:text-gray-200">Konta użytkowników</span>
+        <div onclick="openPopupUsersAdd()"  class="hover:text-white hover:bg-green-500 hover:shadow-xl dark:text-gray-200 shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
         </div>
     </div>
     <section class="flex flex-col gap-4">
-        <div class="grid grid-cols-7 text-sm text-gray-600 font-[poppins] bg-white rounded-2xl ring-1 ring-black ring-opacity-5 shadow-xl mt-4">
+        <div class="grid grid-cols-7 text-sm text-gray-600 dark:text-gray-200 font-[poppins] bg-white dark:bg-[#2c2c2c] rounded-2xl ring-1 ring-black ring-opacity-5 shadow-xl mt-4">
             <div class="font-medium py-5 pl-4 pr-3 sm:pl-6 lg:col-span-2 sm:col-span-3 col-span-5">
                 Użytkownik
             </div>
@@ -65,21 +65,21 @@
                                                 <img class="h-10 w-10 border border-black/10 rounded-full object-cover" src="img/users_images/'.$row['profile_picture'].'" alt="">
                                                 </div>
                                                 <div class="">
-                                                <div class="font-medium text-gray-900">'.$row['name'].' '.$row['sur_name'].'</div>
-                                                <div class="text-gray-500 -mt-2 text-sm font-regular">'.$row['mail'].'</div>
+                                                <div class="font-medium text-gray-900 dark:text-gray-200">'.$row['name'].' '.$row['sur_name'].'</div>
+                                                <div class="text-gray-500 dark:text-gray-400 -mt-2 text-sm font-regular">'.$row['mail'].'</div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-span-2 font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 items-center lg:flex hidden">
+                                        <div class="col-span-2 font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 dark:text-gray-400 items-center lg:flex hidden">
                                             '.$row['description'].'
                                         </div>
                                         <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 items-center sm:col-span-1 col-span-2 sm:flex hidden">
                                             <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 capitalize text-'.$row['status_color'].'-800 bg-'.$row['status_color'].'-100">'.$row['status'].'</span>
                                         </div>
-                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 flex items-center sm:col-span-1 col-span-2">
+                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 dark:text-gray-400 flex items-center sm:col-span-1 col-span-2">
                                             '.$row['role'].'
                                         </div>
-                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 items-center lg:col-span-1 col-span-2 sm:flex hidden">
+                                        <div class="font-medium py-2 pl-4 pr-3 sm:pl-6 text-sm text-gray-500 dark:text-gray-400 items-center lg:col-span-1 col-span-2 sm:flex hidden">
                                             '.substr($login_date, 0).'
                                         </div>
                                     </div>

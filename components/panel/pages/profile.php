@@ -1,5 +1,5 @@
 <section data-aos="fade-up" data-aos-delay="100">
-    <h1 class="font-medium text-2xl">Mój profil</h1>
+    <h1 class="font-medium text-2xl dark:text-gray-200">Mój profil</h1>
 </section>
 <section>
 <?php
@@ -39,13 +39,13 @@ if(mysqli_num_rows($result) > 0)
         
     <div class="mt-4 flex md:flex-row flex-col gap-2">
     <div class="w-full">
-        <label for="name" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900">Imię</label>
+        <label for="name" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Imię</label>
         <div class="mt-2">
             <input name="name" id="name" type="text" value="<?=$name?>" placeholder="Wpisz imię" class="border rounded-xl w-full py-1.5 px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:text-white" required>
         </div>
     </div>
     <div class="w-full">
-        <label for="sur_name" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900">Nazwisko</label>
+        <label for="sur_name" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Nazwisko</label>
         <div class="mt-2">
             <input name="sur_name" id="sur_name" type="text" value="<?=$sur_name?>" placeholder="Wpisz nazwisko" class="border rounded-xl w-full py-1.5 px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:text-white" required>
         </div>
@@ -54,7 +54,7 @@ if(mysqli_num_rows($result) > 0)
 
     <div class="mt-4 flex md:flex-row flex-col gap-2">
     <div class="w-full">
-        <label for="email" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900">Email</label>
+        <label for="email" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Email</label>
         <div class="mt-2">
             <input name="email" id="email" type="email" value="<?=$email?>" placeholder="Wpisz email" class="border rounded-xl py-1.5 w-full px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:text-white" required>
         </div>
@@ -66,7 +66,7 @@ if(mysqli_num_rows($result) > 0)
 
     <div class="mt-4 flex flex-row gap-2">
         <div class="w-full">
-            <label for="description" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900">Opis</label>
+            <label for="description" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Opis</label>
             <div class="mt-2">
                 <textarea name="description" id="description" type="text" placeholder="Nic tu nie ma..." class="border rounded-2xl py-1.5 w-full px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:text-white"><?=$description?></textarea>
             </div>
@@ -75,13 +75,13 @@ if(mysqli_num_rows($result) > 0)
 
     <div class="mt-4 flex flex-row gap-2">
         <div class="w-1/2">
-            <label for="pswd" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900">Hasło</label>
+            <label for="pswd" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Hasło</label>
             <div class="mt-2">
                 <input name="pswd" id="pswd" type="password" placeholder="Wpisz hasło" class="border rounded-xl py-1.5 w-full px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:text-white">
             </div>
         </div>
         <div class="w-1/2">
-            <label for="repeat_pswd" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900">Powtórz hasło</label>
+            <label for="repeat_pswd" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Powtórz hasło</label>
             <div class="mt-2">
                 <input name="repeat_pswd" id="repeat_pswd" type="password" placeholder="Powtórz hasło" class="border rounded-xl py-1.5 w-full px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:text-white">
             </div>

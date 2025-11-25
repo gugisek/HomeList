@@ -20,7 +20,7 @@
               echo 'onclick="popup'.$name_in_scripts.'CloseConfirm()"';
             }
             ?>
-             type="button" class="rounded-md text-gray-800 hover:text-gray-400 flex flex-row gap-2 text-sm items-center duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
+             type="button" class="rounded-md text-gray-800 dark:text-gray-200 hover:text-gray-400 flex flex-row gap-2 text-sm items-center duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
                 <!-- <span class="sr-only">Zamknij</span>Zamknij -->
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -41,7 +41,7 @@
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
         <div class="relative transform overflow-hidden rounded-[25px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 dark:text-gray-200 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
+            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
               <span class="sr-only">Zamknij</span>
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -49,20 +49,20 @@
             </button>
           </div>
           <div class="sm:flex sm:items-start">
-            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-[#3d3d3d] sm:mx-0 sm:h-10 sm:w-10">
-              <svg class="h-6 w-6 text-gray-900 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 sm:mx-0 sm:h-10 sm:w-10">
+              <svg class="h-6 w-6 text-gray-900" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
             </div>
             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-              <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-gray-300" id="modal-title">Masz niezapisane zmiany</h3>
+              <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Masz niezapisane zmiany</h3>
               <div class="mt-2">
-                <p class="text-sm text-gray-700 dark:text-gray-400">Czy na pewno chcesz wyjść mając niezapisane zmiany? Nie ma możliwości przywrócenia tych zmian.</p>
+                <p class="text-sm text-gray-700">Czy na pewno chcesz wyjść mając niezapisane zmiany? Nie ma możliwości przywrócenia tych zmian.</p>
               </div>
             </div>
           </div>
           <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto dark:text-gray-200 dark:border-gray-300">Zostań</button>
+            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Zostań</button>
             <button onclick="popup<?=$name_in_scripts?>OpenClose();popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Nie zapisuj</button>
           </div>
         </div>
@@ -134,15 +134,15 @@
        clearInterval(window.popupInterval);
 
     }
-    function openPopup<?=$name_in_scripts?>(id) {
+    function openPopup<?=$name_in_scripts?>(name, description, deadline, list_id) {
         //wstawienie wartośći id do id_for_delete
         var id_for_delete = document.getElementById("id_for_delete_<?=$name_in_scripts?>");
-        id_for_delete.value = id;
+     
 
         var popupOutput = document.getElementById("pupup<?=$name_in_scripts?>Output");
         popupOutput.innerHTML = "<div class='w-full flex items-center justify-center z-[999]'><div class='z-[30] bg-black/90 p-4 rounded-xl'><div class='lds-dual-ring'></div></div></div>";
         popup<?=$name_in_scripts?>OpenClose();
-        const url = "<?=$path?>?id="+id;
+        const url = "<?=$path?>?name="+name+"&description="+description+"&deadline="+deadline+"&id="+list_id;
         fetch(url)
             .then(response => response.text())
             .then(data => {

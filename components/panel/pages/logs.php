@@ -1,5 +1,5 @@
 <section data-aos="fade-up" data-aos-delay="100">
-    <h1 class="font-medium text-2xl">Archiwum zmian</h1>
+    <h1 class="font-medium text-2xl dark:text-gray-200">Archiwum zmian</h1>
     <div class="mt-8 flow-root">
     <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
       <div class="inline-block min-w-full py-2 align-middle">

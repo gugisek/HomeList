@@ -1,5 +1,25 @@
 <?php
 $list_name = $_GET['id'];
+
+if ($_GET['name']) {
+    $element_name = $_GET['name'];
+} else {
+    $element_name = '';
+}
+
+if ($_GET['description']) {
+    $element_description = $_GET['description'];
+} else {
+    $element_description = '';
+}
+
+if ($_GET['deadline']) {
+    $element_deadline = $_GET['deadline'];
+} else {
+    $element_deadline = '';
+}
+
+
 ?>
 <div id="add_element_loading"></div>
 <section class="font-[poppins] p-1">
@@ -19,7 +39,7 @@ $list_name = $_GET['id'];
             <label for="add_element_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Nazwa zadania <span class="text-red-400">*</span>
             </label>
-            <input id="add_element_name" name="add_element_name" type="text" placeholder="Podaj nazwę zadania" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400" required="">
+            <input id="add_element_name" name="add_element_name" type="text" placeholder="Podaj nazwę zadania" value="<?=$element_name?>" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400" required="">
         </div>
     </div>
 
@@ -28,7 +48,7 @@ $list_name = $_GET['id'];
         <label for="add_element_deadline" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Deadline
         </label>
-        <input id="add_element_deadline" name="add_element_deadline" type="datetime-local" class="w-full cursor-pointer rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] dark:focus:bg-[#3d3d3d] focus:bg-white focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300">
+        <input id="add_element_deadline" name="add_element_deadline" type="datetime-local" value="<?=$element_deadline?>" class="w-full cursor-pointer rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] dark:focus:bg-[#3d3d3d] focus:bg-white focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300">
         </div>
     </div>
 
@@ -37,18 +57,18 @@ $list_name = $_GET['id'];
         <label for="add_element_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Opis
         </label>
-        <textarea id="add_element_description" name="add_element_description" placeholder="Opcjonalny opis zadania..." rows="4" class="w-full rounded-2xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300 resize-none"></textarea>
+        <textarea id="add_element_description" name="add_element_description" placeholder="Opcjonalny opis zadania..." rows="4" class="w-full rounded-2xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300 resize-none"><?=$element_description?></textarea>
         </div>
     </div>
 
     <div class="flex flex-row-reverse gap-2">
-        <button onclick="addElement()" class="mt-4 active:scale-95 duration-150 flex w-full justify-center shadow-xl cursor-pointer rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ring-1 font-medium ring-green-400 duration-150 px-4 py-2 text-sm text-white items-center gap-1 shadow-sm hover:shadow-xl hover:bg-white hover:text-green-400 sm:ml-2">
+        <button onclick="<?php if($element_name == '') echo 'addElement()'; else echo 'copyElement()'; ?>" class="mt-4 active:scale-95 duration-150 flex w-full justify-center shadow-xl cursor-pointer rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ring-1 font-medium ring-green-400 duration-150 px-4 py-2 text-sm text-white items-center gap-1 shadow-sm hover:shadow-xl hover:bg-white hover:text-green-400 sm:ml-2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"></path>
             </svg>
         Zapisz
         </button>
-        <button onclick="popupElementAddCloseConfirm()"  class="mt-4 active:scale-95 duration-150 flex w-full justify-center cursor-pointer rounded-2xl font-medium ring-rose-400 ring-1 duration-150 px-4 py-2 text-sm text-rose-400 items-center gap-1 shadow-sm hover:shadow-xl hover:bg-rose-400 hover:text-white sm:ml-2 ">
+        <button onclick="popupCopyElementCloseConfirm()"  class="mt-4 active:scale-95 duration-150 flex w-full justify-center cursor-pointer rounded-2xl font-medium ring-rose-400 ring-1 duration-150 px-4 py-2 text-sm text-rose-400 items-center gap-1 shadow-sm hover:shadow-xl hover:bg-rose-400 hover:text-white sm:ml-2 ">
 
         Anuluj
         </button>

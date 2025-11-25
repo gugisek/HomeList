@@ -37,13 +37,13 @@ $total_pages = ceil($total_records / 20);
                     </div>
                 <table class="w-full" data-aos="fade-in" data-aos-delay="100">
                     <tr class=" text-left text-xs text-gray-400 ">
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell px-3 text-center md:w-auto md:table-cell sm:pl-6 lg:pl-8">ID</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-1/6">Użytkownik</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell py-3 w-1/6">Data</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[35%] md:table-cell">Opis</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">ID obiektu</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">Obiekt</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">Typ</th>
+                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell px-3 text-center md:w-auto md:table-cell sm:pl-6 lg:pl-8">ID</th>
+                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-1/6">Użytkownik</th>
+                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell py-3 w-1/6">Data</th>
+                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[35%] md:table-cell">Opis</th>
+                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">ID obiektu</th>
+                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">Obiekt</th>
+                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">Typ</th>
                     </tr>
                     <?php
                     
@@ -57,15 +57,15 @@ $total_pages = ceil($total_records / 20);
                             {
 
                                 echo "<tr class='hover:bg-gray-100 transition-all  duration-150 border-t-[0.5px] border-b-[0.5px] border-gray-200' style='cursor: pointer; cursor: hand;' onclick='openPopupLogs(".$row['id'].")'>";
-                                    echo "<td class='py-3 text-gray-500 text-center text-sm md:table-cell hidden sm:pl-6 lg:pl-8'>".$row['id']."</td>";
-                                    echo "<td class='py-3 text-gray-800 text-sm capitalize sm:pl-1 lg:pl-3'>".$row['name']." ".$row['sur_name']."</td>";
-                                    echo "<td class='capitalize text-sm text-gray-600'>".$row['when']."</td>";
+                                    echo "<td class='py-3 text-gray-500 dark:text-gray-400 text-center text-sm md:table-cell hidden sm:pl-6 lg:pl-8'>".$row['id']."</td>";
+                                    echo "<td class='py-3 text-gray-800 dark:text-gray-200 text-sm capitalize sm:pl-1 lg:pl-3'>".$row['name']." ".$row['sur_name']."</td>";
+                                    echo "<td class='capitalize text-sm text-gray-600 dark:text-gray-400'>".$row['when']."</td>";
                                     $description = $row['description'];
                                     if (strlen($description) > 50) {
                                         $description = substr($description, 0, 50)."...";
                                     }
-                                    echo "<td class='text-sm md:table-cell hidden text-gray-600'>".$description."</td>";
-                                    echo "<td class='text-center text-sm text-gray-500'>".$row['object_id']."</td>";
+                                    echo "<td class='text-sm md:table-cell hidden text-gray-600 dark:text-gray-400'>".$description."</td>";
+                                    echo "<td class='text-center text-sm text-gray-500 dark:text-gray-400'>".$row['object_id']."</td>";
                                     echo "<td class='text-center text-sm capitalize ";
                                     if ($row['object_type'] == "users") {
                                         echo " text-yellow-500";
@@ -88,7 +88,7 @@ $total_pages = ceil($total_records / 20);
                                     else if ($row['object_type'] == "log_types") {
                                         echo " text-gray-500";
                                     }else{
-                                        echo " text-gray-800";
+                                        echo " text-gray-800 dark:text-gray-200";
                                     }
                                     echo "'>".$row['object_type']."</td>";
                                     echo "<td class='text-center text-sm capitalize ";
@@ -107,11 +107,11 @@ $total_pages = ceil($total_records / 20);
                             }
                         } else {
                             echo "<tr class='border-t-[0.5px] border-b-[0.5px]'>";
-                                echo "<td class='py-3 text-gray-800 leading-4 text-sm'>Brak wyników</td>";
-                                echo "<td class='text-center capitalize text-sm text-gray-500'></td>";
-                                echo "<td class='text-center capitalize text-sm text-gray-500'></td>";
-                                echo "<td class='text-center text-sm text-gray-500'></td>";
-                                echo "<td class='text-center text-sm'></td>";
+                                echo "<td class='py-3 text-gray-800 dark:text-gray-200 leading-4 text-sm'>Brak wyników</td>";
+                                echo "<td class='text-center capitalize text-sm text-gray-500 dark:text-gray-400'></td>";
+                                echo "<td class='text-center capitalize text-sm text-gray-500 dark:text-gray-400'></td>";
+                                echo "<td class='text-center text-sm text-gray-500 dark:text-gray-400'></td>";
+                                echo "<td class='text-center text-sm dark:text-gray-400'></td>";
                             echo "</tr>";
                         }
                     ?>

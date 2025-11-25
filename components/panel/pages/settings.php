@@ -1,5 +1,5 @@
 <section data-aos="fade-up" data-aos-delay="100">
-    <h1 class="font-medium text-2xl">Ustawienia</h1>
+    <h1 class="font-medium text-2xl dark:text-gray-200">Ustawienia</h1>
 
     <div class="mx-auto lg:flex lg:gap-x-16 mt-2">
   <aside class=" overflow-x-auto border-b border-gray-900/5 py-4 lg:block lg:w-64 lg:flex-none lg:border-0">
@@ -7,7 +7,7 @@
       <ul role="list" class="flex gap-x-3 gap-y-1 whitespace-nowrap lg:flex-col">
         <li>
           <!-- Current: "bg-gray-50 text-indigo-600", Default: "text-gray-700 hover:text-indigo-600 hover:bg-gray-50" -->
-          <a href="#ur" class="text-gray-700 hover:text-violet-500 duration-150 hover:bg-gray-50 group flex gap-x-3 rounded-md py-2 pl-2 pr-3 text-sm leading-6 font-semibold">
+          <a href="#ur" class="text-gray-700 dark:text-gray-200 hover:text-violet-500 duration-150 hover:bg-gray-50 group flex gap-x-3 rounded-md py-2 pl-2 pr-3 text-sm leading-6 font-semibold">
             <svg class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-violet-500 duration-150" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
