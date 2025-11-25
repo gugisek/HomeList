@@ -41,7 +41,7 @@
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
         <div class="relative transform overflow-hidden rounded-[25px] bg-white dark:bg-[#2f2f2f] px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
+            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 dark:text-gray-200 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
               <span class="sr-only">Zamknij</span>
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />

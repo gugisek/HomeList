@@ -1,19 +1,19 @@
 <?php
 $list_name = $_GET['id'];
 
-if ($_GET['name']) {
+if (isset($_GET['name'])) {
     $element_name = $_GET['name'];
 } else {
     $element_name = '';
 }
 
-if ($_GET['description']) {
+if (isset($_GET['description'])) {
     $element_description = $_GET['description'];
 } else {
     $element_description = '';
 }
 
-if ($_GET['deadline']) {
+if (isset($_GET['deadline'])) {
     $element_deadline = $_GET['deadline'];
 } else {
     $element_deadline = '';
