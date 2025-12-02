@@ -68,7 +68,7 @@ if (isset($_GET['deadline'])) {
             </svg>
         Zapisz
         </button>
-        <button onclick="popupCopyElementCloseConfirm()"  class="mt-4 active:scale-95 duration-150 flex w-full justify-center cursor-pointer rounded-2xl font-medium ring-rose-400 ring-1 duration-150 px-4 py-2 text-sm text-rose-400 items-center gap-1 shadow-sm hover:shadow-xl hover:bg-rose-400 hover:text-white sm:ml-2 ">
+        <button onclick="<?php if($element_name == '') echo 'popupElementAddCloseConfirm()'; else echo 'popupCopyElementCloseConfirm()'; ?>"  class="mt-4 active:scale-95 duration-150 flex w-full justify-center cursor-pointer rounded-2xl font-medium ring-rose-400 ring-1 duration-150 px-4 py-2 text-sm text-rose-400 items-center gap-1 shadow-sm hover:shadow-xl hover:bg-rose-400 hover:text-white sm:ml-2 ">
 
         Anuluj
         </button>

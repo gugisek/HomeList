@@ -157,7 +157,7 @@ if ($list == "archive"){
                                           else if($row['status_id'] == 3) echo 'border-sky-400/20';
                                           else echo 'border-black/10';
                                         }
-                                        echo ' relative flex my-2 py-4 items-center justify-between gap-4 sm:px-4 px-4 sm:mx-0 -mx-4 rounded-2xl bg-white/60 dark:bg-[#3a3a3a] sm:hover:shadow-md transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] cursor-pointer">
+                                        echo ' relative flex my-2 py-4 items-center justify-between gap-4 sm:px-4 px-4 sm:mx-0 -mx-4 rounded-2xl bg-white/60 dark:bg-[#3a3a3a] sm:hover:shadow-md transition-all duration-200 md:hover:scale-[1.01] md:active:scale-[0.98] active:scale-[0.95] cursor-pointer">
                                   <div class="flex items-center gap-4 min-w-0">
                                     <div class="flex items-center justify-center h-3 min-w-3 rounded-full transition-colors ';
                                         if($row['deadline_date'] != "" && $row['deadline_date'] != "0000-00-00 00:00:00"){

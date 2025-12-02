@@ -10,7 +10,7 @@
             ?>
    class="z-[80] fixed scale-0 top-0 left-0 w-full h-full">
     <div class="flex flex-col gap-8 items-center justify-center w-full h-full px-2">
-      <div onclick="event.cancelBubble=true;" class="bg-white dark:bg-[#2f2f2f] shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[25px] sm:px-6 sm:py-6  -xl">
+      <div name="popul_l2" onclick="event.cancelBubble=true;" class="bg-white dark:bg-[#2f2f2f] shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[25px] sm:px-6 sm:py-6  -xl">
         <div class="w-full flex flex-row justify-end z-10">
             <button 
             <?php
