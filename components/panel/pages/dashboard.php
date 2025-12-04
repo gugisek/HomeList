@@ -6,8 +6,8 @@ session_start();
 </section>
 <section onclick="moreMenu()" id="more_menu_bg" class="bg-black/40 z-[2] fixed top-0 left-0 h-screen w-screen hidden duration-150"></section>
 <div id="lists" class="flex items-center justify-center z-50">
-<section style="box-shadow: 0px 8px 24px 0px rgba(66, 68, 90, 1);" class="bg-[#3d3d3d] dark:bg-[#2f2f2f] font-[poppins] z-50 xs:scale-100 scale-90 text-white rounded-2xl fixed sm:bottom-10 bottom-4 flex items-center justify-center">
-    <section id="more_menu" class="min-w-[200px] absolute bottom-14 z-[99] scale-y-0 w-full flex flex-col gap-2 duration-150">
+<section style="box-shadow: 0px 8px 24px 0px rgba(66, 68, 90, 1);" class="bg-[#3d3d3d] dark:bg-[#2f2f2f] font-[poppins] z-[49] xs:scale-100 scale-90 text-white rounded-2xl fixed sm:bottom-10 bottom-4 flex items-center justify-center">
+    <section id="more_menu" class="min-w-[200px] absolute bottom-14 z-[49] scale-y-0 w-full flex flex-col gap-2 duration-150">
         <?php
         include '../../../scripts/conn_db.php';
         $user_id = $_SESSION['login_id'];
@@ -17,7 +17,7 @@ session_start();
                  {
                     $i = 0;
                     $ilosc = mysqli_num_rows($result);
-                    echo '<div id="more_nav_body" class="max-h-[60vh] overflow-y-auto';
+                    echo '<div id="more_nav_body" class="max-h-[60vh] overflow-y-auto overflow-x-hidden ';
                     if ($ilosc <= 3) {
                         echo 'hidden';
                     }
