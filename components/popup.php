@@ -1,4 +1,12 @@
 
+<style>
+.popup-sheet { transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
+.popup-sheet.popup-sheet-hidden { transform: translateY(110%); }
+@media (min-width: 640px) {
+  .popup-sheet.popup-sheet-hidden { transform: scale(0); }
+}
+</style>
+
 <section id="popup<?=$name_in_scripts?>Bg" class="fixed backdrop-blur-md z-[50] h-0 opacity-0 top-0 left-0 w-full h-full bg-black/50 transition-opacity duration-300"></section>
 <section id="popup<?=$name_in_scripts?>"
           <?php
@@ -8,7 +16,7 @@
             echo 'onclick="popup'.$name_in_scripts.'CloseConfirm()"';
           }
           ?>
- class="popup-sheet popup-sheet-hidden z-[60] fixed top-0 left-0 w-full h-full">
+ class="popup-sheet popup-sheet-hidden z-[60] fixed top-0 left-0 w-full h-full" style="opacity:0;pointer-events:none">
   <div class="flex flex-col sm:items-center sm:justify-center items-stretch justify-end w-full h-full">
     <div id="popup<?=$name_in_scripts?>Card" name="popup" onclick="event.cancelBubble=true;"
          class="relative bg-white dark:bg-[#1e1e1e]
@@ -57,7 +65,7 @@
 
 <!-- Close confirmation dialog -->
 <section id="popup<?=$name_in_scripts?>CloseBg" class="fixed z-[65] backdrop-blur-md h-0 opacity-0 top-0 left-0 w-full h-full bg-black/50 transition-opacity duration-300"></section>
-<section id="popup<?=$name_in_scripts?>Close" onclick="popup<?=$name_in_scripts?>CloseConfirm()" class="popup-sheet popup-sheet-hidden z-[70] fixed top-0 left-0 w-full h-full font-[poppins]">
+<section id="popup<?=$name_in_scripts?>Close" onclick="popup<?=$name_in_scripts?>CloseConfirm()" class="popup-sheet popup-sheet-hidden z-[70] fixed top-0 left-0 w-full h-full font-[poppins]" style="opacity:0;pointer-events:none">
   <div class="flex flex-col sm:items-center sm:justify-center items-stretch justify-end w-full h-full">
     <div onclick="event.cancelBubble=true;"
          class="bg-white dark:bg-[#1e1e1e] shadow-2xl shadow-black/20 dark:shadow-black/60
@@ -93,7 +101,7 @@
 
 <!-- Delete confirmation dialog -->
 <section id="popup<?=$name_in_scripts?>DeleteBg" class="fixed z-[65] backdrop-blur-md h-0 opacity-0 top-0 left-0 w-full h-full bg-black/50 transition-opacity duration-300"></section>
-<section id="popup<?=$name_in_scripts?>Delete" onclick="popup<?=$name_in_scripts?>Delete()" class="popup-sheet popup-sheet-hidden z-[70] fixed top-0 left-0 w-full h-full font-[poppins]">
+<section id="popup<?=$name_in_scripts?>Delete" onclick="popup<?=$name_in_scripts?>Delete()" class="popup-sheet popup-sheet-hidden z-[70] fixed top-0 left-0 w-full h-full font-[poppins]" style="opacity:0;pointer-events:none">
   <div class="flex flex-col sm:items-center sm:justify-center items-stretch justify-end w-full h-full">
     <div onclick="event.cancelBubble=true;"
          class="bg-white dark:bg-[#1e1e1e] shadow-2xl shadow-black/20 dark:shadow-black/60
@@ -133,20 +141,13 @@
   </div>
 </section>
 
-<style>
-.popup-sheet { transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
-.popup-sheet.popup-sheet-hidden { transform: translateY(110%); }
-@media (min-width: 640px) {
-  .popup-sheet.popup-sheet-hidden { transform: scale(0); }
-}
-</style>
-
 <script>
   function popup<?=$name_in_scripts?>OpenClose() {
     var popup = document.getElementById('popup<?=$name_in_scripts?>');
     var popupBg = document.getElementById('popup<?=$name_in_scripts?>Bg');
     var card = document.getElementById('popup<?=$name_in_scripts?>Card');
-    if (card) card.style.transform = ''; // reset any swipe inline transform
+    if (card) card.style.transform = '';
+    popup.style.opacity = ''; popup.style.pointerEvents = '';
     popupBg.classList.toggle('opacity-0');
     popupBg.classList.toggle('h-0');
     popup.classList.toggle('popup-sheet-hidden');
@@ -206,6 +207,7 @@
   function popup<?=$name_in_scripts?>CloseConfirm() {
     var popup = document.getElementById('popup<?=$name_in_scripts?>Close');
     var popupBg = document.getElementById('popup<?=$name_in_scripts?>CloseBg');
+    popup.style.opacity = ''; popup.style.pointerEvents = '';
     popupBg.classList.toggle('opacity-0');
     popupBg.classList.toggle('h-0');
     popup.classList.toggle('popup-sheet-hidden');
@@ -215,6 +217,7 @@
   function popup<?=$name_in_scripts?>Delete() {
     var popup = document.getElementById('popup<?=$name_in_scripts?>Delete');
     var popupBg = document.getElementById('popup<?=$name_in_scripts?>DeleteBg');
+    popup.style.opacity = ''; popup.style.pointerEvents = '';
     popupBg.classList.toggle('opacity-0');
     popupBg.classList.toggle('h-0');
     popup.classList.toggle('popup-sheet-hidden');
