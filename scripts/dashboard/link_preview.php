@@ -1,6 +1,20 @@
 <?php
 ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
 header('Content-Type: application/json');
+
+// Catch all fatal errors and return as JSON instead of 500
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    echo json_encode(['error' => "PHP error $errno: $errstr in $errfile:$errline"]);
+    exit;
+});
+register_shutdown_function(function() {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        echo json_encode(['error' => "Fatal: {$e['message']} in {$e['file']}:{$e['line']}"]);
+    }
+});
 
 include '../security_scripts.php';
 
@@ -24,6 +38,11 @@ if (!function_exists('curl_init')) {
     exit;
 }
 
+if (!class_exists('DOMDocument')) {
+    echo json_encode(['error' => 'DOMDocument not available']);
+    exit;
+}
+
 $ch = curl_init();
 curl_setopt_array($ch, [
     CURLOPT_URL            => $url,
@@ -33,23 +52,28 @@ curl_setopt_array($ch, [
     CURLOPT_TIMEOUT        => 10,
     CURLOPT_SSL_VERIFYPEER => false,
     CURLOPT_SSL_VERIFYHOST => false,
-    CURLOPT_ENCODING       => '',   // auto-decompress gzip/deflate/br
+    CURLOPT_ENCODING       => '',
     CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; LinkPreviewBot/1.0)',
     CURLOPT_HTTPHEADER     => ['Accept: text/html,application/xhtml+xml'],
 ]);
 $html = curl_exec($ch);
+$curlError = curl_error($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
-if ($html === false || $httpCode < 200 || $httpCode >= 400) {
-    echo json_encode(['error' => 'Could not fetch URL']);
+if ($html === false) {
+    echo json_encode(['error' => 'cURL failed: ' . $curlError]);
+    exit;
+}
+
+if ($httpCode < 200 || $httpCode >= 400) {
+    echo json_encode(['error' => "HTTP $httpCode from remote"]);
     exit;
 }
 
 $doc = new DOMDocument();
 libxml_use_internal_errors(true);
 $htmlChunk = substr($html, 0, 300000);
-// Prepend XML encoding declaration — avoids deprecated mb_convert_encoding('HTML-ENTITIES')
 $doc->loadHTML('<?xml encoding="UTF-8"?>' . $htmlChunk);
 libxml_clear_errors();
 
@@ -85,7 +109,6 @@ if (!$preview['title']) {
     }
 }
 
-// Fix protocol-relative and relative image URLs
 if ($preview['image']) {
     if (str_starts_with($preview['image'], '//')) {
         $preview['image'] = $scheme . ':' . $preview['image'];
@@ -94,7 +117,6 @@ if ($preview['image']) {
     }
 }
 
-// Fallback: Google favicon service
 if (!$preview['image']) {
     $preview['image']     = 'https://www.google.com/s2/favicons?domain=' . urlencode($host) . '&sz=64';
     $preview['is_favicon'] = true;
