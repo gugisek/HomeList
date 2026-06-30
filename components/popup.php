@@ -54,8 +54,11 @@
       <!-- Content — pt-[48px] absorbs the -mt-[43px] in loaded content files -->
       <div id="popupItself" class="flex-1 overflow-y-auto pt-[48px] px-5 sm:px-6 pb-6">
         <div id="pupup<?=$name_in_scripts?>Output">
-          <div class='w-full flex items-center justify-center py-10'>
-            <div class='lds-dual-ring'></div>
+          <div class="animate-pulse space-y-4 pt-2">
+            <div class="flex items-start gap-3"><div class="flex-1 space-y-2"><div class="h-6 bg-gray-200 dark:bg-white/10 rounded-xl w-3/4"></div><div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-1/3"></div></div><div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full flex-shrink-0"></div></div>
+            <div class="space-y-2 pt-1"><div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-full"></div><div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-5/6"></div><div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-2/3"></div></div>
+            <div class="h-[72px] bg-gray-200 dark:bg-white/10 rounded-2xl"></div>
+            <div class="flex gap-2 pt-1"><div class="h-10 bg-gray-200 dark:bg-white/10 rounded-2xl flex-1"></div><div class="h-10 bg-gray-200 dark:bg-white/10 rounded-2xl flex-1"></div><div class="h-10 w-10 bg-gray-200 dark:bg-white/10 rounded-2xl flex-shrink-0"></div></div>
           </div>
         </div>
       </div>
@@ -157,7 +160,26 @@
     var id_for_delete = document.getElementById('id_for_delete_<?=$name_in_scripts?>');
     if (id_for_delete) id_for_delete.value = id;
     var popupOutput = document.getElementById('pupup<?=$name_in_scripts?>Output');
-    popupOutput.innerHTML = "<div class='w-full flex items-center justify-center py-10'><div class='lds-dual-ring'></div></div>";
+    popupOutput.innerHTML = `<div class="animate-pulse space-y-4 pt-2">
+      <div class="flex items-start gap-3">
+        <div class="flex-1 space-y-2">
+          <div class="h-6 bg-gray-200 dark:bg-white/10 rounded-xl w-3/4"></div>
+          <div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-1/3"></div>
+        </div>
+        <div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full flex-shrink-0"></div>
+      </div>
+      <div class="space-y-2 pt-1">
+        <div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-full"></div>
+        <div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-5/6"></div>
+        <div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-2/3"></div>
+      </div>
+      <div class="h-[72px] bg-gray-200 dark:bg-white/10 rounded-2xl"></div>
+      <div class="flex gap-2 pt-1">
+        <div class="h-10 bg-gray-200 dark:bg-white/10 rounded-2xl flex-1"></div>
+        <div class="h-10 bg-gray-200 dark:bg-white/10 rounded-2xl flex-1"></div>
+        <div class="h-10 w-10 bg-gray-200 dark:bg-white/10 rounded-2xl flex-shrink-0"></div>
+      </div>
+    </div>`;
     popup<?=$name_in_scripts?>OpenClose();
     fetch('<?=$path?>?id=' + id)
       .then(r => r.text())

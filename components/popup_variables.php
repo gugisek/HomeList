@@ -140,7 +140,24 @@
      
 
         var popupOutput = document.getElementById("pupup<?=$name_in_scripts?>Output");
-        popupOutput.innerHTML = "<div class='w-full flex items-center justify-center z-[999]'><div class='z-[30] bg-black/90 p-4 rounded-xl'><div class='lds-dual-ring'></div></div></div>";
+        popupOutput.innerHTML = `<div class="animate-pulse space-y-4 pt-2">
+          <div class="flex items-start gap-3">
+            <div class="flex-1 space-y-2">
+              <div class="h-6 bg-gray-200 dark:bg-white/10 rounded-xl w-3/4"></div>
+              <div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-1/3"></div>
+            </div>
+            <div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full flex-shrink-0"></div>
+          </div>
+          <div class="space-y-2 pt-1">
+            <div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-full"></div>
+            <div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-5/6"></div>
+            <div class="h-4 bg-gray-200 dark:bg-white/10 rounded-lg w-2/3"></div>
+          </div>
+          <div class="flex gap-2 pt-2">
+            <div class="h-10 bg-gray-200 dark:bg-white/10 rounded-2xl flex-1"></div>
+            <div class="h-10 bg-gray-200 dark:bg-white/10 rounded-2xl flex-1"></div>
+          </div>
+        </div>`;
         popup<?=$name_in_scripts?>OpenClose();
         const url = "<?=$path?>?name="+name+"&description="+description+"&deadline="+deadline+"&id="+list_id;
         fetch(url)
