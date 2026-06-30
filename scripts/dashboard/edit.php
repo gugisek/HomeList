@@ -10,18 +10,21 @@ $element_id = $_POST['element_id'];
 $name = $_POST['name'];
 $description = $_POST['description'];
 $deadline = empty($_POST['deadline']) ? '0000-00-00 00:00:00' : $_POST['deadline'];
+$link_url = !empty($_POST['link_url']) && filter_var(trim($_POST['link_url']), FILTER_VALIDATE_URL) ? trim($_POST['link_url']) : null;
 
 
 if ($name != "" && $element_id != "") {
-    
+
     include "../conn_db.php";
         $sql_old = "SELECT * FROM list_elements WHERE id = '$element_id'";
         $result_old = mysqli_query($conn, $sql_old);
-        $row_old = mysqli_fetch_assoc($result_old);        
+        $row_old = mysqli_fetch_assoc($result_old);
 
-        if($row_old['title'] != $name || $row_old['description'] != $description || $row_old['deadline_date'] != $deadline) {
-            
-            $sql = "UPDATE list_elements SET title = '$name', description = '$description', deadline_date = '$deadline' WHERE id = '$element_id'";
+        if($row_old['title'] != $name || $row_old['description'] != $description || $row_old['deadline_date'] != $deadline || $row_old['link_url'] != $link_url) {
+
+            $link_url_escaped = $link_url ? mysqli_real_escape_string($conn, $link_url) : null;
+            $link_url_sql = $link_url_escaped ? "'$link_url_escaped'" : "NULL";
+            $sql = "UPDATE list_elements SET title = '$name', description = '$description', deadline_date = '$deadline', link_url = $link_url_sql WHERE id = '$element_id'";
             if (mysqli_query($conn, $sql)) {
                 $id = mysqli_insert_id($conn);
                 

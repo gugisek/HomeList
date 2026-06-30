@@ -61,6 +61,22 @@ if (isset($_GET['deadline'])) {
         </div>
     </div>
 
+    <div class="mt-4 flex flex-row gap-2">
+        <div class="w-full">
+        <label for="add_element_link_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Link / Załącznik
+        </label>
+        <div class="relative">
+            <input id="add_element_link_url" name="add_element_link_url" type="url" placeholder="https://..." class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 pr-10 text-sm font-medium text-gray-800 dark:text-gray-300 placeholder-gray-400">
+            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 text-gray-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                </svg>
+            </div>
+        </div>
+        </div>
+    </div>
+
     <div class="flex flex-row-reverse gap-2">
         <button onclick="<?php if($element_name == '') echo 'addElement()'; else echo 'copyElement()'; ?>" class="mt-4 active:scale-95 duration-150 flex w-full justify-center shadow-xl cursor-pointer rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ring-1 font-medium ring-green-400 duration-150 px-4 py-2 text-sm text-white items-center gap-1 shadow-sm hover:shadow-xl hover:bg-white hover:text-green-400 sm:ml-2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">

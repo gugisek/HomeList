@@ -44,6 +44,20 @@ if(mysqli_num_rows($result) > 0) {
         </div>
     </div>
 
+    <div class="mt-4 flex flex-row gap-2">
+        <div class="w-full">
+            <label for="edit_element_link_url" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-700 dark:text-gray-300">Link / Załącznik</label>
+            <div class="mt-2 relative">
+                <input name="edit_element_link_url" id="edit_element_link_url" type="url" value="<?=htmlspecialchars($row['link_url'] ?? '')?>" placeholder="https://..." class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 pr-10 text-sm text-gray-800 dark:text-gray-300 font-medium">
+                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 text-gray-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="mt-6 sm:mt-6 mb-2 flex flex-row-reverse items-center gap-2">
     <button onclick="updateElement()" class="mt-0 active:scale-95 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 ring-1 ring-green-400 font-medium duration-150 px-4 py-2 text-sm text-white items-center gap-1 shadow-sm hover:shadow-xl hover:bg-white dark:hover:bg-green-400 dark:hover:text-white hover:text-green-400">Zapisz</button>
     <button onclick="popupEditElementCloseConfirm()" type="button" class="mt-0 active:scale-95 duration-150 inline-flex w-full justify-center cursor-pointer rounded-2xl font-medium dark:ring-gray-400 ring-[#3d3d3d] ring-1 duration-150 px-4 py-2 text-sm dark:text-gray-400 text-[#3d3d3d] items-center gap-1 shadow-sm hover:shadow-xl dark:hover:bg-gray-400 hover:bg-[#3d3d3d] hover:text-white">Anuluj</button>

@@ -125,7 +125,7 @@ if ($list == "archive"){
       }
       
     }else{
-    $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, users.name, users.profile_picture FROM `list_elements` left join users on users.id=list_elements.creator_id 
+    $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, list_elements.link_url, users.name, users.profile_picture FROM `list_elements` left join users on users.id=list_elements.creator_id
             WHERE `list_id` = '$list_id' and (list_elements.status_id != 2 or (list_elements.status_id = 2 and list_elements.done_date > DATE_SUB(NOW(), INTERVAL 1 DAY)))
             ORDER BY 
             NULLIF(`deadline_date`, '0000-00-00 00:00:00') IS NULL,
@@ -138,7 +138,7 @@ if ($list == "archive"){
                     while($row = mysqli_fetch_assoc($result))
                         {
                             echo '
-                                <li onclick="openPopupDetailsElement('.$row['id'].')" class="group sm:border ';
+                                <li onclick="openPopupDetailsElement('.$row['id'].')" class="group border ';
                                         if($row['deadline_date'] != "" && $row['deadline_date'] != "0000-00-00 00:00:00"){
                                           if($row['deadline_date'] < date('Y-m-d H:i:s') && $row['status_id'] != 2){
                                             echo 'border-red-400/30';
@@ -157,7 +157,7 @@ if ($list == "archive"){
                                           else if($row['status_id'] == 3) echo 'border-sky-400/20';
                                           else echo 'border-black/10';
                                         }
-                                        echo ' relative flex my-2 py-4 items-center justify-between gap-4 sm:px-4 px-4 sm:mx-0 -mx-4 rounded-2xl bg-white/60 dark:bg-[#3a3a3a] sm:hover:shadow-md transition-all duration-200 md:hover:scale-[1.01] md:active:scale-[0.98] active:scale-[0.95] cursor-pointer">
+                                        echo ' relative flex my-1.5 py-3.5 items-center justify-between gap-4 sm:px-4 px-4 sm:mx-0 -mx-4 rounded-2xl bg-white dark:bg-[#2f2f2f] shadow-sm hover:shadow-md transition-all duration-200 md:hover:scale-[1.01] md:active:scale-[0.98] active:scale-[0.95] cursor-pointer">
                                   <div class="flex items-center gap-4 min-w-0">
                                     <div class="flex items-center justify-center h-3 min-w-3 rounded-full transition-colors ';
                                         if($row['deadline_date'] != "" && $row['deadline_date'] != "0000-00-00 00:00:00"){
@@ -215,7 +215,9 @@ if ($list == "archive"){
                                     
                                       <!-- Prawa sekcja -->
                                     <div class="flex items-center gap-3 flex-none">
-                                      <span class="px-2 py-1 flex items-center justify-center rounded-full text-xs font-medium ';
+                                      ';
+                                    if (!empty($row['link_url'])) echo '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="h-4 w-4 text-sky-400 flex-shrink-0 hidden sm:block" title="Ma dołączony link"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" /></svg>';
+                                    echo '<span class="px-2 py-1 flex items-center justify-center rounded-full text-xs font-medium ';
                                     if($row['status_id'] == 1) echo 'text-gray-500 bg-gray-100 dark:bg-black/20 dark:border-gray-600 dark:border group-hover:bg-gray-200 ';
                                     else if($row['status_id'] == 2) echo 'text-green-500 bg-green-100 dark:bg-green-400/20 dark:border-green-600 dark:border group-hover:bg-green-200 ';
                                     else if($row['status_id'] == 3) echo 'text-sky-500 bg-sky-100 dark:bg-sky-400/20 dark:border-sky-600 dark:border group-hover:bg-sky-200 ';
@@ -299,5 +301,5 @@ $name_in_scripts = 'DetailsElement';
 $delete_path = '';
 $path = 'components/panel/dashboard/element_details.php';
 $close="true";
-include "../../popup.php";
+include "../../popup_center.php";
 ?>

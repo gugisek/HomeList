@@ -10,7 +10,7 @@
             ?>
    class="z-[80] fixed scale-0 top-0 left-0 w-full h-full">
     <div class="flex flex-col gap-8 items-center justify-center w-full h-full px-2">
-      <div name="popul_l2" onclick="event.cancelBubble=true;" class="bg-white dark:bg-[#2f2f2f] shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[25px] sm:px-6 sm:py-6  -xl">
+      <div name="popul_l2" onclick="event.cancelBubble=true;" class="bg-white dark:bg-[#2f2f2f] shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[28px] sm:px-6 sm:py-6  -xl">
         <div class="w-full flex flex-row justify-end z-10">
             <button 
             <?php
@@ -39,7 +39,7 @@
   <section id="popup<?=$name_in_scripts?>Close" onclick="popup<?=$name_in_scripts?>CloseConfirm()" class="z-[90] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
     <div class="flex items-center justify-center w-full h-full px-2">
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
-        <div class="relative transform overflow-hidden rounded-[25px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+        <div class="relative transform overflow-hidden rounded-[28px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
             <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 dark:text-gray-200 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
               <span class="sr-only">Zamknij</span>
@@ -74,7 +74,7 @@
   <section id="popup<?=$name_in_scripts?>Delete" onclick="popup<?=$name_in_scripts?>Delete()" class="z-[90] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
     <div class="flex items-center justify-center w-full h-full px-2">
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
-        <div class="relative transform overflow-hidden rounded-[25px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+        <div class="relative transform overflow-hidden rounded-[28px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
             <button onclick="popup<?=$name_in_scripts?>Delete()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
               <span class="sr-only">Zamknij</span>

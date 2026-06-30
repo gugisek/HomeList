@@ -1,7 +1,7 @@
 <?php
 $id = $_GET['id'];
 include '../../../scripts/conn_db.php';
-$sql = "SELECT list_elements.title, list_elements.id, list_elements.description, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.list_id, list_elements.done_date, users.name, users.sur_name FROM list_elements left join users on users.id=list_elements.creator_id WHERE list_elements.id = $id";
+$sql = "SELECT list_elements.title, list_elements.id, list_elements.description, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.list_id, list_elements.done_date, list_elements.link_url, users.name, users.sur_name FROM list_elements left join users on users.id=list_elements.creator_id WHERE list_elements.id = $id";
 $result = mysqli_query($conn, $sql);
 if(mysqli_num_rows($result) > 0) {
     $row = mysqli_fetch_assoc($result);
@@ -25,6 +25,82 @@ if(mysqli_num_rows($result) > 0) {
     }
     ?>
     <p class="pt-4 text-wrap text-gray-800 dark:text-gray-300"><?=$row['description']?></p>
+
+    <?php if (!empty($row['link_url'])): ?>
+    <div id="link_preview_badge" class="mt-4">
+        <div class="flex items-center gap-3 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#2c2c2c] p-3 animate-pulse">
+            <div class="w-14 h-14 rounded-xl bg-gray-200 dark:bg-[#3a3a3a] flex-shrink-0"></div>
+            <div class="flex-1 space-y-2 min-w-0">
+                <div class="h-2.5 bg-gray-200 dark:bg-[#3a3a3a] rounded w-1/4"></div>
+                <div class="h-3.5 bg-gray-200 dark:bg-[#3a3a3a] rounded w-3/4"></div>
+                <div class="h-2.5 bg-gray-200 dark:bg-[#3a3a3a] rounded"></div>
+            </div>
+            <div class="w-4 h-4 bg-gray-200 dark:bg-[#3a3a3a] rounded flex-shrink-0"></div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        const linkUrl = <?=json_encode($row['link_url'])?>;
+        const badge = document.getElementById('link_preview_badge');
+
+        function esc(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function renderFallback() {
+            let hostname = linkUrl;
+            try { hostname = new URL(linkUrl).hostname; } catch(e) {}
+            badge.innerHTML = `
+                <a href="${esc(linkUrl)}" target="_blank" rel="noopener noreferrer"
+                   class="flex items-center gap-3 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#2c2c2c] p-3 hover:bg-gray-100 dark:hover:bg-[#333] transition-all duration-150 group overflow-hidden">
+                    <div class="flex items-center justify-center w-14 h-14 rounded-xl bg-gray-100 dark:bg-[#3d3d3d] flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs text-gray-400 dark:text-gray-500 truncate">${esc(hostname)}</p>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate group-hover:text-green-400 transition-colors">${esc(linkUrl)}</p>
+                    </div>
+                    <svg class="flex-shrink-0 h-4 w-4 text-gray-400 group-hover:text-green-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                </a>`;
+        }
+
+        fetch('scripts/dashboard/link_preview.php?url=' + encodeURIComponent(linkUrl))
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) { renderFallback(); return; }
+
+                const isFavicon = !!data.is_favicon;
+                const imgWrap = isFavicon
+                    ? 'flex items-center justify-center w-14 h-14 rounded-xl bg-gray-100 dark:bg-[#3d3d3d] flex-shrink-0'
+                    : 'w-14 h-14 rounded-xl overflow-hidden bg-gray-200 dark:bg-[#3d3d3d] flex-shrink-0';
+                const imgClass = isFavicon ? 'w-8 h-8 object-contain' : 'w-full h-full object-cover';
+
+                badge.innerHTML = `
+                    <a href="${esc(linkUrl)}" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center gap-3 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#2c2c2c] p-3 hover:bg-gray-100 dark:hover:bg-[#333] transition-all duration-150 group overflow-hidden">
+                        <div class="${imgWrap}">
+                            <img src="${esc(data.image)}" class="${imgClass}"
+                                 onerror="this.parentElement.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' fill=\\'none\\' viewBox=\\'0 0 24 24\\' stroke-width=\\'1.5\\' stroke=\\'currentColor\\' class=\\'size-6 text-gray-400\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' d=\\'M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244\\' /></svg>'" alt="">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">${esc(data.site_name)}</p>
+                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate group-hover:text-green-400 transition-colors">${esc(data.title || linkUrl)}</p>
+                            ${data.description ? `<p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">${esc(data.description)}</p>` : ''}
+                        </div>
+                        <svg class="flex-shrink-0 h-4 w-4 text-gray-400 group-hover:text-green-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                    </a>`;
+            })
+            .catch(() => renderFallback());
+    })();
+    </script>
+    <?php endif; ?>
+
     <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Dodano <?=date_format(date_create($row['create_date']), "H:i d.m")?> przez <?=$row['name']?> <?=$row['sur_name']?></a>
     
     <div class=" flex gap-2">
@@ -316,16 +392,31 @@ if(mysqli_num_rows($result) > 0) {
 <script>
 function toggleMenu(btn) {
     const menu = btn.parentElement.querySelector(".menu-dropdown");
+    const isHidden = menu.classList.contains("hidden");
 
-    // Toggle widoczności
-    menu.classList.toggle("hidden");
-    
-    document.addEventListener("click", function handler(e) {
-        if (!btn.parentElement.contains(e.target)) {
-            menu.classList.add("hidden");
-            document.removeEventListener("click", handler);
-        }
+    // Zamknij wszystkie otwarte menus
+    document.querySelectorAll(".menu-dropdown").forEach(m => {
+        m.classList.add("hidden");
+        m.style.cssText = "";
     });
-   
+
+    if (isHidden) {
+        const rect = btn.getBoundingClientRect();
+        menu.classList.remove("hidden");
+        // Fixed pozycjonowanie omija overflow wszystkich rodziców (scroll container, popup karta)
+        menu.style.position = "fixed";
+        menu.style.left = rect.left + "px";
+        menu.style.bottom = (window.innerHeight - rect.top) + "px";
+        menu.style.top = "auto";
+        menu.style.zIndex = "9999";
+
+        document.addEventListener("click", function handler(e) {
+            if (!btn.parentElement.contains(e.target)) {
+                menu.classList.add("hidden");
+                menu.style.cssText = "";
+                document.removeEventListener("click", handler);
+            }
+        });
+    }
 }
 </script>
