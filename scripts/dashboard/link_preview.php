@@ -30,10 +30,11 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_MAXREDIRS      => 3,
-    CURLOPT_TIMEOUT        => 8,
+    CURLOPT_TIMEOUT        => 10,
     CURLOPT_SSL_VERIFYPEER => false,
     CURLOPT_SSL_VERIFYHOST => false,
-    CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    CURLOPT_ENCODING       => '',   // auto-decompress gzip/deflate/br
+    CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; LinkPreviewBot/1.0)',
     CURLOPT_HTTPHEADER     => ['Accept: text/html,application/xhtml+xml'],
 ]);
 $html = curl_exec($ch);
@@ -47,7 +48,9 @@ if ($html === false || $httpCode < 200 || $httpCode >= 400) {
 
 $doc = new DOMDocument();
 libxml_use_internal_errors(true);
-$doc->loadHTML(mb_convert_encoding(substr($html, 0, 300000), 'HTML-ENTITIES', 'UTF-8'));
+$htmlChunk = substr($html, 0, 300000);
+// Prepend XML encoding declaration — avoids deprecated mb_convert_encoding('HTML-ENTITIES')
+$doc->loadHTML('<?xml encoding="UTF-8"?>' . $htmlChunk);
 libxml_clear_errors();
 
 $preview = [
