@@ -9,7 +9,7 @@ include '../security_scripts.php';
 $element_id = $_POST['element_id'];
 $name = $_POST['name'];
 $description = $_POST['description'];
-$deadline = empty($_POST['deadline']) ? '0000-00-00 00:00:00' : $_POST['deadline'];
+$deadline = empty($_POST['deadline']) ? null : $_POST['deadline'];
 $link_url = !empty($_POST['link_url']) && filter_var(trim($_POST['link_url']), FILTER_VALIDATE_URL) ? trim($_POST['link_url']) : null;
 
 
@@ -24,13 +24,14 @@ if ($name != "" && $element_id != "") {
 
             $link_url_escaped = $link_url ? mysqli_real_escape_string($conn, $link_url) : null;
             $link_url_sql = $link_url_escaped ? "'$link_url_escaped'" : "NULL";
-            $sql = "UPDATE list_elements SET title = '$name', description = '$description', deadline_date = '$deadline', link_url = $link_url_sql WHERE id = '$element_id'";
+            $deadline_sql = !empty($deadline) ? "'" . mysqli_real_escape_string($conn, $deadline) . "'" : "NULL";
+            $sql = "UPDATE list_elements SET title = '$name', description = '$description', deadline_date = $deadline_sql, link_url = $link_url_sql WHERE id = '$element_id'";
             if (mysqli_query($conn, $sql)) {
                 $id = mysqli_insert_id($conn);
                 
                 //log
-                $before = 'Nazwa: '.$row_old['title'].' <br/>Opis: '.$row_old['description'].' <br/>Deadline: '.$row_old['deadline_date'];
-                $after = 'Nazwa: '.$name.' <br/>Opis: '.$description.' <br/>Deadline: '.$deadline;
+                $before = 'Nazwa: '.$row_old['title'].' <br/>Opis: '.$row_old['description'].' <br/>Deadline: '.($row_old['deadline_date'] ?: 'brak');
+                $after = 'Nazwa: '.$name.' <br/>Opis: '.$description.' <br/>Deadline: '.($deadline ?: 'brak');
                 $object_id = $element_id;
                 $object_type="ListElement";
                 $action_type = '1';

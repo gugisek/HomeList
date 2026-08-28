@@ -8,7 +8,7 @@ include '../security_scripts.php';
 
 $name = $_POST['name'];
 $description = $_POST['description'];
-$deadline = empty($_POST['deadline']) ? '0000-00-00 00:00:00' : $_POST['deadline'];
+$deadline = empty($_POST['deadline']) ? null : $_POST['deadline'];
 $list = $_POST['list'];
 $link_url = !empty($_POST['link_url']) && filter_var(trim($_POST['link_url']), FILTER_VALIDATE_URL) ? trim($_POST['link_url']) : null;
 
@@ -19,15 +19,16 @@ if ($name != "" && $list != "") {
         $creator_id = $_SESSION['login_id'];
         $create_date = date('Y-m-d H:i:s');
         $link_url_escaped = $link_url ? mysqli_real_escape_string($conn, $link_url) : null;
-        //jeżeli deadline jest pusty to ustaw na poprawną datę zerową dla sql
+        //jeżeli deadline jest pusty to zapisz NULL zamiast daty zerowej
+        $deadline_sql = !empty($deadline) ? "'" . mysqli_real_escape_string($conn, $deadline) . "'" : "NULL";
 
-        $sql = "INSERT INTO list_elements (title, description, deadline_date, list_id, status_id, creator_id, create_date, link_url) VALUES ('$name', '$description', '$deadline', '$list', '1', '$creator_id', '$create_date', " . ($link_url_escaped ? "'$link_url_escaped'" : "NULL") . ")";
+        $sql = "INSERT INTO list_elements (title, description, deadline_date, list_id, status_id, creator_id, create_date, link_url) VALUES ('$name', '$description', $deadline_sql, '$list', '1', '$creator_id', '$create_date', " . ($link_url_escaped ? "'$link_url_escaped'" : "NULL") . ")";
         if (mysqli_query($conn, $sql)) {
             $id = mysqli_insert_id($conn);
             
             //log
             $before = '';
-            $after = 'Nazwa: '.$name.' <br/>Opis: '.$description.' <br/>Deadline: '.$deadline.' <br/>Lista: '.$list;
+            $after = 'Nazwa: '.$name.' <br/>Opis: '.$description.' <br/>Deadline: '.($deadline ?: 'brak').' <br/>Lista: '.$list;
             $object_id = $id;
             $object_type="ListElement";
             $action_type = '2';

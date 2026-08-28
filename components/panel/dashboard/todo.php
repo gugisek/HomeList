@@ -44,8 +44,8 @@ if ($list == "archive"){
         //warunek taki, że aby pokazywało elementy ze statusem zrobione oraz te, które mają done_date większe niż 1 dzień temu
         $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, users.name FROM `list_elements` left join users on users.id=list_elements.creator_id left join lists on lists.id=list_elements.list_id 
                 WHERE lists.owner_id = $user_id and list_elements.status_id = 2 and list_elements.done_date < DATE_SUB(NOW(), INTERVAL 1 DAY)
-                ORDER BY 
-                NULLIF(`done_date`, '0000-00-00 00:00:00') IS NULL,
+                ORDER BY
+                (`done_date` IS NULL OR `done_date` = 0),
                 `done_date` DESC,
                 `create_date` DESC
                 ";
@@ -127,8 +127,8 @@ if ($list == "archive"){
     }else{
     $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, list_elements.link_url, users.name, users.profile_picture FROM `list_elements` left join users on users.id=list_elements.creator_id
             WHERE `list_id` = '$list_id' and (list_elements.status_id != 2 or (list_elements.status_id = 2 and list_elements.done_date > DATE_SUB(NOW(), INTERVAL 1 DAY)))
-            ORDER BY 
-            NULLIF(`deadline_date`, '0000-00-00 00:00:00') IS NULL,
+            ORDER BY
+            (`deadline_date` IS NULL OR `deadline_date` = 0),
             `deadline_date` ASC,
             `create_date` ASC
             ";
