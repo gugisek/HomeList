@@ -63,6 +63,18 @@ function hl_e($s) {
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
 
+// małe litery w UTF-8 bez wymagania rozszerzenia mbstring (nie każdy serwer je ma)
+function hl_lower($s) {
+    if (function_exists('mb_strtolower')) return mb_strtolower($s, 'UTF-8');
+    return strtolower(strtr($s, ['Ą' => 'ą', 'Ć' => 'ć', 'Ę' => 'ę', 'Ł' => 'ł', 'Ń' => 'ń', 'Ó' => 'ó', 'Ś' => 'ś', 'Ź' => 'ź', 'Ż' => 'ż']));
+}
+
+// obcięcie do $len znaków UTF-8 bez wymagania mbstring
+function hl_substr($s, $len) {
+    if (function_exists('mb_substr')) return mb_substr($s, 0, $len, 'UTF-8');
+    return preg_match('/^.{0,'.(int)$len.'}/us', $s, $m) ? $m[0] : substr($s, 0, $len);
+}
+
 function hl_valid_date($s) {
     return is_string($s) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $s) && strtotime($s) !== false;
 }
@@ -107,7 +119,7 @@ function hl_relative_day($date, $today) {
 // "poniedziałek, 19 października"
 function hl_long_date($date) {
     $ts = strtotime($date);
-    $s = mb_strtolower(hl_day_name($date), 'UTF-8').', '.(int)date('j', $ts).' '.hl_month_name(date('n', $ts));
+    $s = hl_lower(hl_day_name($date)).', '.(int)date('j', $ts).' '.hl_month_name(date('n', $ts));
     if (date('Y', $ts) !== date('Y')) $s .= ' '.date('Y', $ts);
     return $s;
 }
@@ -117,7 +129,7 @@ function hl_plan_label($date, $part, $today) {
     $parts = hl_parts();
     $rel = hl_relative_day($date, $today);
     if (!in_array($rel, ['Dziś', 'Jutro', 'Wczoraj'])) {
-        $rel = mb_strtolower(hl_day_name($date, true), 'UTF-8').' '.date('d.m', strtotime($date));
+        $rel = hl_lower(hl_day_name($date, true)).' '.date('d.m', strtotime($date));
     }
     return $rel.' · '.$parts[(int)$part]['label'];
 }

@@ -44,7 +44,7 @@ $day_label = hl_relative_day($date, $today);
 if (!in_array($day_label, ['Dziś', 'Jutro', 'Wczoraj'])) $day_label .= ' '.date('d.m', strtotime($date));
 
 function backlog_row(array $row, array $parts, $show_list) {
-    echo '<div class="backlog-row flex items-center gap-2 py-2 pl-3 pr-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 duration-150" data-title="'.hl_e(mb_strtolower($row['title'].' '.$row['list_name'], 'UTF-8')).'">';
+    echo '<div class="backlog-row flex items-center gap-2 py-2 pl-3 pr-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 duration-150" data-title="'.hl_e(hl_lower($row['title'].' '.$row['list_name'])).'">';
     echo '<div class="min-w-0 flex-1"><p class="text-sm font-medium truncate">'.hl_e($row['title']).'</p>';
     $meta = [];
     if ($show_list) $meta[] = '<span class="truncate text-gray-400">'.hl_e($row['list_name']).'</span>';

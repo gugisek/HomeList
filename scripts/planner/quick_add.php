@@ -32,7 +32,7 @@ if (!$list || $list['list_type'] !== 'normal') {
     exit;
 }
 
-$title_sql = mysqli_real_escape_string($conn, mb_substr($title, 0, 500));
+$title_sql = mysqli_real_escape_string($conn, hl_substr($title, 500));
 $create_date = date('Y-m-d H:i:s');
 $sql = "INSERT INTO list_elements (title, description, deadline_date, list_id, status_id, creator_id, create_date, link_url)
         VALUES ('$title_sql', '', NULL, '$list_id', '1', '$user_id', '$create_date', NULL)";
