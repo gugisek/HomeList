@@ -16,16 +16,36 @@ $link_url = !empty($_POST['link_url']) && filter_var(trim($_POST['link_url']), F
 if ($name != "" && $element_id != "") {
 
     include "../conn_db.php";
-        $sql_old = "SELECT * FROM list_elements WHERE id = '$element_id'";
+        $sql_old = "SELECT list_elements.*, lists.list_type FROM list_elements LEFT JOIN lists ON lists.id=list_elements.list_id WHERE list_elements.id = '$element_id'";
         $result_old = mysqli_query($conn, $sql_old);
         $row_old = mysqli_fetch_assoc($result_old);
 
-        if($row_old['title'] != $name || $row_old['description'] != $description || $row_old['deadline_date'] != $deadline || $row_old['link_url'] != $link_url) {
+        // rutyna: pola powtarzania (porównanie z poprzednimi wartościami, żeby wykryć zmiany)
+        $routine_set = '';
+        $routine_changed = false;
+        if ($row_old['list_type'] === 'routine') {
+            include "../planner/planner_lib.php";
+            $routine = hl_routine_fields_from_post();
+            if (is_string($routine)) {
+                echo json_encode(['status' => 'warning', 'message' => $routine]);
+                exit;
+            }
+            if ($routine['_start'] !== null) $routine['recurrence_start'] = "'".$routine['_start']."'";
+            unset($routine['_start']);
+            foreach ($routine as $col => $val) {
+                $routine_set .= ", $col = $val";
+                $new = $val === 'NULL' ? null : trim($val, "'");
+                if ((string)$row_old[$col] !== (string)$new) $routine_changed = true;
+            }
+            $deadline = $row_old['deadline_date'];
+        }
+
+        if($row_old['title'] != $name || $row_old['description'] != $description || $row_old['deadline_date'] != $deadline || $row_old['link_url'] != $link_url || $routine_changed) {
 
             $link_url_escaped = $link_url ? mysqli_real_escape_string($conn, $link_url) : null;
             $link_url_sql = $link_url_escaped ? "'$link_url_escaped'" : "NULL";
             $deadline_sql = !empty($deadline) ? "'" . mysqli_real_escape_string($conn, $deadline) . "'" : "NULL";
-            $sql = "UPDATE list_elements SET title = '$name', description = '$description', deadline_date = $deadline_sql, link_url = $link_url_sql WHERE id = '$element_id'";
+            $sql = "UPDATE list_elements SET title = '$name', description = '$description', deadline_date = $deadline_sql, link_url = $link_url_sql$routine_set WHERE id = '$element_id'";
             if (mysqli_query($conn, $sql)) {
                 $id = mysqli_insert_id($conn);
                 

@@ -19,13 +19,17 @@ if (isset($_GET['deadline'])) {
     $element_deadline = '';
 }
 
+include '../../../scripts/conn_db.php';
+include '../../../scripts/planner/planner_lib.php';
+$list_type_row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT list_type FROM lists WHERE id = '".(int)$list_name."'"));
+$is_routine = $list_type_row && $list_type_row['list_type'] === 'routine';
 
 ?>
 <div id="add_element_loading"></div>
 <section class="font-[poppins] p-1">
     <input type="hidden" id="add_element_list_name" value="<?=$list_name?>">
     <div class="-mt-[45px] flex items-center justify-between">
-        <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Dodaj zadanie</h1>
+        <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-200"><?=$is_routine ? 'Dodaj rutynę' : 'Dodaj zadanie'?></h1>
         <a class="flex items-center z-10 gap-2 hover:bg-green-400 dark:bg-green-400/20 cursor-pointer rounded-xl mr-9 p-1 px-3 ring-1 ring-green-400 text-green-400 hover:text-white duration-150 text-xs" onclick="addElement()">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -43,6 +47,9 @@ if (isset($_GET['deadline'])) {
         </div>
     </div>
 
+    <?php if ($is_routine): ?>
+    <?php $rf_prefix = 'add'; $rf = []; include 'routine_fields.php'; ?>
+    <?php else: ?>
     <div class="mt-4 flex md:flex-row flex-col gap-2">
         <div class="w-full">
         <label for="add_element_deadline" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -51,6 +58,7 @@ if (isset($_GET['deadline'])) {
         <input id="add_element_deadline" name="add_element_deadline" type="datetime-local" value="<?=$element_deadline?>" class="w-full cursor-pointer rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] dark:focus:bg-[#3d3d3d] focus:bg-white focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300">
         </div>
     </div>
+    <?php endif; ?>
 
     <div class="mt-4 flex flex-row gap-2">
         <div class="w-full">

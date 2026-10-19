@@ -7,6 +7,7 @@ header('Content-Type: application/json'); // Nagłówek JSON
 include '../security_scripts.php';
 
 $name = $_POST['name'];
+$list_type = (isset($_POST['type']) && $_POST['type'] === 'routine') ? 'routine' : 'normal';
 
 if ($name != "") {
     
@@ -24,13 +25,13 @@ if ($name != "") {
             $list_code = substr(str_shuffle(str_repeat("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 6)), 0, 6);
         }
         
-        $sql = "INSERT INTO lists (name, full_name, owner_id, list_code) VALUES ('$name', '$name', '$owner_id', '$list_code')";
+        $sql = "INSERT INTO lists (name, full_name, owner_id, list_code, list_type) VALUES ('$name', '$name', '$owner_id', '$list_code', '$list_type')";
         if (mysqli_query($conn, $sql)) {
             $id = mysqli_insert_id($conn);
             
             //log
             $before = '';
-            $after = 'Nazwa: '.$name.' <br/>Owner: '.$owner_id.' <br/>Kod: '.$list_code;
+            $after = 'Nazwa: '.$name.' <br/>Owner: '.$owner_id.' <br/>Kod: '.$list_code.' <br/>Typ: '.$list_type;
             $object_id = $id;
             $object_type="List";
             $action_type = '2';

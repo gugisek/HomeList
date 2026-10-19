@@ -1,6 +1,7 @@
 <?php
 $list = $_GET['list'];
 include '../../../scripts/conn_db.php';
+$list_type = 'normal';
 if ($list == "archive"){
   $list_full_name = "Archiwum";
   $list_id = 0;
@@ -14,6 +15,7 @@ if ($list == "archive"){
           $list_id = $row['id'];
           $list_name = $row['name'];
           $list_full_name = $row['full_name'];
+          $list_type = $row['list_type'];
       }
   else {
       echo 'Błąd listy';
@@ -24,6 +26,12 @@ if ($list == "archive"){
     <div class="flex items-center justify-between">
         <div class="text-gray-400">
             <span class="font-medium text-2xl text-black dark:text-white font-[poppins]"><?=$list_full_name?></span>
+            <?php if ($list_type == 'routine'): ?>
+            <span class="ml-1 align-middle inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-orange-500 bg-orange-100 dark:text-orange-400 dark:bg-orange-400/15">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                Rutyny
+            </span>
+            <?php endif; ?>
         </div>
         <div onclick="openPopupElementAdd('<?=$list_id?>')"  class="<?php if($list == "archive"){echo 'hidden ';}?> hover:text-white hover:bg-green-400 dark:text-white hover:shadow-xl shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
@@ -124,7 +132,15 @@ if ($list == "archive"){
   
       }
       
+    }else if($list_type == "routine"){
+      include 'routines_body.php';
     }else{
+    // plan dnia zalogowanego użytkownika dla zadań z tej listy
+    include_once '../../../scripts/planner/planner_lib.php';
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    $plans = [];
+    $plan_result = mysqli_query($conn, "SELECT day_plan.element_id, day_plan.plan_date, day_plan.day_part FROM day_plan JOIN list_elements ON list_elements.id=day_plan.element_id WHERE day_plan.user_id = '".(int)$_SESSION['login_id']."' AND list_elements.list_id = '".(int)$list_id."'");
+    while ($plan_row = mysqli_fetch_assoc($plan_result)) $plans[(int)$plan_row['element_id']] = $plan_row;
     $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, list_elements.link_url, users.name, users.profile_picture FROM `list_elements` left join users on users.id=list_elements.creator_id
             WHERE `list_id` = '$list_id' and (list_elements.status_id != 2 or (list_elements.status_id = 2 and list_elements.done_date > DATE_SUB(NOW(), INTERVAL 1 DAY)))
             ORDER BY
@@ -208,7 +224,13 @@ if ($list == "archive"){
                                           echo '">Deadline '.date_format(date_create($row['deadline_date']), "H:i d.m").'</p>';
                                         }else{
                                           echo '<p class="whitespace-nowrap">'.date_format(date_create($row['create_date']), "H:i d.m").'</p>';
-                                        }echo '
+                                        }
+                                        if (isset($plans[(int)$row['id']]) && $row['status_id'] != 2) {
+                                          $p = $plans[(int)$row['id']];
+                                          echo '<svg viewBox="0 0 2 2" class="h-0.5 w-0.5 fill-gray-300"><circle cx="1" cy="1" r="1" /></svg>
+                                                <p class="flex items-center gap-1 whitespace-nowrap '.($p['plan_date'] < date('Y-m-d') ? 'text-amber-500' : 'text-green-500').'">'.hl_icon('calendar', 'size-3.5').hl_plan_label($p['plan_date'], $p['day_part'], date('Y-m-d')).'</p>';
+                                        }
+                                        echo '
                                       </div>
                                     </div>
                                   </div>
@@ -298,6 +320,7 @@ function toggleAccordion(id, button) {
 
 <?php 
 $name_in_scripts = 'DetailsElement';
+$delete_v2 = '';
 $delete_path = '';
 $path = 'components/panel/dashboard/element_details.php';
 $close="true";

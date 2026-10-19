@@ -22,7 +22,25 @@ if ($name != "" && $list != "") {
         //jeżeli deadline jest pusty to zapisz NULL zamiast daty zerowej
         $deadline_sql = !empty($deadline) ? "'" . mysqli_real_escape_string($conn, $deadline) . "'" : "NULL";
 
-        $sql = "INSERT INTO list_elements (title, description, deadline_date, list_id, status_id, creator_id, create_date, link_url) VALUES ('$name', '$description', $deadline_sql, '$list', '1', '$creator_id', '$create_date', " . ($link_url_escaped ? "'$link_url_escaped'" : "NULL") . ")";
+        // lista rutyn: dodatkowe pola powtarzania, bez deadline'u
+        include "../planner/planner_lib.php";
+        $list_type_row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT list_type FROM lists WHERE id = '".(int)$list."'"));
+        $routine_cols = '';
+        $routine_vals = '';
+        if ($list_type_row && $list_type_row['list_type'] === 'routine') {
+            $routine = hl_routine_fields_from_post();
+            if (is_string($routine)) {
+                echo json_encode(['status' => 'warning', 'message' => $routine]);
+                exit;
+            }
+            $routine['recurrence_start'] = "'".($routine['_start'] ?? date('Y-m-d'))."'";
+            unset($routine['_start']);
+            $deadline_sql = "NULL";
+            $routine_cols = ', '.implode(', ', array_keys($routine));
+            $routine_vals = ', '.implode(', ', $routine);
+        }
+
+        $sql = "INSERT INTO list_elements (title, description, deadline_date, list_id, status_id, creator_id, create_date, link_url$routine_cols) VALUES ('$name', '$description', $deadline_sql, '$list', '1', '$creator_id', '$create_date', " . ($link_url_escaped ? "'$link_url_escaped'" : "NULL") . "$routine_vals)";
         if (mysqli_query($conn, $sql)) {
             $id = mysqli_insert_id($conn);
             

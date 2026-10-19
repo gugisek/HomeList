@@ -6,108 +6,7 @@ session_start();
 </section>
 <section onclick="moreMenu()" id="more_menu_bg" class="bg-black/40 z-[2] fixed top-0 left-0 h-screen w-screen hidden duration-150"></section>
 <div id="lists" class="flex items-center justify-center z-50">
-<section class="bg-[#1c1c1e]/95 dark:bg-[#111]/95 backdrop-blur-md font-[poppins] z-[49] xs:scale-100 scale-90 text-white rounded-2xl fixed sm:bottom-8 bottom-4 flex items-center justify-center shadow-2xl shadow-black/60 ring-1 ring-white/[0.07]">
-    <section id="more_menu" class="min-w-[200px] absolute bottom-14 z-[49] scale-y-0 w-full flex flex-col gap-2 duration-150">
-        <?php
-        include '../../../scripts/conn_db.php';
-        $user_id = $_SESSION['login_id'];
-        $sql = "SELECT lists.id, lists.name, lists.full_name FROM `lists` left join list_invities on list_invities.list_id=lists.id where lists.owner_id='$user_id' or list_invities.user_id='$user_id' ORDER BY lists.id asc;";
-        $result = mysqli_query($conn, $sql);
-            if(mysqli_num_rows($result) > 0)
-                 {
-                    $i = 0;
-                    $ilosc = mysqli_num_rows($result);
-                    echo '<div id="more_nav_body" class="max-h-[60vh] overflow-y-auto overflow-x-hidden ';
-                    if ($ilosc <= 3) {
-                        echo 'hidden';
-                    }
-                    echo ' bg-white/[0.97] dark:bg-[#1e1e1e]/[0.97] backdrop-blur-xl rounded-2xl py-2 shadow-2xl shadow-black/20 ring-1 ring-black/[0.06] dark:ring-white/[0.06]">';
-                    while($row = mysqli_fetch_assoc($result)) {
-                        echo '<a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="lists_main_nav list_'.$row['id'].' flex items-center gap-2.5 py-2.5 px-4 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl ';
-                        if ($i <= 2) {
-                            echo 'hidden';
-                        }
-                            echo '">
-                                    <span>'.$row['full_name'].'</span>
-                             </a>';
-                        $i++;
-                    }
-                    echo '</div>';
-                }
-        ?>
-        <div class="bg-white/[0.97] dark:bg-[#1e1e1e]/[0.97] backdrop-blur-xl rounded-2xl py-2 shadow-2xl shadow-black/20 ring-1 ring-black/[0.06] dark:ring-white/[0.06]">
-            <a onclick="moreMenuClose();openPopupAddLists();" class="flex gap-2 py-2.5 px-5 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                </svg>
-                <span>Utwórz nową listę</span>
-            </a>
-            <a onclick="moreMenuClose();openPopupCodeLists();" class="flex gap-2 py-2.5 px-5 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5" />
-                </svg>
-                <span>Wprowadź kod listy</span>
-            </a>
-            <a onclick="openPopupEditLists()" class="flex gap-2 py-2.5 px-5 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                </svg>
-                <span>Edytuj listy</span>
-            </a>
-            <a onclick="moreMenuClose();openDetailTab(`todo`,`list=archive`)" id="nav_button_details" class="archive flex gap-2 py-2.5 px-5 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-                </svg>
-                <span>Archiwum</span>
-            </a>
-            <a onclick="moreMenuClose();openDetailTab(`settings_app`,`list=settings`)" id="nav_button_details" class="flex gap-2 py-2.5 px-5 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                </svg>
-
-                <span>Ustawienia</span>
-            </a>
-            <a onclick="moreMenu()" class="flex gap-2 py-2.5 px-5 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-                <span>Zamknij</span>
-            </a>
-        </div>
-        
-    </section>
-    <div id="todo-nav" class="contents">
-
-    
-    <?php
-    include '../../../scripts/conn_db.php';
-    $user_id = $_SESSION['login_id'];
-    $sql = "SELECT lists.id, lists.name, lists.full_name FROM `lists` left join list_invities on list_invities.list_id=lists.id where lists.owner_id='$user_id' or list_invities.user_id='$user_id' ORDER BY lists.id asc;";
-    $result = mysqli_query($conn, $sql);
-        if(mysqli_num_rows($result) > 0)
-             {
-                $i = 0;
-                
-                while($row = mysqli_fetch_assoc($result)) {
-                    echo '
-                        <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="lists_main_nav list_'.$row['id'].' inline-block hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-5 py-3 hover:bg-white/10 text-white/75 hover:text-white duration-150 rounded-xl text-sm font-medium ';
-                    if ($i > 2) {
-                        echo 'hidden';
-                    }
-                        echo '">'.$row['full_name'].'</a>';
-                    $i++;
-                }
-                }
-    ?>
-    </div>
-    <a onclick="moreMenu()" id="nav_button_details" class="rounded-r-2xl hover:scale-105 cursor-pointer active:scale-95 focus:scale-95 px-5 py-3 hover:bg-white/10 text-white/50 hover:text-white duration-150">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-        </svg>
-
-    </a>
-    </section>
+<?php include '../dashboard/lists.php'; ?>
 </div>
 <input type="hidden" id="list_hold">
 
@@ -199,45 +98,26 @@ fixRoundedCorners();
 <script>
     
     function openFirstList() {
-    const container = document.getElementById("todo-nav");
-    const savedOrder = JSON.parse(localStorage.getItem(storageKey));
+    // Po wejściu do aplikacji startujemy od planu dnia, przy przeładowaniu panelu w tej samej sesji wracamy do ostatniej zakładki
+    var started = null;
+    try { started = sessionStorage.getItem("hl_started"); } catch (e) {}
+    try { sessionStorage.setItem("hl_started", "1"); } catch (e) {}
 
     var current_todo = localStorage.getItem("current_todo");
-
-    let firstListId;
-
-    if (savedOrder && Array.isArray(savedOrder) && savedOrder.length > 0) {
-        // Kolejność z localStorage
-        firstListId = savedOrder[0];
+    if (!started || current_todo === null) {
+        openDetailTab('today', 'list=today');
     } else {
-        // Brak zapisanej kolejności – bierzemy pierwszą listę z DOM
-        const firstElement = container.querySelector("a[class*='list_']");
-        if (firstElement) {
-            const match = firstElement.className.match(/list_(\d+)/);
-            if (match) {
-                firstListId = match[1];
-            }
-        }
-    }
-
-    if (firstListId) {
-        if(localStorage.getItem("current_todo") === null){
-            if(current_todo === "list=settings"){
-                openDetailTab('settings_app', 'list=settings');
-            }else{
-                openDetailTab('todo', 'list=' + firstListId);
-            }
-        }else{
-            if(current_todo === "list=settings"){
-                openDetailTab('settings_app', 'list=settings');
-            }else{
-                openDetailTabReload();
-                console.log(firstListId);
-            }
-        }
+        openDetailTabReload();
     }
 }
 
+    // która strona z components/panel/dashboard obsługuje dany link zakładki
+    function tabSiteFor(link) {
+        var list = new URLSearchParams(link).get('list');
+        if (list === 'today') return 'today';
+        if (list === 'settings') return 'settings_app';
+        return 'todo';
+    }
 
     openFirstList();
 
@@ -253,7 +133,8 @@ fixRoundedCorners();
             var body_scroll = document.getElementsByTagName("html")[0];
         }
 
-    document.getElementById("list_hold").value = link.split('=')[1];
+    var tab_list = new URLSearchParams(link).get('list');
+    document.getElementById("list_hold").value = tab_list;
     var body = document.getElementById("dashboard_body");
     body.innerHTML = "<div data-aos='fade-up' data-aos-delay='100' class='w-full duartion-150 flex items-center mt-[20vh] justify-center z-[999]'><div class='z-[30] bg-black/90 p-4 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
     const url = "components/panel/dashboard/" + site + ".php?" + link;
@@ -281,7 +162,7 @@ fixRoundedCorners();
       removeButtons[i].classList.remove("bg-white/15");
         removeButtons[i].classList.remove("text-green-400");
     }
-    var activeButtons = document.querySelectorAll(".list_" + link.split('=')[1]);
+    var activeButtons = document.querySelectorAll(".lists_main_nav.list_" + tab_list);
     for(var i = 0; i < activeButtons.length; i++) {
       activeButtons[i].classList.add("bg-white/15");
         activeButtons[i].classList.add("text-green-400");
@@ -309,12 +190,89 @@ fixRoundedCorners();
     function openDetailTabReload() {
     var current_todo = localStorage.getItem("current_todo");
     if (current_todo) {
-        openDetailTab('todo', current_todo);
-        
+        // plan dnia zawsze otwieramy na dziś, a nie na dzień oglądany ostatnio
+        if (tabSiteFor(current_todo) === 'today') current_todo = 'list=today';
+        openDetailTab(tabSiteFor(current_todo), current_todo);
     }
 }
 
-    
+    // odświeżenie bieżącej zakładki (lista / plan dnia / ustawienia)
+    function refreshCurrentTab(restore_scroll = null) {
+        var link = localStorage.getItem("current_todo") || 'list=today';
+        if (tabSiteFor(link) === 'today') {
+            reloadTabSilently();
+        } else {
+            openDetailTab(tabSiteFor(link), link, restore_scroll);
+        }
+    }
+
+    // przeładowanie zakładki bez spinnera i animacji, z zachowaniem scrolla
+    function reloadTabSilently() {
+        var link = localStorage.getItem("current_todo") || 'list=today';
+        var body = document.getElementById("dashboard_body");
+        var html = document.getElementsByTagName("html")[0];
+        var scroll = html.scrollTop;
+        return fetch("components/panel/dashboard/" + tabSiteFor(link) + ".php?" + link)
+            .then(response => response.text())
+            .then(data => {
+                var parsedDocument = new DOMParser().parseFromString(data, "text/html");
+                parsedDocument.querySelectorAll("[data-aos]").forEach(el => el.removeAttribute("data-aos"));
+                body.innerHTML = parsedDocument.body.innerHTML;
+                document.querySelectorAll(".popup-script").forEach(script => script.remove());
+                parsedDocument.querySelectorAll("script").forEach(script => {
+                    var scriptElement = document.createElement("script");
+                    scriptElement.textContent = script.textContent;
+                    scriptElement.classList.add("popup-script");
+                    document.body.appendChild(scriptElement);
+                });
+                html.scrollTop = scroll;
+            });
+    }
+
+    // kilka szybkich zmian (np. planowanie z backlogu) = jedno przeładowanie
+    function hlDebouncedReload() {
+        clearTimeout(window.hlReloadTimer);
+        window.hlReloadTimer = setTimeout(reloadTabSilently, 900);
+    }
+
+    // POST + parsowanie odpowiedzi (może zawierać kilka sklejonych JSON-ów)
+    function hlPost(url, data) {
+        return fetch(url, { method: 'POST', body: data })
+            .then(response => response.text())
+            .then(text => text.trim().split(/(?<=\})\s*(?=\{)/).map(jsonString => {
+                try {
+                    return JSON.parse(jsonString);
+                } catch (e) {
+                    console.error('Błąd parsowania JSON:', e, 'Fragment:', jsonString);
+                    return null;
+                }
+            }).filter(obj => obj !== null));
+    }
+
+    function hlEnsureSortable(callback) {
+        if (typeof Sortable !== 'undefined') {
+            callback();
+            return;
+        }
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js';
+        s.onload = callback;
+        document.head.appendChild(s);
+    }
+
+    // przełączniki (chipy) – te same klasy co hl_chip_class() w planner_lib.php
+    var HL_CHIP_ON = ['bg-[#1c1c1e]', 'text-white', 'dark:bg-white', 'dark:text-black', 'shadow-lg'];
+    var HL_CHIP_OFF = ['bg-gray-100/80', 'dark:bg-[#3d3d3d]', 'text-gray-700', 'dark:text-gray-300'];
+    function hlChip(el, on) {
+        el.classList.remove(...(on ? HL_CHIP_OFF : HL_CHIP_ON));
+        el.classList.add(...(on ? HL_CHIP_ON : HL_CHIP_OFF));
+        el.dataset.on = on ? '1' : '0';
+    }
+    function hlChipSelect(el) {
+        el.parentElement.querySelectorAll('.hl-chip').forEach(c => hlChip(c, c === el));
+    }
+
+
 
 </script>
 <script>
@@ -323,7 +281,7 @@ fixRoundedCorners();
     var element_id = document.getElementById('edit_element_id').value;
     var name = document.getElementById('edit_element_name').value;
     var description = document.getElementById('edit_element_description').value;
-    var deadline = document.getElementById('edit_element_deadline').value;
+    var deadline = document.getElementById('edit_element_deadline') ? document.getElementById('edit_element_deadline').value : '';
     var link_url = document.getElementById('edit_element_link_url') ? document.getElementById('edit_element_link_url').value : '';
     const postData = new FormData();
     postData.append('element_id', element_id);
@@ -331,6 +289,14 @@ fixRoundedCorners();
     postData.append('description', description);
     postData.append('deadline', deadline);
     postData.append('link_url', link_url);
+    // pola rutyny (tylko w formularzu listy rutyn)
+    if (document.getElementById('edit_element_recurrence_type')) {
+        var routine_error = rfCollect('edit', postData);
+        if (routine_error) {
+            showAlert('warning', routine_error);
+            return;
+        }
+    }
 
     // Pokazanie kółka ładowania
     var delivery_loading = document.getElementById('edit_element_loading');
@@ -366,7 +332,7 @@ fixRoundedCorners();
                         if(i==1){
                           var list = document.getElementById("list_hold").value;
                           popupEditElementOpenClose();
-                          openDetailTab('todo', 'list='+list);
+                          refreshCurrentTab();
                         }
                         break;
                     case 'error':
@@ -435,7 +401,7 @@ function moveElement() {
                         if(i==1){
                           var list = document.getElementById("list_hold").value;
                           popupMoveElementOpenClose();
-                          openDetailTab('todo', 'list='+list);
+                          refreshCurrentTab();
                         }
                         break;
                     case 'error':
@@ -493,9 +459,11 @@ function moveElement() {
     function addList() {
     // Pobranie danych z pól formularza
     var name = document.getElementById('add_list_name').value;
+    var type = document.getElementById('add_list_type') ? document.getElementById('add_list_type').value : 'normal';
 
     const postData = new FormData();
     postData.append('name', name);
+    postData.append('type', type);
 
     // Pokazanie kółka ładowania
     var delivery_loading = document.getElementById('add_list_loading');
@@ -636,7 +604,7 @@ function codeList() {
     // Pobranie danych z pól formularza
     var name = document.getElementById('add_element_name').value;
     var description = document.getElementById('add_element_description').value;
-    var deadline = document.getElementById('add_element_deadline').value;
+    var deadline = document.getElementById('add_element_deadline') ? document.getElementById('add_element_deadline').value : '';
     var list = document.getElementById('add_element_list_name').value;
     var link_url = document.getElementById('add_element_link_url') ? document.getElementById('add_element_link_url').value : '';
     const postData = new FormData();
@@ -645,6 +613,14 @@ function codeList() {
     postData.append('deadline', deadline);
     postData.append('list', list);
     postData.append('link_url', link_url);
+    // pola rutyny (tylko w formularzu listy rutyn)
+    if (document.getElementById('add_element_recurrence_type')) {
+        var routine_error = rfCollect('add', postData);
+        if (routine_error) {
+            showAlert('warning', routine_error);
+            return;
+        }
+    }
 
     // Pokazanie kółka ładowania
     var delivery_loading = document.getElementById('add_element_loading');
@@ -680,7 +656,7 @@ function codeList() {
                         if(i==1){
                           var list = document.getElementById("list_hold").value;
                           popupElementAddOpenClose();
-                          openDetailTab('todo', 'list='+list);
+                          refreshCurrentTab();
                         }
                         break;
                     case 'error':
@@ -754,7 +730,7 @@ function copyElement() {
                         if(i==1){
                           var list = document.getElementById("list_hold").value;
                           popupCopyElementOpenClose();
-                          openDetailTab('todo', 'list='+list);
+                          refreshCurrentTab();
                         }
                         break;
                     case 'error':
@@ -824,7 +800,7 @@ function copyElement() {
                           var list = document.getElementById("list_hold").value;
                           popupEditElementOpenClose();
                           popupEditElementDelete()
-                          openDetailTab('todo', 'list='+list);
+                          refreshCurrentTab();
                         }
                         break;
                     case 'error':
@@ -934,6 +910,7 @@ function updateListName() {
 <?php 
 $name_in_scripts = 'ElementAdd';
 $delete_path = '';
+$delete_v2 = '';
 $path = 'components/panel/dashboard/element_add.php';
 $docs_text = '';
 $docs_path = '';
@@ -994,7 +971,43 @@ $close="true";
 include "../../popup.php";
 ?>
 
-<?php 
+<?php
+$name_in_scripts = 'PlanSheet';
+$delete_path = '';
+$delete_v2 = '';
+$path = 'components/panel/dashboard/plan_sheet.php';
+$close = "true";
+include "../../popup_center.php";
+?>
+
+<?php
+$name_in_scripts = 'Backlog';
+$delete_path = '';
+$delete_v2 = '';
+$path = 'components/panel/dashboard/backlog.php';
+$close = "true";
+include "../../popup_center.php";
+?>
+
+<?php
+$name_in_scripts = 'Month';
+$delete_path = '';
+$delete_v2 = '';
+$path = 'components/panel/dashboard/month.php';
+$close = "true";
+include "../../popup_center.php";
+?>
+
+<?php
+$name_in_scripts = 'TodayAdd';
+$delete_path = '';
+$delete_v2 = '';
+$path = 'components/panel/dashboard/today_add.php';
+$close = "true";
+include "../../popup_center.php";
+?>
+
+<?php
 $name_in_scripts = 'InfoLists';
 $delete_path = 'scripts/dashboard/list_delete.php';
 $delete_v2 = 'true';

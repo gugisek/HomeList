@@ -1,10 +1,20 @@
 <?php
 $id = $_GET['id'];
 include '../../../scripts/conn_db.php';
-$sql = "SELECT list_elements.title, list_elements.id, list_elements.description, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.list_id, list_elements.done_date, list_elements.link_url, users.name, users.sur_name FROM list_elements left join users on users.id=list_elements.creator_id WHERE list_elements.id = $id";
+include '../../../scripts/planner/planner_lib.php';
+$sql = "SELECT list_elements.*, lists.list_type, lists.full_name AS list_name, users.name, users.sur_name FROM list_elements left join users on users.id=list_elements.creator_id left join lists on lists.id=list_elements.list_id WHERE list_elements.id = $id";
 $result = mysqli_query($conn, $sql);
 if(mysqli_num_rows($result) > 0) {
     $row = mysqli_fetch_assoc($result);
+
+    // rutyny mają własny widok szczegółów
+    if ($row['list_type'] === 'routine') {
+        include 'routine_details.php';
+        exit;
+    }
+    // plan dnia zalogowanego użytkownika dla tego zadania
+    session_start();
+    $plan_row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT plan_date, day_part FROM day_plan WHERE user_id = '".(int)$_SESSION['login_id']."' AND element_id = '".(int)$row['id']."' LIMIT 1"));
 
     //zmienie description aby działały entery z bazy danych
     $row['description'] = str_replace("\n", "<br>", $row['description']);
@@ -101,8 +111,19 @@ if(mysqli_num_rows($result) > 0) {
     </script>
     <?php endif; ?>
 
+    <?php if ((int)$row['status_id'] !== 2 || $plan_row): ?>
+    <button type="button" onclick="popupDetailsElementOpenClose(); openPopupPlanSheet('<?=$row['id']?>')" class="mt-5 w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left duration-150 active:scale-[0.98] <?=$plan_row ? 'bg-green-400/10 ring-1 ring-green-400/30 hover:bg-green-400/20' : 'bg-gray-100/80 dark:bg-[#2c2c2c] hover:bg-gray-200/80 dark:hover:bg-[#333]'?>">
+        <span class="flex h-9 w-9 flex-none items-center justify-center rounded-xl <?=$plan_row ? 'bg-green-400 text-white' : 'bg-white dark:bg-[#3d3d3d] text-gray-500 dark:text-gray-300'?>"><?=hl_icon('calendar', 'size-5')?></span>
+        <span class="min-w-0 flex-1">
+            <span class="block text-sm font-medium text-gray-800 dark:text-gray-200"><?=$plan_row ? 'Zaplanowane' : 'Zaplanuj'?></span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400 truncate"><?=$plan_row ? hl_plan_label($plan_row['plan_date'], $plan_row['day_part'], date('Y-m-d')) : 'Dodaj do planu dnia na wybraną porę'?></span>
+        </span>
+        <span class="text-gray-400"><?=hl_icon('right', 'size-4', '2')?></span>
+    </button>
+    <?php endif; ?>
+
     <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Dodano <?=date_format(date_create($row['create_date']), "H:i d.m")?> przez <?=$row['name']?> <?=$row['sur_name']?></a>
-    
+
     <div class=" flex gap-2">
             <?php
 
@@ -358,9 +379,8 @@ if(mysqli_num_rows($result) > 0) {
                     case 'success':
                         showAlert('success', data.message);
                         if(i==1){
-                          var list = document.getElementById("list_hold").value;
                           popupDetailsElementOpenClose();
-                          openDetailTab('todo', 'list='+list, 'restore_scroll');
+                          refreshCurrentTab('restore_scroll');
                         }
                         break;
                     case 'error':

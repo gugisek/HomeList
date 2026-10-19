@@ -18,7 +18,10 @@ if ($id != "" && $delete == "true") {
         $row_old = mysqli_fetch_assoc($result_old);
         $sql = "DELETE FROM list_elements WHERE id = '$id'";
         if (mysqli_query($conn, $sql)) {
-            
+            // plan dnia i odhaczenia rutyn usuniętego elementu
+            mysqli_query($conn, "DELETE FROM day_plan WHERE element_id = '".(int)$id."'");
+            mysqli_query($conn, "DELETE FROM routine_done WHERE element_id = '".(int)$id."'");
+
             //log
             $before = 'Nazwa: '.$row_old['title'].' <br/>Opis: '.$row_old['description'].' <br/>Deadline: '.$row_old['deadline_date'].' <br/>Lista: '.$row_old['list_id'];
             $after = '';

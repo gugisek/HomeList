@@ -1,7 +1,8 @@
 <?php
 $element_id = $_GET['id'];
-$sql = "SELECT * FROM list_elements WHERE id = '$element_id'";
+$sql = "SELECT list_elements.*, lists.list_type FROM list_elements LEFT JOIN lists ON lists.id=list_elements.list_id WHERE list_elements.id = '$element_id'";
 include '../../../scripts/conn_db.php';
+include '../../../scripts/planner/planner_lib.php';
 $result = mysqli_query($conn, $sql);
 if(mysqli_num_rows($result) > 0) {
     $row = mysqli_fetch_assoc($result);
@@ -14,7 +15,7 @@ if(mysqli_num_rows($result) > 0) {
 <section class="font-[poppins] p-1 text-gray-800 dark:text-gray-200">
     <input type="hidden" id="edit_element_id" value="<?=$row['id']?>">
     <div class="-mt-10">
-        <h1 class="text-lg font-semibold font-[poppins] text-gray-800 dark:text-gray-200">Edytuj zadanie</h1>
+        <h1 class="text-lg font-semibold font-[poppins] text-gray-800 dark:text-gray-200"><?=$row['list_type'] === 'routine' ? 'Edytuj rutynę' : 'Edytuj zadanie'?></h1>
     </div>
 
     <div class="mt-4 flex md:flex-row flex-col gap-2">
@@ -26,6 +27,9 @@ if(mysqli_num_rows($result) > 0) {
         </div>
     </div>
 
+    <?php if ($row['list_type'] === 'routine'): ?>
+    <?php $rf_prefix = 'edit'; $rf = $row; include 'routine_fields.php'; ?>
+    <?php else: ?>
     <div class="mt-4 flex md:flex-row flex-col gap-2">
         <div class="w-full">
             <label for="edit_element_deadline" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-700 dark:text-gray-300">Deadline</label>
@@ -34,6 +38,7 @@ if(mysqli_num_rows($result) > 0) {
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <div class="mt-4 flex flex-row gap-2">
         <div class="w-full">
