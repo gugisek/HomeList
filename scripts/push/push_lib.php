@@ -62,22 +62,40 @@ function hl_vapid_header($endpoint) {
 
 // wysyła pusty push, zwraca kod HTTP (201 = OK, 404/410 = subskrypcja wygasła)
 function hl_push_send($endpoint, $ttl = 4 * 3600) {
-    $ch = curl_init($endpoint);
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => '',
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 10,
-        CURLOPT_HTTPHEADER => [
-            'Authorization: '.hl_vapid_header($endpoint),
-            'TTL: '.$ttl,
-            'Urgency: normal',
-            'Content-Length: 0',
-        ],
-    ]);
-    curl_exec($ch);
-    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    return $code;
+    $headers = [
+        'Authorization: '.hl_vapid_header($endpoint),
+        'TTL: '.$ttl,
+        'Urgency: normal',
+        'Content-Length: 0',
+    ];
+    if (function_exists('curl_init')) {
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => '',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_HTTPHEADER => $headers,
+        ]);
+        curl_exec($ch);
+        return (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    }
+
+    // serwer bez rozszerzenia curl – wbudowane strumienie HTTP (wymagają openssl i allow_url_fopen)
+    $ctx = stream_context_create(['http' => [
+        'method' => 'POST',
+        'header' => implode("\r\n", $headers),
+        'content' => '',
+        'timeout' => 10,
+        'ignore_errors' => true, // kod 4xx też chcemy odczytać, a nie dostać false
+    ]]);
+    @file_get_contents($endpoint, false, $ctx);
+    $response = function_exists('http_get_last_response_headers') ? http_get_last_response_headers() : ($http_response_header ?? []);
+    if (!$response) {
+        error_log('HomeList push: nie udało się połączyć z '.parse_url($endpoint, PHP_URL_HOST).' (sprawdź allow_url_fopen / openssl)');
+        return 0;
+    }
+    return preg_match('~^HTTP/\S+\s+(\d{3})~', $response[0], $m) ? (int)$m[1] : 0;
 }
 
 // kolejkuje powiadomienie na każde urządzenie użytkownika i budzi je pushem; zwraca liczbę urządzeń, które przyjęły
