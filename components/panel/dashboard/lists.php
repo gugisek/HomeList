@@ -1,6 +1,6 @@
 <?php
 // Dolny pływający navbar z listami. Includowany w pages/dashboard.php i odświeżany przez refreshLists().
-if (session_status() === PHP_SESSION_NONE) session_start();
+include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 include '../../../scripts/conn_db.php';
 $user_id = $_SESSION['login_id'];
 $sql = "SELECT lists.id, lists.name, lists.full_name, lists.list_type FROM `lists` left join list_invities on list_invities.list_id=lists.id where lists.owner_id='$user_id' or list_invities.user_id='$user_id' ORDER BY lists.id asc;";
@@ -9,15 +9,15 @@ $result = mysqli_query($conn, $sql);
 while ($row = mysqli_fetch_assoc($result)) $nav_lists[] = $row;
 $routine_icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-3.5 inline -mt-0.5 mr-1 opacity-60"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>';
 ?>
-<section class="bg-[#1c1c1e]/95 dark:bg-[#111]/95 backdrop-blur-md font-[poppins] z-[49] xs:scale-100 scale-90 text-white rounded-2xl fixed sm:bottom-8 bottom-4 flex items-center justify-center shadow-2xl shadow-black/60 ring-1 ring-white/[0.07]">
-    <section id="more_menu" class="min-w-[200px] absolute bottom-14 z-[49] scale-y-0 w-full flex flex-col gap-2 duration-150">
+<section class="font-[poppins] z-[49] xs:scale-100 scale-90 text-white fixed sm:bottom-8 bottom-4 flex items-center justify-center gap-2">
+    <section id="more_menu" class="min-w-[200px] absolute bottom-[4.25rem] z-[49] scale-y-0 origin-bottom w-full flex flex-col gap-2 duration-200">
         <?php
         if (count($nav_lists) > 0) {
             echo '<div id="more_nav_body" class="max-h-[60vh] overflow-y-auto overflow-x-hidden ';
             if (count($nav_lists) <= 3) {
                 echo 'hidden';
             }
-            echo ' bg-white/[0.97] dark:bg-[#1e1e1e]/[0.97] backdrop-blur-xl rounded-2xl py-2 shadow-2xl shadow-black/20 ring-1 ring-black/[0.06] dark:ring-white/[0.06]">';
+            echo ' bg-white/75 dark:bg-[#1e1e1e]/75 liquid-glass-menu rounded-3xl py-2 ring-1 ring-black/[0.06] dark:ring-white/[0.06]">';
             foreach ($nav_lists as $i => $row) {
                 echo '<a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="lists_main_nav list_'.$row['id'].' flex items-center gap-2.5 py-2.5 px-4 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl ';
                 if ($i <= 2) {
@@ -30,7 +30,7 @@ $routine_icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 
             echo '</div>';
         }
         ?>
-        <div class="bg-white/[0.97] dark:bg-[#1e1e1e]/[0.97] backdrop-blur-xl rounded-2xl py-2 shadow-2xl shadow-black/20 ring-1 ring-black/[0.06] dark:ring-white/[0.06]">
+        <div class="bg-white/75 dark:bg-[#1e1e1e]/75 liquid-glass-menu rounded-3xl py-2 ring-1 ring-black/[0.06] dark:ring-white/[0.06]">
             <a onclick="moreMenuClose();openPopupAddLists();" class="flex gap-2 py-2.5 px-5 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -72,18 +72,19 @@ $routine_icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 
         </div>
 
     </section>
-    <a onclick="moreMenuClose();openDetailTab(`today`,`list=today`)" title="Plan dnia" class="lists_main_nav list_today flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-3.5 sm:pl-4 sm:pr-5 py-3 hover:bg-white/10 text-white/75 hover:text-white duration-150 rounded-xl text-sm font-medium">
+    <div class="liquid-glass liquid-glass-pill rounded-full p-1.5 flex items-center gap-0.5">
+    <a onclick="moreMenuClose();openDetailTab(`today`,`list=today`)" title="Plan dnia" class="lists_main_nav list_today flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-3.5 sm:pl-4 sm:pr-5 py-2.5 hover:bg-white/10 text-white/75 hover:text-white rounded-full text-sm font-medium">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
         </svg>
         <span class="hidden sm:inline">Dziś</span>
     </a>
-    <span class="w-px h-6 bg-white/10"></span>
+    <span class="w-px h-5 mx-0.5 bg-white/15"></span>
     <div id="todo-nav" class="contents">
     <?php
     foreach ($nav_lists as $i => $row) {
         echo '
-            <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="lists_main_nav list_'.$row['id'].' inline-block hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-3.5 sm:px-5 py-3 hover:bg-white/10 text-white/75 hover:text-white duration-150 rounded-xl text-sm font-medium whitespace-nowrap max-w-[6.5rem] sm:max-w-[12rem] truncate ';
+            <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="lists_main_nav list_'.$row['id'].' inline-block hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-3.5 sm:px-5 py-2.5 hover:bg-white/10 text-white/75 hover:text-white rounded-full text-sm font-medium whitespace-nowrap max-w-[6.5rem] sm:max-w-[12rem] truncate ';
         if ($i > 2) {
             echo 'hidden';
         }
@@ -91,9 +92,10 @@ $routine_icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 
     }
     ?>
     </div>
-    <a onclick="moreMenu()" id="nav_button_details" class="rounded-r-2xl hover:scale-105 cursor-pointer active:scale-95 focus:scale-95 px-3.5 sm:px-5 py-3 hover:bg-white/10 text-white/50 hover:text-white duration-150">
+    </div>
+    <a onclick="moreMenu()" id="nav_button_details" title="Więcej" class="liquid-glass liquid-glass-more rounded-full size-[52px] shrink-0 flex items-center justify-center hover:scale-105 cursor-pointer active:scale-95 focus:scale-95 text-white/60 hover:text-white duration-150">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
         </svg>
     </a>
 </section>

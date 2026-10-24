@@ -1,7 +1,7 @@
 <?php
 // Popup "Zaplanuj": wybór dnia, pory dnia i opcjonalnej godziny dla zwykłego zadania
 // id = id zadania, opcjonalnie &date=YYYY-MM-DD (domyślny dzień)
-session_start();
+include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 include __DIR__.'/../../../scripts/conn_db.php';
 include __DIR__.'/../../../scripts/planner/planner_lib.php';
 

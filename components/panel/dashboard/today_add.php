@@ -1,6 +1,6 @@
 <?php
 // Popup szybkiego dodania zadania prosto do planu. id = YYYY-MM-DD, opcjonalnie &part=N
-session_start();
+include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 include __DIR__.'/../../../scripts/conn_db.php';
 include __DIR__.'/../../../scripts/planner/planner_lib.php';
 

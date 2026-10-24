@@ -1,6 +1,6 @@
 <?php
 // Popup z lekkim widokiem miesiąca: ile zaplanowane / zrobione każdego dnia. id = YYYY-MM
-session_start();
+include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 include __DIR__.'/../../../scripts/conn_db.php';
 include __DIR__.'/../../../scripts/planner/planner_lib.php';
 
@@ -44,7 +44,7 @@ foreach ($counts as $d => $c) {
             $shown = min($c['total'], 4);
             $done_shown = $c['total'] ? (int)round($c['done'] / $c['total'] * $shown) : 0;
         ?>
-        <button type="button" onclick="popupMonthOpenClose(); openDetailTab('today', 'list=today&date=<?=$d?>')" class="aspect-square flex flex-col items-center justify-center gap-1 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 active:scale-90 duration-150 <?=$cls?>">
+        <button type="button" onclick="popupMonthOpenClose(); feedGoTo('<?=$d?>')" class="aspect-square flex flex-col items-center justify-center gap-1 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 active:scale-90 duration-150 <?=$cls?>">
             <span class="text-sm leading-none"><?=(int)date('j', strtotime($d))?></span>
             <span class="flex gap-0.5 h-1">
                 <?php for ($i = 0; $i < $shown; $i++): ?>

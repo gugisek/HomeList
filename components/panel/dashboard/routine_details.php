@@ -1,6 +1,6 @@
 <?php
 // Szczegóły rutyny – includowane z element_details.php ($row = wiersz elementu + list_type, list_name)
-if (session_status() === PHP_SESSION_NONE) session_start();
+include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 $user_id = (int)$_SESSION['login_id'];
 $today = date('Y-m-d');
 $parts = hl_parts();
@@ -11,6 +11,7 @@ $streak = hl_streak($row, $done_set, $today);
 $occurs_today = hl_routine_occurs($row, $today);
 $done_today = isset($done_set[$today]);
 $part = (int)$row['day_part'];
+$muted = (bool)mysqli_num_rows(mysqli_query($conn, "SELECT 1 FROM push_mute WHERE user_id='$user_id' AND element_id='$rid'"));
 
 // kto odhaczył dziś (przy rutynie wspólnej)
 $done_by = '';
@@ -40,6 +41,7 @@ $description = str_replace("\r", '', nl2br(hl_e($row['description'])));
         <span class="<?=$chip?>"><span class="<?=$parts[$part]['color']?>"><?=hl_icon($parts[$part]['icon'], 'size-3.5')?></span><?=$parts[$part]['label']?></span>
         <?php if (!empty($row['plan_time'])): ?><span class="<?=$chip?>"><?=hl_icon('clock', 'size-3.5')?><?=substr($row['plan_time'], 0, 5)?></span><?php endif; ?>
         <span class="<?=$chip?>"><?=hl_icon((int)$row['shared_done'] === 1 ? 'users' : 'user', 'size-3.5')?><?=(int)$row['shared_done'] === 1 ? 'Wspólne odhaczanie' : 'Każdy osobno'?></span>
+        <button id="routine-mute" onclick="routineMuteToggle(<?=$rid?>)" data-muted="<?=$muted ? 1 : 0?>" class="<?=$chip?> hover:bg-gray-200 dark:hover:bg-white/10 active:scale-95 duration-150"><?=$muted ? '🔕 Bez przypomnień' : '🔔 Przypominaj'?></button>
     </div>
 
     <?php if (trim($row['description']) !== ''): ?>
@@ -88,6 +90,23 @@ $description = str_replace("\r", '', nl2br(hl_e($row['description'])));
     </div>
 </div>
 <script>
+function routineMuteToggle(id) {
+    const btn = document.getElementById('routine-mute');
+    const mute = btn.dataset.muted !== '1';
+    const fd = new FormData();
+    fd.append('element_id', id);
+    fd.append('mute', mute ? '1' : '0');
+    hlPost('scripts/push/mute.php', fd)
+        .then(list => {
+            const res = list[0] || {};
+            showAlert(res.status || 'error', res.message || 'Nieznany status odpowiedzi');
+            if (res.status !== 'success') return;
+            btn.dataset.muted = mute ? '1' : '0';
+            btn.textContent = mute ? '🔕 Bez przypomnień' : '🔔 Przypominaj';
+        })
+        .catch(() => showAlert('error', 'Wystąpił problem połączenia z serwerem'));
+}
+
 function routineDetailsToggle(id, done) {
     const fd = new FormData();
     fd.append('type', 'routine');

@@ -22,7 +22,7 @@ $row = mysqli_fetch_assoc($result);
             </div>
         </div>
         <?php
-        session_start();
+        include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
         if($row['invite_id'] == null or $row['owner_id'] == $_SESSION['login_id']) {
             echo '
             <input type="hidden" id="edit_list_id" name="edit_list_id" value="'.$row['id'].'" hidden></input>

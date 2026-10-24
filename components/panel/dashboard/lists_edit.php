@@ -4,7 +4,7 @@
     <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Przytrzymaj i przeciągnij aby zmienić kolejność</p>
     <div id="items-container" class="flex flex-col mt-4 gap-1 overflow-y-auto max-h-[55vh] pr-1">
         <?php
-        session_start();
+        include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
         include '../../../scripts/conn_db.php';
         $user_id = $_SESSION['login_id'];
         $sql = "SELECT lists.id, lists.name, lists.full_name, list_invities.id as 'invite_id' FROM `lists` left join list_invities on list_invities.list_id=lists.id where lists.owner_id='$user_id' or list_invities.user_id='$user_id' ORDER BY lists.id asc;";

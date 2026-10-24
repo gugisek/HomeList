@@ -22,7 +22,7 @@ if ($list == "archive"){
   }
 }
 ?>
-<section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -ml-2 -mr-2 px-2 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0  dark:from-[#3d3d3d] via-[#3d3d3d]/70 via-70% to-[#3d3d3d]/0">
+<section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/70 dark:to-[#3d3d3d]/0">
     <div class="flex items-center justify-between">
         <div class="text-gray-400">
             <span class="font-medium text-2xl text-black dark:text-white font-[poppins]"><?=$list_full_name?></span>
@@ -47,11 +47,11 @@ if ($list == "archive"){
     
     include '../../../scripts/conn_db.php';
     if($list=="archive"){
-      session_start();
+      include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
       $user_id = $_SESSION['login_id'];
         //warunek taki, że aby pokazywało elementy ze statusem zrobione oraz te, które mają done_date większe niż 1 dzień temu
         $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, users.name FROM `list_elements` left join users on users.id=list_elements.creator_id left join lists on lists.id=list_elements.list_id 
-                WHERE lists.owner_id = $user_id and list_elements.status_id = 2 and list_elements.done_date < DATE_SUB(NOW(), INTERVAL 1 DAY)
+                WHERE lists.owner_id = $user_id and ((list_elements.status_id = 2 and list_elements.done_date < DATE_SUB(NOW(), INTERVAL 1 DAY)) or list_elements.status_id = 4)
                 ORDER BY
                 (`done_date` IS NULL OR `done_date` = 0),
                 `done_date` DESC,
@@ -137,12 +137,12 @@ if ($list == "archive"){
     }else{
     // plan dnia zalogowanego użytkownika dla zadań z tej listy
     include_once '../../../scripts/planner/planner_lib.php';
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
     $plans = [];
     $plan_result = mysqli_query($conn, "SELECT day_plan.element_id, day_plan.plan_date, day_plan.day_part FROM day_plan JOIN list_elements ON list_elements.id=day_plan.element_id WHERE day_plan.user_id = '".(int)$_SESSION['login_id']."' AND list_elements.list_id = '".(int)$list_id."'");
     while ($plan_row = mysqli_fetch_assoc($plan_result)) $plans[(int)$plan_row['element_id']] = $plan_row;
     $sql = "SELECT list_elements.id, list_elements.list_id, list_elements.title, list_elements.create_date, list_elements.deadline_date, list_elements.status_id, list_elements.done_date, list_elements.link_url, users.name, users.profile_picture FROM `list_elements` left join users on users.id=list_elements.creator_id
-            WHERE `list_id` = '$list_id' and (list_elements.status_id != 2 or (list_elements.status_id = 2 and list_elements.done_date > DATE_SUB(NOW(), INTERVAL 1 DAY)))
+            WHERE `list_id` = '$list_id' and (list_elements.status_id not in (2, 4) or (list_elements.status_id = 2 and list_elements.done_date > DATE_SUB(NOW(), INTERVAL 1 DAY)))
             ORDER BY
             (`deadline_date` IS NULL OR `deadline_date` = 0),
             `deadline_date` ASC,

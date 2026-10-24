@@ -3,7 +3,7 @@
 </section>
 <section>
 <?php
-session_start();
+include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 $id = $_SESSION['login_id'];
 include "../../../scripts/conn_db.php";
 $sql = "SELECT users.id, users.name, users.profile_picture, users.sur_name, users.mail, role_id, status_id, description FROM users where users.id = $id;";

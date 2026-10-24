@@ -2,7 +2,7 @@
 // Zawartość listy typu 'routine' – includowane z todo.php wewnątrz <ul>. Wymaga $list_id, $conn.
 include_once __DIR__.'/../../../scripts/planner/planner_lib.php';
 include_once __DIR__.'/feed_parts.php';
-if (session_status() === PHP_SESSION_NONE) session_start();
+include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 
 $user_id = (int)$_SESSION['login_id'];
 $today = date('Y-m-d');

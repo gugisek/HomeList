@@ -1,7 +1,7 @@
 <?php
 // Popup "Zaplanuj z list": niezaplanowane, niezrobione zadania ze wszystkich list użytkownika.
 // Stuknięcie w porę dnia planuje zadanie na wybrany dzień. id = YYYY-MM-DD
-session_start();
+include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 include __DIR__.'/../../../scripts/conn_db.php';
 include __DIR__.'/../../../scripts/planner/planner_lib.php';
 
@@ -16,7 +16,7 @@ $soon_limit = hl_add_days(max($date, $today), 7).' 23:59:59';
 
 $sql = "SELECT list_elements.id, list_elements.title, list_elements.deadline_date, list_elements.status_id, list_elements.list_id, lists.full_name AS list_name
         FROM list_elements JOIN lists ON lists.id=list_elements.list_id
-        WHERE list_elements.list_id IN ($ids) AND lists.list_type='normal' AND list_elements.status_id<>2
+        WHERE list_elements.list_id IN ($ids) AND lists.list_type='normal' AND list_elements.status_id NOT IN (2, 4)
           AND NOT EXISTS (SELECT 1 FROM day_plan WHERE day_plan.user_id='$user_id' AND day_plan.element_id=list_elements.id)
         ORDER BY lists.id ASC,
                  (list_elements.deadline_date IS NULL OR list_elements.deadline_date<'1000-01-01'),

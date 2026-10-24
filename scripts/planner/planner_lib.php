@@ -350,7 +350,7 @@ function hl_feed($conn, $user_id, $date, $today) {
     if ($date === $today) {
         $sql = "SELECT $task_cols, day_plan.day_part, day_plan.plan_time, day_plan.position, day_plan.plan_date
                 FROM day_plan JOIN list_elements ON list_elements.id=day_plan.element_id JOIN lists ON lists.id=list_elements.list_id
-                WHERE day_plan.user_id='$user_id' AND day_plan.plan_date<'$d' AND list_elements.status_id<>2
+                WHERE day_plan.user_id='$user_id' AND day_plan.plan_date<'$d' AND list_elements.status_id NOT IN (2, 4)
                   AND lists.list_type='normal' AND list_elements.list_id IN ($ids)
                 ORDER BY day_plan.plan_date ASC, day_plan.position ASC";
         $result = mysqli_query($conn, $sql);
@@ -362,7 +362,7 @@ function hl_feed($conn, $user_id, $date, $today) {
     $sql = "SELECT $task_cols FROM list_elements JOIN lists ON lists.id=list_elements.list_id
             WHERE list_elements.list_id IN ($ids) AND lists.list_type='normal'
               AND list_elements.deadline_date IS NOT NULL AND list_elements.deadline_date>'1000-01-01' AND $deadline_cond
-              AND (list_elements.status_id<>2 OR DATE(list_elements.done_date)='$d')
+              AND (list_elements.status_id NOT IN (2, 4) OR (list_elements.status_id=2 AND DATE(list_elements.done_date)='$d'))
               AND NOT EXISTS (SELECT 1 FROM day_plan WHERE day_plan.user_id='$user_id' AND day_plan.element_id=list_elements.id)
             ORDER BY list_elements.deadline_date ASC";
     $result = mysqli_query($conn, $sql);

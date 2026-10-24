@@ -13,7 +13,7 @@ if(mysqli_num_rows($result) > 0) {
         exit;
     }
     // plan dnia zalogowanego użytkownika dla tego zadania
-    session_start();
+    include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
     $plan_row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT plan_date, day_part FROM day_plan WHERE user_id = '".(int)$_SESSION['login_id']."' AND element_id = '".(int)$row['id']."' LIMIT 1"));
 
     //zmienie description aby działały entery z bazy danych
@@ -111,7 +111,7 @@ if(mysqli_num_rows($result) > 0) {
     </script>
     <?php endif; ?>
 
-    <?php if ((int)$row['status_id'] !== 2 || $plan_row): ?>
+    <?php if (!in_array((int)$row['status_id'], [2, 4], true) || $plan_row): ?>
     <button type="button" onclick="popupDetailsElementOpenClose(); openPopupPlanSheet('<?=$row['id']?>')" class="mt-5 w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left duration-150 active:scale-[0.98] <?=$plan_row ? 'bg-green-400/10 ring-1 ring-green-400/30 hover:bg-green-400/20' : 'bg-gray-100/80 dark:bg-[#2c2c2c] hover:bg-gray-200/80 dark:hover:bg-[#333]'?>">
         <span class="flex h-9 w-9 flex-none items-center justify-center rounded-xl <?=$plan_row ? 'bg-green-400 text-white' : 'bg-white dark:bg-[#3d3d3d] text-gray-500 dark:text-gray-300'?>"><?=hl_icon('calendar', 'size-5')?></span>
         <span class="min-w-0 flex-1">
@@ -178,6 +178,16 @@ if(mysqli_num_rows($result) > 0) {
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25" />
                                 </svg>
                                 Kopiuj
+                            </button>
+
+                            <!-- ARCHIWIZUJ -->
+                            <button onclick="updateStatus('.$row['id'].', `4`)"
+                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-amber-400 hover:text-white"
+                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                                </svg>
+                                Archiwizuj
                             </button>
 
                         </div>
@@ -249,6 +259,16 @@ if(mysqli_num_rows($result) > 0) {
                                 Kopiuj
                             </button>
 
+                            <!-- ARCHIWIZUJ -->
+                            <button onclick="updateStatus('.$row['id'].', `4`)"
+                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-amber-400 hover:text-white"
+                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                                </svg>
+                                Archiwizuj
+                            </button>
+
                         </div>
                     </div>
                     <button onclick="updateStatus('.$row['id'].', `3`)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl bg-[#3d3d3d] dark:bg-[#2b2b2b] duration-150 px-4 py-2 hover:scale-105 font-medium text-white xs:text-normal text-sm shadow-sm hover:shadow-xl hover:bg-gray-300 hover:text-gray-800">
@@ -317,6 +337,16 @@ if(mysqli_num_rows($result) > 0) {
                                 Kopiuj
                             </button>
 
+                            <!-- ARCHIWIZUJ -->
+                            <button onclick="updateStatus('.$row['id'].', `4`)"
+                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-amber-400 hover:text-white"
+                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                                </svg>
+                                Archiwizuj
+                            </button>
+
                         </div>
                     </div>
 
@@ -333,6 +363,22 @@ if(mysqli_num_rows($result) > 0) {
                         </svg>
 
                         Zrobione!
+                    </button>
+                    ';
+                    break;
+                case 4:
+                    echo '
+                    <span class="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium text-amber-500 bg-amber-100 dark:text-amber-400 dark:bg-amber-400/15 whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                        </svg>
+                        Zarchiwizowane
+                    </span>
+                    <button onclick="updateStatus('.$row['id'].', `1`)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center rounded-2xl bg-[#3d3d3d] dark:bg-[#2b2b2b] px-4 py-2 hover:scale-105 font-medium text-white xs:text-normal text-sm shadow-sm hover:shadow-xl hover:bg-gray-300 hover:text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                        </svg>
+                        Przywróć
                     </button>
                     ';
                     break;

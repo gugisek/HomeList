@@ -12,8 +12,12 @@ $status_id = $_POST['status_id'];
 if ($element_id != "" && $status_id != "") {
     
     include "../conn_db.php";
-        if($status_id == 2){
+        if($status_id == 2 || $status_id == 4){
+            // 4 = zarchiwizowane: done_date to data archiwizacji, zadanie znika z planu dnia
             $sql = "UPDATE list_elements SET status_id = '$status_id', done_date = NOW() WHERE id = '$element_id'";
+            if($status_id == 4){
+                mysqli_query($conn, "DELETE FROM day_plan WHERE element_id = '".(int)$element_id."'");
+            }
         }else{
             $sql = "UPDATE list_elements SET status_id = '$status_id' WHERE id = '$element_id'";
         }
