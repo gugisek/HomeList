@@ -28,9 +28,13 @@ function hl_vapid() {
     openssl_pkey_export($key, $pem, null, isset($cnf) && $cnf ? ['config' => $cnf] : []);
     $d = openssl_pkey_get_details($key)['ec'];
     $public = "\x04".str_pad($d['x'], 32, "\0", STR_PAD_LEFT).str_pad($d['y'], 32, "\0", STR_PAD_LEFT);
-    $keys = ['public' => hl_b64u($public), 'pem' => $pem];
-    file_put_contents(HL_VAPID_FILE, "<?php\n// Klucze VAPID – wygenerowane automatycznie. Zmiana kluczy unieważnia wszystkie subskrypcje.\nreturn ".var_export($keys, true).";\n");
-    return $keys;
+    $new = ['public' => hl_b64u($public), 'pem' => $pem];
+    // bez zapisu klucze byłyby inne przy każdym żądaniu (subskrypcje do kosza) – wtedy lepiej nie działać wcale
+    if (!@file_put_contents(HL_VAPID_FILE, "<?php\n// Klucze VAPID – wygenerowane automatycznie. Zmiana kluczy unieważnia wszystkie subskrypcje.\nreturn ".var_export($new, true).";\n")) {
+        error_log('HomeList push: brak uprawnień do zapisu '.HL_VAPID_FILE.' – uruchom raz: php scripts/push/cron.php --key');
+        return null;
+    }
+    return $keys = $new;
 }
 
 // podpis ES256: openssl zwraca DER (SEQUENCE{INTEGER r, INTEGER s}), JWT wymaga surowego r||s po 32 bajty
@@ -73,16 +77,16 @@ function hl_push_send($endpoint, $ttl = 4 * 3600) {
     ]);
     curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
     return $code;
 }
 
 // kolejkuje powiadomienie na każde urządzenie użytkownika i budzi je pushem; zwraca liczbę urządzeń, które przyjęły
 function hl_push_notify($conn, $user_id, $title, $body, $tag, $url = 'panel.php') {
+    if (!hl_vapid()) return 0;
     $user_id = (int)$user_id;
-    $t = mysqli_real_escape_string($conn, mb_substr($title, 0, 200));
-    $b = mysqli_real_escape_string($conn, mb_substr($body, 0, 600));
-    $g = mysqli_real_escape_string($conn, mb_substr($tag, 0, 60));
+    $t = mysqli_real_escape_string($conn, hl_substr($title, 200));
+    $b = mysqli_real_escape_string($conn, hl_substr($body, 600));
+    $g = mysqli_real_escape_string($conn, hl_substr($tag, 60));
     $l = mysqli_real_escape_string($conn, $url);
     $ok = 0;
     $result = mysqli_query($conn, "SELECT id, endpoint FROM push_subscriptions WHERE user_id='$user_id'");

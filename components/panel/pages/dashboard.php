@@ -251,7 +251,14 @@ fixRoundedCorners();
     function hlPushSubscribe() {
         return navigator.serviceWorker.register('sw.js')
             .then(() => navigator.serviceWorker.ready)
-            .then(reg => reg.pushManager.getSubscription().then(sub => sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: hlPushKey() })))
+            .then(reg => reg.pushManager.getSubscription().then(sub => {
+                // subskrypcja z innym kluczem VAPID (np. po zmianie kluczy na serwerze) – push by ją odrzucił, zakładamy nową
+                const key = hlPushKey();
+                const old = sub && sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null;
+                if (sub && old && old.length === key.length && old.every((b, i) => b === key[i])) return sub;
+                return (sub ? sub.unsubscribe() : Promise.resolve())
+                    .then(() => reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+            }))
             .then(sub => {
                 const fd = new FormData();
                 fd.append('endpoint', sub.endpoint);
