@@ -62,7 +62,13 @@ if (!function_exists('appCookieParams')) {
     }
 }
 
+// Własna nazwa ciasteczka sesji zamiast domyślnego PHPSESSID: na produkcji przeglądarka wysyłała dwa
+// PHPSESSID (stare host-only / z domeny nadrzędnej rgbpc.pl), PHP brał osieroconą sesję bez logowania
+// i tokenu CSRF – każde żądanie logowało się od nowa z remember_me, a każdy POST kończył się 403.
+const HL_SESSION_NAME = 'HLSESSID';
+
 if (session_status() === PHP_SESSION_NONE) {
+    session_name(HL_SESSION_NAME);
     session_set_cookie_params(['lifetime' => 0] + appCookieParams());
     session_start();
 }

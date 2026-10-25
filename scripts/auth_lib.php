@@ -176,7 +176,11 @@ if (!function_exists('hl_auth_user')) {
     // Nowa, pusta sesja tylko po to, żeby przenieść komunikat na stronę logowania
     function hl_flash_session(string $message, string $type): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_name(HL_SESSION_NAME);
+            session_set_cookie_params(['lifetime' => 0] + appCookieParams());
+            session_start();
+        }
         if (!headers_sent()) session_regenerate_id(true);
         $_SESSION['alert'] = $message;
         $_SESSION['alert_type'] = $type;

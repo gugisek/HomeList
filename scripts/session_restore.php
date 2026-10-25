@@ -14,6 +14,7 @@ if (!function_exists('hl_session_start')) {
     function hl_session_start(): bool
     {
         if (session_status() === PHP_SESSION_NONE) {
+            session_name(HL_SESSION_NAME);
             session_set_cookie_params(['lifetime' => 0] + appCookieParams());
             session_start();
         }
