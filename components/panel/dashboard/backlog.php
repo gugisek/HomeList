@@ -42,7 +42,7 @@ usort($soon, fn($a, $b) => strcmp($a['deadline'], $b['deadline']));
 $open_all = $count <= 25;
 
 $day_label = hl_relative_day($date, $today);
-if (!in_array($day_label, ['Dziś', 'Jutro', 'Wczoraj'])) $day_label .= ' '.date('d.m', strtotime($date));
+if (!in_array($day_label, ['Dziś', 'Jutro', 'Wczoraj'])) $day_label .= ' '.hl_short_date($date);
 
 function backlog_row(array $row, array $parts, $show_list) {
     echo '<div class="backlog-row flex items-center gap-2 py-2 pl-3 pr-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 duration-150" data-title="'.hl_e(hl_lower($row['title'].' '.$row['list_name'])).'">';
@@ -50,7 +50,7 @@ function backlog_row(array $row, array $parts, $show_list) {
     $meta = [];
     if ($show_list) $meta[] = '<span class="truncate text-gray-400">'.hl_e($row['list_name']).'</span>';
     if ((int)$row['status_id'] === 3) $meta[] = '<span class="whitespace-nowrap text-sky-400">W trakcie</span>';
-    if ($row['deadline']) $meta[] = '<span class="whitespace-nowrap '.($row['deadline'] < date('Y-m-d H:i:s') ? 'text-red-400' : 'text-rose-400').'">Deadline '.date('H:i d.m', strtotime($row['deadline'])).'</span>';
+    if ($row['deadline']) $meta[] = '<span class="whitespace-nowrap '.($row['deadline'] < date('Y-m-d H:i:s') ? 'text-red-400' : 'text-rose-400').'">Deadline '.hl_short_date($row['deadline'], true).'</span>';
     if ($meta) echo '<p class="text-xs flex items-center gap-1.5 min-w-0">'.implode('<span class="text-gray-300">·</span>', $meta).'</p>';
     // przyciski pór dnia wstawia JS z szablonu #backlog_actions_tpl (mniejszy payload przy setkach zadań)
     echo '</div><div class="backlog-actions flex items-center gap-1 flex-none" data-id="'.(int)$row['id'].'"></div></div>';

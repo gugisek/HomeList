@@ -17,7 +17,7 @@ $result = mysqli_query($conn, "SELECT id, full_name FROM lists WHERE id IN ($ids
 while ($row = mysqli_fetch_assoc($result)) $lists[] = $row;
 
 $day_label = hl_relative_day($date, $today);
-if (!in_array($day_label, ['Dziś', 'Jutro', 'Wczoraj'])) $day_label .= ' '.date('d.m', strtotime($date));
+if (!in_array($day_label, ['Dziś', 'Jutro', 'Wczoraj'])) $day_label .= ' '.hl_short_date($date);
 $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5';
 ?>
 <div id="today_add_loading"></div>

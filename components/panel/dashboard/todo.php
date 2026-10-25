@@ -221,9 +221,9 @@ if ($list == "archive"){
                                           }else{
                                               echo 'text-gray-400';
                                             }
-                                          echo '">Deadline '.date_format(date_create($row['deadline_date']), "H:i d.m").'</p>';
+                                          echo '">Deadline '.hl_short_date($row['deadline_date'], true).'</p>';
                                         }else{
-                                          echo '<p class="whitespace-nowrap">'.date_format(date_create($row['create_date']), "H:i d.m").'</p>';
+                                          echo '<p class="whitespace-nowrap">'.hl_short_date($row['create_date'], true).'</p>';
                                         }
                                         if (isset($plans[(int)$row['id']]) && $row['status_id'] != 2) {
                                           $p = $plans[(int)$row['id']];

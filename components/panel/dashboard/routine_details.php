@@ -61,7 +61,7 @@ $description = str_replace("\r", '', nl2br(hl_e($row['description'])));
             <?php foreach ($days as $d):
                 $c = ['done' => 'bg-green-400', 'missed' => 'bg-gray-300 dark:bg-gray-600', 'today' => 'ring-2 ring-inset ring-green-400/70', 'off' => 'bg-gray-200/40 dark:bg-white/5'][$d['state']];
             ?>
-            <span title="<?=date('d.m', strtotime($d['date']))?>" class="aspect-square rounded-[5px] <?=$c?>"></span>
+            <span title="<?=hl_short_date($d['date'])?>" class="aspect-square rounded-[5px] <?=$c?>"></span>
             <?php endforeach; ?>
         </div>
     </div>

@@ -36,11 +36,11 @@ function hl_render_feed_item(array $it, $date, $today, $variant = 'part', array 
     if ($it['deadline'] && $variant !== 'routine_list') {
         $late = $it['deadline'] < date('Y-m-d H:i:s') && !$it['done'];
         $dl_date = substr($it['deadline'], 0, 10);
-        $label = $dl_date === $date ? date('H:i', strtotime($it['deadline'])) : date('H:i d.m', strtotime($it['deadline']));
+        $label = $dl_date === $date ? date('H:i', strtotime($it['deadline'])) : hl_short_date($it['deadline'], true);
         $meta[] = '<span class="whitespace-nowrap '.($late ? 'text-red-400' : 'text-rose-400').'">Deadline '.$label.'</span>';
     }
     if ($variant === 'overdue' && $it['plan_date']) {
-        $was = $it['plan_date'] === hl_add_days($today, -1) ? 'Wczoraj' : hl_day_name($it['plan_date'], true).' '.date('d.m', strtotime($it['plan_date']));
+        $was = $it['plan_date'] === hl_add_days($today, -1) ? 'Wczoraj' : hl_day_name($it['plan_date'], true).' '.hl_short_date($it['plan_date']);
         $meta[] = '<span class="flex items-center gap-1 whitespace-nowrap text-amber-500">'.hl_icon('warning', 'size-3.5').$was.'</span>';
     }
     if ($it['shared']) {

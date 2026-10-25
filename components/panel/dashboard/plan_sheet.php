@@ -47,12 +47,12 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
         ?>
         <button type="button" onclick="planSheetDate(this, '<?=$d?>')" class="<?=hl_chip_class($d === $sel_date)?> flex-none flex flex-col items-center min-w-[3.5rem] px-2.5 py-2 rounded-2xl active:scale-95 duration-150">
             <span class="text-xs font-semibold"><?=$top?></span>
-            <span class="text-[10px] opacity-60"><?=date('d.m', strtotime($d))?></span>
+            <span class="text-[10px] opacity-60"><?=hl_short_date($d)?></span>
         </button>
         <?php endforeach; ?>
         <label class="<?=hl_chip_class($custom)?> relative flex-none flex flex-col items-center justify-center min-w-[3.5rem] px-2.5 py-2 rounded-2xl active:scale-95 duration-150 cursor-pointer">
             <?=hl_icon('calendar', 'size-4')?>
-            <span id="plan_sheet_custom_label" class="text-[10px] opacity-60"><?=$custom ? date('d.m', strtotime($sel_date)) : 'Inny'?></span>
+            <span id="plan_sheet_custom_label" class="text-[10px] opacity-60"><?=$custom ? hl_short_date($sel_date) : 'Inny'?></span>
             <input type="date" value="<?=$sel_date?>" onchange="planSheetCustom(this)" class="absolute inset-0 opacity-0 cursor-pointer">
         </label>
     </div>
@@ -91,7 +91,8 @@ function planSheetCustom(input) {
     if (!input.value) return;
     hlChipSelect(input.parentElement);
     document.getElementById('plan_sheet_date').value = input.value;
-    document.getElementById('plan_sheet_custom_label').textContent = input.value.slice(8, 10) + '.' + input.value.slice(5, 7);
+    document.getElementById('plan_sheet_custom_label').textContent = input.value.slice(8, 10) + '.' + input.value.slice(5, 7)
+        + (input.value.slice(0, 4) !== String(new Date().getFullYear()) ? '.' + input.value.slice(0, 4) : '');
 }
 function planSheetPart(el, part) {
     hlChipSelect(el);

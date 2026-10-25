@@ -29,8 +29,7 @@ if ($row) {
     <h1 class="font-[poppins] font-medium pr-8 text-gray-800 dark:text-gray-200"><?=hl_e($row['title'])?></h1>
     <?php
     if($row['deadline_date'] != null && $row['deadline_date'] != "0000-00-00 00:00:00") {
-        $date = date_create($row['deadline_date']);
-    $date = date_format($date, "H:i d.m");
+    $date = hl_short_date($row['deadline_date'], true);
     echo '<span class="text-sm text-red-500 dark:text-red-400">Deadline: '.$date.'</span>';
     }
     ?>
@@ -122,7 +121,7 @@ if ($row) {
     </button>
     <?php endif; ?>
 
-    <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Dodano <?=date_format(date_create($row['create_date']), "H:i d.m")?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></a>
+    <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Dodano <?=hl_short_date($row['create_date'], true)?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></a>
 
     <div class=" flex gap-2">
             <?php

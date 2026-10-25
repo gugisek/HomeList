@@ -17,7 +17,7 @@ $strip_to = hl_add_days($date, 21);
 $counts = hl_day_counts($conn, $user_id, $strip_from, $strip_to, $today);
 
 $title = hl_relative_day($date, $today);
-$subtitle = in_array($title, ['Dziś', 'Jutro', 'Wczoraj']) ? hl_long_date($date) : (int)date('j', strtotime($date)).' '.hl_month_name(date('n', strtotime($date)));
+$subtitle = in_array($title, ['Dziś', 'Jutro', 'Wczoraj']) ? hl_long_date($date) : (int)date('j', strtotime($date)).' '.hl_month_name(date('n', strtotime($date))).(date('Y', strtotime($date)) !== date('Y') ? ' '.date('Y', strtotime($date)) : '');
 $pct = $feed['total'] ? round($feed['done'] / $feed['total'] * 100) : 0;
 $all_done = $feed['total'] > 0 && $feed['done'] === $feed['total'];
 $is_empty = $feed['total'] === 0 && !$feed['overdue'] && !$feed['late'];

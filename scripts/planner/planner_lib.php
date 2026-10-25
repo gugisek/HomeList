@@ -124,12 +124,20 @@ function hl_long_date($date) {
     return $s;
 }
 
+// krótka data "24.10" / "24.10.2025" (rok tylko gdy inny niż bieżący), z $time: "14:30 24.10"
+function hl_short_date($date, $time = false) {
+    $ts = strtotime($date);
+    $s = date('d.m', $ts);
+    if (date('Y', $ts) !== date('Y')) $s .= '.'.date('Y', $ts);
+    return $time ? date('H:i', $ts).' '.$s : $s;
+}
+
 // krótka etykieta planu: "dziś · Rano", "pt 24.10 · Wieczór"
 function hl_plan_label($date, $part, $today) {
     $parts = hl_parts();
     $rel = hl_relative_day($date, $today);
     if (!in_array($rel, ['Dziś', 'Jutro', 'Wczoraj'])) {
-        $rel = hl_lower(hl_day_name($date, true)).' '.date('d.m', strtotime($date));
+        $rel = hl_lower(hl_day_name($date, true)).' '.hl_short_date($date);
     }
     return $rel.' · '.$parts[(int)$part]['label'];
 }
