@@ -64,6 +64,13 @@ $routine_icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 
 
                 <span>Ustawienia</span>
             </a>
+            <a onclick="moreMenuClose();hlInstallApp()" class="hl-install-btn group relative overflow-hidden flex items-center gap-2 py-2.5 px-5 mx-1.5 my-1 hover:scale-[1.02] active:scale-95 cursor-pointer text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 shadow-lg shadow-green-500/25 ring-1 ring-white/20 font-medium text-sm duration-150 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                </svg>
+                <span>Zainstaluj aplikację</span>
+                <span class="hl-install-shine pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 skew-x-[-20deg] bg-white/25 blur-sm"></span>
+            </a>
             <a onclick="moreMenu()" class="flex items-center gap-2 py-2.5 px-5 mx-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer text-red-400 dark:text-red-400 hover:bg-green-50 dark:hover:bg-green-400/10 hover:text-green-700 dark:hover:text-green-400 font-medium text-sm duration-150 rounded-xl">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
