@@ -12,6 +12,7 @@ require_once __DIR__ . '/../lib/PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/../lib/PHPMailer/SMTP.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
 if (!function_exists('send_app_mail')) {
@@ -66,7 +67,14 @@ if (!function_exists('send_app_mail')) {
         }
 
         $mail = new PHPMailer(true);
+        $transcript = [];
         try {
+            // zapis rozmowy SMTP do logów (diagnostyka "sukces, ale mail nie dochodzi")
+            $mail->SMTPDebug = SMTP::DEBUG_SERVER;
+            $mail->Debugoutput = function ($line) use (&$transcript) {
+                $transcript[] = rtrim((string)$line);
+            };
+
             $mail->CharSet = 'UTF-8';
             $mail->Encoding = 'base64';
             $mail->isSMTP();
@@ -91,10 +99,57 @@ if (!function_exists('send_app_mail')) {
             $mail->addCustomHeader('Auto-Submitted', 'auto-generated');
 
             $mail->send();
+            hl_mail_log($conn, $mail, $to, $subject, true, '', $transcript);
             return ['status' => 'success', 'message' => 'Wiadomość została wysłana'];
         } catch (PHPMailerException $e) {
             error_log('send_app_mail error: ' . $mail->ErrorInfo);
+            hl_mail_log($conn, $mail, $to, $subject, false, $mail->ErrorInfo, $transcript);
             return ['status' => 'error', 'message' => 'Błąd wysyłki: ' . $mail->ErrorInfo];
+        }
+    }
+
+    // Wpis w logs (object_type 'mail'): przed = konfiguracja SMTP, po = wynik + przebieg rozmowy z serwerem.
+    // Dane uwierzytelniające z rozmowy są maskowane, błąd zapisu logu nie psuje wysyłki.
+    function hl_mail_log(mysqli $conn, PHPMailer $mail, string $to, string $subject, bool $ok, string $error, array $transcript): void
+    {
+        try {
+            $lines = [];
+            $inAuth = false;
+            $serverId = '';
+            foreach ($transcript as $line) {
+                if (preg_match('~^CLIENT -> SERVER: AUTH\b~i', $line)) {
+                    $inAuth = true;
+                    $line = preg_replace('~^(CLIENT -> SERVER: AUTH \S+).*$~i', '$1 [ukryto]', $line);
+                } elseif ($inAuth && str_starts_with($line, 'CLIENT -> SERVER:')) {
+                    $line = 'CLIENT -> SERVER: [ukryto]';
+                } elseif ($inAuth && preg_match('~^SERVER -> CLIENT: (235|5\d\d)~', $line)) {
+                    $inAuth = false;
+                }
+                // odpowiedź na DATA, np. Amazon SES: "250 Ok 0100018f...-000000" = identyfikator wiadomości w SES
+                if (preg_match('~^SERVER -> CLIENT: 250 Ok (\S+)~i', $line, $m)) {
+                    $serverId = $m[1];
+                }
+                $lines[] = $line;
+            }
+            $log = implode('<br/>', $lines);
+            if (strlen($log) > 50000) {
+                $log = substr($log, 0, 50000) . '<br/>[...]';
+            }
+
+            $before = 'Serwer: ' . $mail->Host . ':' . $mail->Port . ' (' . ($mail->SMTPSecure ?: 'bez szyfrowania') . ')'
+                . ' <br/>Login: ' . $mail->Username
+                . ' <br/>Nadawca: ' . $mail->From . ' (' . $mail->FromName . ')';
+            $after = 'Do: ' . $to
+                . ' <br/>Temat: ' . $subject
+                . ' <br/>Wynik: ' . ($ok ? 'przyjęty przez serwer SMTP' : 'błąd – ' . $error)
+                . ($serverId !== '' ? ' <br/>ID wiadomości na serwerze: ' . $serverId : '')
+                . ' <br/>Message-ID: ' . $mail->getLastMessageID()
+                . ' <br/><br/>Przebieg SMTP:<br/>' . $log;
+
+            require_once __DIR__ . '/log_lib.php';
+            hl_log($conn, 0, 'mail', $before, $after, 2, $ok ? 'Wysłano email: ' . $subject : 'Błąd wysyłki email: ' . $subject);
+        } catch (Throwable $e) {
+            error_log('hl_mail_log error: ' . $e->getMessage());
         }
     }
 }
