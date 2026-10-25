@@ -37,7 +37,7 @@ $device = function ($ua) {
         </div>
     </div>
     <div class="overflow-x-auto rounded-2xl bg-white dark:bg-[#2c2c2c] ring-1 ring-black/5 shadow-xl">
-    <table class="w-full text-sm" data-aos="fade-in" data-aos-delay="100">
+    <table class="w-full text-sm">
         <tr class="text-left text-gray-900 dark:text-gray-200 border-b border-gray-200 dark:border-white/5">
             <th class="py-3 px-4 font-semibold">Kiedy</th>
             <th class="py-3 px-4 font-semibold">Konto / wpisany login</th>

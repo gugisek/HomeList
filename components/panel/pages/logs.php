@@ -51,6 +51,7 @@
             const parsedDocument = parser.parseFromString(data, "text/html");
             body.innerHTML = parsedDocument.body.innerHTML;
             executeScripts(parsedDocument);
+            if (window.AOS) AOS.refreshHard();
         });
     // var removeButtons = document.querySelectorAll("#nav_button_details");
     // for (var i = 0; i < removeButtons.length; i++) {
