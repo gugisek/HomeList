@@ -87,20 +87,48 @@ if ($html === false) {
 }
 
 if ($httpCode < 200 || $httpCode >= 400) {
+    // Strona zablokowana (np. Cloudflare w Media Expert) – nazwa z końcówki adresu, jeśli jest czytelna
+    $slug = basename(rawurldecode(parse_url($url, PHP_URL_PATH) ?? ''));
+    $slug = preg_replace('/\.(html?|php|aspx?)$/i', '', $slug);
+    $words = array_filter(preg_split('/[-_]+/', $slug), fn($w) => $w !== '' && !preg_match('/^\d{5,}$/', $w));
+    if (count($words) >= 2) {
+        $title = implode(' ', $words);
+        echo json_encode([
+            'title'       => mb_strtoupper(mb_substr($title, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($title, 1, 200, 'UTF-8'),
+            'description' => '',
+            'image'       => 'https://www.google.com/s2/favicons?domain=' . urlencode($host) . '&sz=64',
+            'site_name'   => $host,
+            'url'         => $url,
+            'is_favicon'  => true,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     echo json_encode(['error' => "HTTP $httpCode"]);
     exit;
 }
 
-$html = substr($html, 0, 300000);
+// Metatagi są w <head>, ale np. YouTube ma przed nimi ~800 KB inline skryptów –
+// dlatego tniemy na </head>, a nie na sztywnym limicie znaków
+$body = $html;
+$headEnd = stripos($html, '</head>');
+$html = substr($html, 0, $headEnd !== false ? $headEnd : 300000);
 
-// Extract meta tag content by property or name attribute (regex, no DOM extension needed)
-function getMeta(string $html, string $attr, string $value): string {
-    // matches <meta property="og:title" content="..."> in any attribute order
-    $pattern = '/<meta\s[^>]*' . $attr . '\s*=\s*["\']' . preg_quote($value, '/') . '["\'][^>]*content\s*=\s*["\']([^"\']*)["\'][^>]*>/is';
-    if (preg_match($pattern, $html, $m)) return html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    // reverse attribute order
-    $pattern2 = '/<meta\s[^>]*content\s*=\s*["\']([^"\']*)["\'][^>]*' . $attr . '\s*=\s*["\']' . preg_quote($value, '/') . '["\'][^>]*>/is';
-    if (preg_match($pattern2, $html, $m)) return html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+// Atrybuty wszystkich <meta> jako [atrybut => wartość] (regex, bez rozszerzenia DOM)
+preg_match_all('/<meta\s([^>]*)>/is', $html, $metaTags);
+$metas = [];
+foreach ($metaTags[1] as $attrs) {
+    preg_match_all('/([\w:-]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))/s', $attrs, $am, PREG_SET_ORDER);
+    $a = [];
+    foreach ($am as $x) $a[strtolower($x[1])] = $x[2] . ($x[3] ?? '') . ($x[4] ?? '');
+    $metas[] = $a;
+}
+
+function getMeta(array $metas, string $attr, string $value): string {
+    foreach ($metas as $a) {
+        if (isset($a[$attr], $a['content']) && strcasecmp($a[$attr], $value) === 0 && trim($a['content']) !== '') {
+            return html_entity_decode(trim($a['content']), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+    }
     return '';
 }
 
@@ -113,20 +141,33 @@ $preview = [
     'is_favicon' => false,
 ];
 
-$preview['title']       = getMeta($html, 'property', 'og:title')
-                       ?: getMeta($html, 'name', 'twitter:title');
-$preview['description'] = getMeta($html, 'property', 'og:description')
-                       ?: getMeta($html, 'name', 'twitter:description')
-                       ?: getMeta($html, 'name', 'description');
-$preview['image']       = getMeta($html, 'property', 'og:image')
-                       ?: getMeta($html, 'name', 'twitter:image');
-$siteName               = getMeta($html, 'property', 'og:site_name');
+$preview['title']       = getMeta($metas, 'property', 'og:title')
+                       ?: getMeta($metas, 'name', 'twitter:title');
+$preview['description'] = getMeta($metas, 'property', 'og:description')
+                       ?: getMeta($metas, 'name', 'twitter:description')
+                       ?: getMeta($metas, 'name', 'description');
+$preview['image']       = getMeta($metas, 'property', 'og:image')
+                       ?: getMeta($metas, 'name', 'twitter:image');
+$siteName               = getMeta($metas, 'property', 'og:site_name');
 if ($siteName) $preview['site_name'] = $siteName;
 
 // Fallback title from <title> tag
 if (!$preview['title'] && preg_match('/<title[^>]*>([^<]*)<\/title>/is', $html, $m)) {
     $preview['title'] = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 }
+
+// Amazon wystawia w og: tylko "Amazon" + logo – prawdziwa nazwa i zdjęcie są w karcie produktu
+if (preg_match('/id="productTitle"[^>]*>([^<]+)</i', $body, $m)) {
+    $preview['title'] = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    if (strcasecmp($preview['description'], 'Amazon') === 0) $preview['description'] = '';
+    if (preg_match('/<img[^>]*id="landingImage"[^>]*>/i', $body, $img)
+        && (preg_match('/data-old-hires="(https?:[^"]+)"/i', $img[0], $src)
+            || preg_match('/data-a-dynamic-image="\{&quot;(https?:[^&]+)&quot;/i', $img[0], $src)
+            || preg_match('/\ssrc="(https?:[^"]+)"/i', $img[0], $src))) {
+        $preview['image'] = html_entity_decode($src[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+}
+unset($body);
 
 // Fix protocol-relative and relative image URLs
 if ($preview['image']) {
@@ -143,7 +184,7 @@ if (!$preview['image']) {
     $preview['is_favicon'] = true;
 }
 
-$preview['title']       = substr($preview['title'], 0, 200);
-$preview['description'] = substr($preview['description'], 0, 400);
+$preview['title']       = mb_substr($preview['title'], 0, 200, 'UTF-8');
+$preview['description'] = mb_substr($preview['description'], 0, 400, 'UTF-8');
 
 echo json_encode($preview, JSON_UNESCAPED_UNICODE);

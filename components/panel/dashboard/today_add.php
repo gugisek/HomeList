@@ -34,6 +34,21 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
     <label for="today_add_title" class="<?=$label?>">Nazwa zadania <span class="text-red-400">*</span></label>
     <input id="today_add_title" type="text" maxlength="500" placeholder="Co do zrobienia?" onkeydown="if(event.key==='Enter'){todayAddSave();}" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400">
 
+    <!-- opis i link chowane domyślnie, żeby popup nie wymagał scrollowania -->
+    <textarea id="today_add_desc" rows="2" maxlength="1000" placeholder="Opis zadania..." oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'" class="hidden mt-2 w-full rounded-2xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400 resize-none"></textarea>
+    <div id="today_add_link_box" class="hidden relative mt-2">
+        <input id="today_add_link" type="url" maxlength="2000" placeholder="https://..." onkeydown="if(event.key==='Enter'){todayAddSave();}" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 pr-10 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400">
+        <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400"><?=hl_icon('link', 'size-4')?></div>
+    </div>
+    <div id="today_add_extras" class="mt-2 flex gap-1.5">
+        <button type="button" onclick="todayAddExtra(this, 'today_add_desc', 'today_add_desc')" class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100/80 dark:bg-[#3d3d3d] hover:text-green-400 active:scale-95 duration-150">
+            <?=hl_icon('plus', 'size-3.5', '2')?>Opis
+        </button>
+        <button type="button" onclick="todayAddExtra(this, 'today_add_link_box', 'today_add_link')" class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100/80 dark:bg-[#3d3d3d] hover:text-green-400 active:scale-95 duration-150">
+            <?=hl_icon('plus', 'size-3.5', '2')?>Link
+        </button>
+    </div>
+
     <label class="<?=$label?>">Lista</label>
     <div id="today_add_lists" class="no-scrollbar flex gap-1.5 overflow-x-auto -mx-1 px-1 py-1">
         <?php foreach ($lists as $l): ?>
@@ -87,6 +102,13 @@ function todayAddList(el) {
     document.getElementById('today_add_list').value = el.dataset.list;
     el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
+function todayAddExtra(btn, boxId, inputId) {
+    document.getElementById(boxId).classList.remove('hidden');
+    btn.remove();
+    var extras = document.getElementById('today_add_extras');
+    if (!extras.children.length) extras.remove();
+    document.getElementById(inputId).focus();
+}
 function todayAddPart(el, part) {
     hlChipSelect(el);
     document.getElementById('today_add_part').value = part;
@@ -95,6 +117,8 @@ function todayAddSave() {
     var list = document.getElementById('today_add_list').value;
     var fd = new FormData();
     fd.append('title', document.getElementById('today_add_title').value);
+    fd.append('description', document.getElementById('today_add_desc').value);
+    fd.append('link_url', document.getElementById('today_add_link').value);
     fd.append('list_id', list);
     fd.append('date', document.getElementById('today_add_date').value);
     fd.append('day_part', document.getElementById('today_add_part').value);
