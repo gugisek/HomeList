@@ -125,6 +125,8 @@ if (!defined('HL_SECURITY_PASSED')) {
     unset($securityUser);
 
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && empty($SECURITY_SKIP_CSRF) && !csrf_verify()) {
+        // aktualny token w odpowiedzi – wrapper fetch (csrf_js.php) podmienia nim stary i ponawia żądanie raz
+        if (!headers_sent()) header('X-CSRF-Token: ' . csrf_token());
         security_deny('csrf', 'Nieprawidłowy token bezpieczeństwa. Odśwież stronę i spróbuj ponownie.', false);
     }
 

@@ -7,23 +7,39 @@
 (function () {
     if (window.__hlFetchWrapped) return;
     window.__hlFetchWrapped = true;
-    const token = document.querySelector('meta[name="csrf-token"]').content;
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    let token = meta.content;
     const nativeFetch = window.fetch.bind(window);
+
+    // token w nagłówku i dodatkowo w treści FormData – część serwerów/proxy gubi niestandardowe nagłówki
+    function withToken(init) {
+        init.headers.set('X-CSRF-Token', token);
+        if (init.body instanceof FormData) init.body.set('csrf_token', token);
+    }
 
     window.fetch = function (input, init) {
         init = init || {};
         const url = typeof input === 'string' ? input : (input && input.url) || '';
         let sameOrigin = true;
         try { sameOrigin = new URL(url, window.location.href).origin === window.location.origin; } catch (e) {}
+        const method = (init.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+        const unsafe = sameOrigin && method !== 'GET' && method !== 'HEAD';
         if (sameOrigin) {
-            const method = (init.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
-            const headers = new Headers(init.headers || (input instanceof Request ? input.headers : undefined));
-            headers.set('X-HL-Ajax', '1');
-            if (method !== 'GET' && method !== 'HEAD') headers.set('X-CSRF-Token', token);
-            init.headers = headers;
+            init.headers = new Headers(init.headers || (input instanceof Request ? input.headers : undefined));
+            init.headers.set('X-HL-Ajax', '1');
+            if (unsafe) withToken(init);
             init.credentials = init.credentials || 'same-origin';
         }
         return nativeFetch(input, init).then(function (response) {
+            // odrzucony token (np. sesja odnowiona z remember_me) – serwer podaje aktualny, ponawiamy raz
+            const fresh = response.headers.get('X-CSRF-Token');
+            if (unsafe && response.status === 403 && fresh && fresh !== init.headers.get('X-CSRF-Token') && !(input instanceof Request)) {
+                token = meta.content = fresh;
+                withToken(init);
+                return nativeFetch(input, init);
+            }
+            return response;
+        }).then(function (response) {
             if (sameOrigin && response.headers.get('X-Session-Expired') === '1' && !window.__hlRedirecting) {
                 window.__hlRedirecting = true;
                 setTimeout(function () { window.location.href = 'login.php'; }, 1500);
@@ -39,7 +55,7 @@
         const input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'csrf_token';
-        input.value = token;
+        input.value = meta.content;
         form.appendChild(input);
     }, true);
 })();

@@ -34,7 +34,10 @@ function hlPushSubscribe() {
             fd.append('endpoint', sub.endpoint);
             return hlJson('scripts/push/subscribe.php', fd);
         })
-        .then(r => r.status === 'success');
+        .then(r => {
+            window.hlPushError = r.status === 'success' ? '' : r.message;
+            return r.status === 'success';
+        });
 }
 
 function hlPushEnable() {
@@ -47,7 +50,7 @@ function hlPushEnable() {
         .then(ok => {
             if (ok) showAlert('success', 'Powiadomienia włączone');
             else if (Notification.permission !== 'granted') showAlert('warning', 'Nie zezwolono na powiadomienia');
-            else showAlert('error', 'Nie udało się zapisać subskrypcji');
+            else showAlert('error', 'Nie udało się zapisać subskrypcji' + (window.hlPushError ? ': ' + window.hlPushError : ''));
             return ok;
         })
         .catch(() => { showAlert('error', 'Nie udało się włączyć powiadomień'); return false; });
