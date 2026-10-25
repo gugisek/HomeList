@@ -121,7 +121,7 @@ if ($row) {
     </button>
     <?php endif; ?>
 
-    <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Dodano <?=hl_short_date($row['create_date'], true)?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></a>
+    <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center gap-2 mb-4 w-full text-gray-600 dark:text-gray-400"><?php if (hl_list_is_shared($conn, (int)$row['list_id'])) echo hl_avatar_img($row['profile_picture'], 'size-6'); ?><span>Dodano <?=hl_short_date($row['create_date'], true)?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></span></a>
 
     <div class=" flex gap-2">
             <?php

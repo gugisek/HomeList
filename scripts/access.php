@@ -36,7 +36,7 @@ if (!function_exists('hl_list_access')) {
         if (!$access) return null;
 
         $stmt = $conn->prepare(
-            'SELECT list_elements.*, lists.list_type, lists.full_name AS list_name, users.name, users.sur_name
+            'SELECT list_elements.*, lists.list_type, lists.full_name AS list_name, users.name, users.sur_name, users.profile_picture
              FROM list_elements
              JOIN lists ON lists.id = list_elements.list_id
              LEFT JOIN users ON users.id = list_elements.creator_id
@@ -49,6 +49,27 @@ if (!function_exists('hl_list_access')) {
         if (!$element) return null;
         $element['access'] = $access['role'];
         return $element;
+    }
+
+    // lista wspólna = poza właścicielem ma do niej dostęp ktoś jeszcze
+    function hl_list_is_shared(mysqli $conn, int $listId): bool
+    {
+        $stmt = $conn->prepare(
+            'SELECT COUNT(*) AS c FROM list_invities JOIN lists ON lists.id = list_invities.list_id
+             WHERE list_invities.list_id = ? AND list_invities.user_id <> lists.owner_id'
+        );
+        $stmt->bind_param('i', $listId);
+        $stmt->execute();
+        $count = (int)$stmt->get_result()->fetch_assoc()['c'];
+        $stmt->close();
+        return $count > 0;
+    }
+
+    // <img> z profilowym autora zadania (img/users_images/, brak -> default.png)
+    function hl_avatar_img(?string $file, string $class = 'size-4'): string
+    {
+        $file = basename((string)$file) ?: 'default.png';
+        return '<img src="img/users_images/'.htmlspecialchars($file, ENT_QUOTES).'" alt="" loading="lazy" class="'.$class.' flex-none rounded-full object-cover border border-black/10 dark:border-white/10">';
     }
 
     function hl_json_exit(string $status, string $message, array $extra = []): void

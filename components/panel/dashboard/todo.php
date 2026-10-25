@@ -20,6 +20,7 @@ if ($list == "archive"){
   $list_name = $row['name'];
   $list_full_name = hl_e($row['full_name']);
   $list_type = $row['list_type'];
+  $list_shared = hl_list_is_shared($conn, $list_id);
 }
 ?>
 <section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/70 dark:to-[#3d3d3d]/0">
@@ -204,7 +205,7 @@ if ($list == "archive"){
                                             echo '">'.hl_e($row['title']).'</span>
                                       </h2>
                                       <div class="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                        <span class="truncate"><span class="hidden sm:inline">Dodane przez </span>'.hl_e($row['name']).'</span>
+                                        <span class="flex items-center gap-1.5 min-w-0">'.($list_shared ? hl_avatar_img($row['profile_picture']) : '').'<span class="truncate"><span class="hidden sm:inline">Dodane przez </span>'.hl_e($row['name']).'</span></span>
                                         <svg viewBox="0 0 2 2" class="h-0.5 w-0.5 fill-gray-300">
                                           <circle cx="1" cy="1" r="1" />
                                         </svg>';
