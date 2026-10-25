@@ -48,7 +48,7 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
 </section>
 
 <section class="mt-2" data-aos="fade-up" data-aos-delay="120">
-    <div id="day-strip" class="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 py-1">
+    <div id="day-strip" class="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pt-1 pb-5 -mb-4">
         <?php
         foreach ($counts as $d => $c) {
             $sel = $d === $date;
@@ -93,7 +93,7 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
     </button>
 </div>
 
-<div id="feed-clip">
+<div id="feed-clip" class="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
 <section id="feed" class="mt-2" data-date="<?=$date?>" data-aos="fade-right" data-aos-delay="150">
 
     <div id="feed-celebrate" class="feed-celebrate overflow-hidden" style="max-height:<?=$all_done ? '120px' : '0px'?>;opacity:<?=$all_done ? '1' : '0'?>;margin-top:<?=$all_done ? '0.75rem' : '0px'?>">
@@ -317,6 +317,7 @@ function feedEnter() {
 
 // przesunięty w prawo feed wystaje poza stronę – pojawia się poziomy pasek, za nim pionowy scroll i skacze dolna nawigacja.
 // Przycinamy na czas animacji tylko wrapper feedu (na stałe ucinałby cień przeciąganych kart).
+// Wrapper jest poszerzony o padding kontenera, bo karty na mobile mają -mx-4 i inaczej traciłyby boki.
 function feedClipX(hold) {
     const wrap = document.getElementById('feed-clip');
     if (!wrap) return;
