@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
 // Pola formularza rutyny – includowane w element_add.php i element_edit.php dla list typu 'routine'.
 // Wymaga: $rf_prefix ('add' | 'edit'), $rf (wiersz elementu albo []), planner_lib.php

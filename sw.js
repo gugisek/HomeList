@@ -14,13 +14,15 @@ self.addEventListener('push', event => {
             items = await res.json();
         } catch (e) {}
         if (!items.length) items = [{ title: 'HomeList', body: 'Masz rzeczy do zrobienia na dziś', tag: 'fallback', url: 'panel.php' }];
-        const icon = new URL('img/icon_192.png', self.registration.scope).href;
+        // icon – kolorowa ikona aplikacji; badge – biała sylwetka (Android bierze z niej tylko kanał alfa)
+        const icon = new URL('img/icon-192.png', self.registration.scope).href;
+        const badge = new URL('img/badge-96.png', self.registration.scope).href;
         await Promise.all(items.map(it => self.registration.showNotification(it.title, {
             body: it.body,
             tag: it.tag,
             renotify: true,
             icon: icon,
-            badge: icon,
+            badge: badge,
             data: { url: new URL(it.url || 'panel.php', self.registration.scope).href },
         })));
     })());

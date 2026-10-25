@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
 // Popup "Zaplanuj z list": niezaplanowane, niezrobione zadania ze wszystkich list użytkownika.
 // Stuknięcie w porę dnia planuje zadanie na wybrany dzień. id = YYYY-MM-DD

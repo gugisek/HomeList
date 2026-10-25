@@ -6,6 +6,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 header('Content-Type: application/json');
 
+$SECURITY_REQUIRED_MODULE = ['dashboard', 'read'];
 include '../security_scripts.php';
 include '../conn_db.php';
 include 'planner_lib.php';

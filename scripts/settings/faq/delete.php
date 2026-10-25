@@ -1,36 +1,22 @@
 <?php
+$SECURITY_REQUIRED_MODULE = ['faq', 'full'];
 include '../../security.php';
-
-$id = $_POST['id'];
 include "../../conn_db.php";
+require_once "../../users/user_admin_lib.php";
+require_once "../../log_lib.php";
 
-    if($id != "") {
-        $sql_old = "Select * from faq where id='$id'";
-        $result_old = $conn->query($sql_old);
-        $row_old = $result_old->fetch_assoc();
-
-        $sql = "DELETE FROM faq WHERE id='$id';";
-        if ($conn->query($sql) === TRUE) {
-            //log
-                    $before = 'Pytanie: ' . $row_old['question'] . ' <br/> Odpowiedź: ' . $row_old['answer'];
-                    $after = "";
-                    $object_id=$id;
-                    $object_type="faq";
-                    $action_type="3";
-                    $desc="Usunięto FAQ";
-                    include "../../log.php";
-            //log
-            $_SESSION['alert'] = 'Pomyślnie usunięto FAQ';
-            $_SESSION['alert_type'] = 'success';
-        } else {
-            $_SESSION['alert'] = 'Wystąpił błąd podczas usuwania FAQ';
-            $_SESSION['alert_type'] = 'error';
-        }
-    } else {
-        $_SESSION['alert'] = 'Nie wybrano FAQ';
-        $_SESSION['alert_type'] = 'warning';
-    }
-
-header("Location: ../../../panel.php");
-
-?>
+$id = (int)($_POST['id'] ?? 0);
+$stmt = $conn->prepare('SELECT * FROM faq WHERE id = ?');
+$stmt->bind_param('i', $id);
+$stmt->execute();
+$row_old = $stmt->get_result()->fetch_assoc();
+if (!$row_old) {
+    hl_admin_back('Nie wybrano FAQ', 'warning');
+}
+$stmt = $conn->prepare('DELETE FROM faq WHERE id = ?');
+$stmt->bind_param('i', $id);
+if (!$stmt->execute()) {
+    hl_admin_back('Wystąpił błąd podczas usuwania FAQ', 'error');
+}
+hl_log($conn, $id, 'faq', 'Pytanie: ' . $row_old['question'] . ' <br/> Odpowiedź: ' . $row_old['answer'], '', 3, 'Usunięto FAQ');
+hl_admin_back('Pomyślnie usunięto FAQ', 'success');

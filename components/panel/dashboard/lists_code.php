@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <div class="-mt-[43px]">
 <div id="code_list_loading"></div>
     <h1 class="font-[poppins] font-semibold text-lg pr-8 dark:text-gray-200">Wprowadź kod listy</h1>

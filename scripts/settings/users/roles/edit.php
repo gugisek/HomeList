@@ -1,51 +1,39 @@
 <?php
-
+$SECURITY_REQUIRED_MODULE = ['settings', 'edit'];
 include '../../../security.php';
+include "../../../conn_db.php";
+require_once 'role_lib.php';
+require_once '../../../log_lib.php';
 
-$id = $_POST['id'];
-$role = $_POST['name'];
-$description = $_POST['description'];
-$dashboard = $_POST['dashboard'];
-$users = $_POST['users'];
-$logs = $_POST['logs'];
-$settings = $_POST['settings'];
-
-
-if ($role != "" && $description != "" && $dashboard != "" && $users != "" && $logs != "" && $settings != "") {
-    
-    include "../../../conn_db.php";
-    $sql_old = "SELECT * FROM user_roles WHERE id=$id;";
-    $result_old = mysqli_query($conn, $sql_old);
-    $row_old = mysqli_fetch_assoc($result_old);
-
-    if ($row_old['role'] != $role || $row_old['description'] != $description || $row_old['dashboard'] != $dashboard || $row_old['users'] != $users || $row_old['logs'] != $logs || $row_old['settings'] != $settings) {
-        $sql = "UPDATE user_roles SET role='$role', description='$description', dashboard='$dashboard', users='$users', logs='$logs', settings='$settings' WHERE id=$id;";
-        echo $sql;
-        if (mysqli_query($conn, $sql)) {
-
-            //log
-            $before = 'Nazwa: ' . $row_old['role'] . ' <br/>Opis: ' . $row_old['description'] . ' <br/>Dashboard: ' . $row_old['dashboard'] . ' <br/>Użytkownicy: ' . $row_old['users'] . ' <br/>Logi: ' . $row_old['logs'] . ' <br/>Ustawienia: ' . $row_old['settings'];
-            $after = 'Nazwa: ' . $role . ' <br/>Opis: ' . $description . ' <br/>Dashboard: ' . $dashboard . ' <br/>Użytkownicy: ' . $users . ' <br/>Logi: ' . $logs . ' <br/>Ustawienia: ' . $settings;
-            $object_id = $id;
-            $object_type="settings";
-            $action_type = '1';
-            $desc = 'Edytowano rolę użytkownika';
-            include "../../../log.php";
-            //log
-
-            $_SESSION['alert'] = 'Dane zostały zaktualizowane';
-            $_SESSION['alert_type'] = 'success';
-        } else {
-            $_SESSION['alert'] = 'Błąd aktualizacji danych';
-            $_SESSION['alert_type'] = 'error';
-        }
-    } else {
-        $_SESSION['alert'] = 'Nie wprowadzono nowych danych';
-        $_SESSION['alert_type'] = 'warning';
-    }
-} else {
-    $_SESSION['alert'] = 'Nie wprowadzono wszystkich danych';
-    $_SESSION['alert_type'] = 'error';
+$id = (int)($_POST['id'] ?? 0);
+$role = hl_role_from_post();
+$old = hl_role_row($conn, $id);
+if (!$old || $role['role'] === '') {
+    hl_admin_back('Nie wprowadzono wszystkich danych', 'error');
 }
-header("Location: ../../../../panel.php");
-?>
+if (!hl_role_within_mine($old) || !hl_role_within_mine($role)) {
+    hl_admin_back('Nie możesz edytować roli z wyższymi uprawnieniami niż Twoje', 'error');
+}
+if (hl_role_name_taken($conn, $role['role'], $id)) {
+    hl_admin_back('Rola z taką nazwą już istnieje', 'error');
+}
+// rola ostatnich pełnych adminów nie może stracić dostępu do Użytkowników / Ustawień
+if (hl_is_full_admin_role($old) && !hl_is_full_admin_role($role) && hl_full_admin_count($conn, 0, $id) === 0) {
+    hl_admin_back('To jedyna rola z pełnym dostępem przypisana do aktywnych kont – nie można jej odebrać uprawnień do Użytkowników i Ustawień', 'error');
+}
+
+$changed = false;
+foreach ($role as $col => $val) {
+    if ((string)$old[$col] !== (string)$val) $changed = true;
+}
+if (!$changed) {
+    hl_admin_back('Nie wprowadzono nowych danych', 'warning');
+}
+
+$stmt = $conn->prepare('UPDATE user_roles SET role = ?, description = ?, dashboard = ?, users = ?, logs = ?, settings = ?, faq = ? WHERE id = ?');
+$stmt->bind_param('ssiiiiii', $role['role'], $role['description'], $role['dashboard'], $role['users'], $role['logs'], $role['settings'], $role['faq'], $id);
+if (!$stmt->execute()) {
+    hl_admin_back('Błąd aktualizacji danych', 'error');
+}
+hl_log($conn, $id, 'settings', hl_role_summary($old), hl_role_summary($role), 1, 'Edytowano rolę użytkownika');
+hl_admin_back('Rola została zaktualizowana', 'success');

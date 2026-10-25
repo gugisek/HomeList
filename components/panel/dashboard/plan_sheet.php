@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
 // Popup "Zaplanuj": wybór dnia, pory dnia i opcjonalnej godziny dla zwykłego zadania
 // id = id zadania, opcjonalnie &date=YYYY-MM-DD (domyślny dzień)

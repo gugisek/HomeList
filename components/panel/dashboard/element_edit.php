@@ -1,12 +1,10 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'edit']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
-$element_id = $_GET['id'];
-$sql = "SELECT list_elements.*, lists.list_type FROM list_elements LEFT JOIN lists ON lists.id=list_elements.list_id WHERE list_elements.id = '$element_id'";
 include '../../../scripts/conn_db.php';
-include '../../../scripts/planner/planner_lib.php';
-$result = mysqli_query($conn, $sql);
-if(mysqli_num_rows($result) > 0) {
-    $row = mysqli_fetch_assoc($result);
-} else {
+include_once '../../../scripts/planner/planner_lib.php';
+include_once '../../../scripts/access.php';
+$row = hl_element_access($conn, (int)$_SESSION['login_id'], (int)($_GET['id'] ?? 0));
+if (!$row) {
     echo "Nie znaleziono elementu.";
     exit;
 }
@@ -22,7 +20,7 @@ if(mysqli_num_rows($result) > 0) {
         <div class="w-full">
             <label for="edit_element_name" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-700 dark:text-gray-300">Nazwa zadania</label>
             <div class="mt-2">
-                <input name="edit_element_name" id="edit_element_name" type="text" value="<?=$row['title']?>" placeholder="Wymagane" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium" required>
+                <input name="edit_element_name" id="edit_element_name" type="text" value="<?=hl_e($row['title'])?>" placeholder="Wymagane" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium" required>
             </div>
         </div>
     </div>
@@ -44,7 +42,7 @@ if(mysqli_num_rows($result) > 0) {
         <div class="w-full">
             <label for="edit_element_description" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-700 dark:text-gray-300">Opis</label>
             <div class="mt-2">
-                <textarea name="edit_element_description" rows="4" id="edit_element_description" type="text" placeholder="Nic tu nie ma..." class="w-full rounded-2xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium resize-none"><?=$row['description']?></textarea>
+                <textarea name="edit_element_description" rows="4" id="edit_element_description" type="text" placeholder="Nic tu nie ma..." class="w-full rounded-2xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium resize-none"><?=hl_e($row['description'])?></textarea>
             </div>
         </div>
     </div>

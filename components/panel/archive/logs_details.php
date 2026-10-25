@@ -1,21 +1,26 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['logs', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-}
-else {
-    $id = "";
-}
+$id = (int)($_GET['id'] ?? 0);
 include "../../../scripts/conn_db.php";
-$sql = "SELECT logs.id, users.name, users.sur_name, logs.when, logs.object_id, logs.object_type, log_types.type,logs.description, logs.before, logs.after FROM `logs` join users on users.id=logs.user_id join log_types on log_types.id=logs.type where logs.id='$id';";
-$result = mysqli_query($conn, $sql);
-$row = mysqli_fetch_assoc($result);
+$stmt = $conn->prepare("SELECT logs.id, users.name, users.sur_name, logs.when, logs.object_id, logs.object_type, log_types.type,logs.description, logs.before, logs.after FROM `logs` left join users on users.id=logs.user_id join log_types on log_types.id=logs.type where logs.id=?");
+$stmt->bind_param('i', $id);
+$stmt->execute();
+$row = $stmt->get_result()->fetch_assoc();
+if (!$row) {
+    echo '<p class="text-sm text-gray-500">Nie znaleziono wpisu.</p>';
+    exit;
+}
+// before/after to tekst z danymi użytkowników rozdzielany <br/> – escapujemy całość i przywracamy tylko łamanie linii
+$log_html = fn($s) => preg_replace('~&lt;br\s*/?&gt;~i', '<br/>', htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'));
+$row['name'] = htmlspecialchars((string)$row['name'], ENT_QUOTES, 'UTF-8');
+$row['sur_name'] = htmlspecialchars((string)$row['sur_name'], ENT_QUOTES, 'UTF-8');
 $when = $row['when'];
-$objectId = $row['object_id'];
-$objectType = $row['object_type'];
-$before = $row['before'];
-$after = $row['after'];
+$objectId = (int)$row['object_id'];
+$objectType = htmlspecialchars((string)$row['object_type'], ENT_QUOTES, 'UTF-8');
+$before = $log_html($row['before']);
+$after = $log_html($row['after']);
 $type = $row['type'];
-$description = $row['description'];
+$description = htmlspecialchars((string)$row['description'], ENT_QUOTES, 'UTF-8');
 
 ?>
    <section class="w-full rounded-3xl md:px-0 px-4 pb-4">
@@ -60,19 +65,19 @@ $description = $row['description'];
                     if ($objectType == "users") {$sql = "SELECT name, sur_name FROM `users` where id='$objectId';"; 
                         $result = mysqli_query($conn, $sql);
                         $row = mysqli_fetch_assoc($result);
-                        echo $row['name'] . ' ' . $row['sur_name'];
+                        echo htmlspecialchars($row['name'] . ' ' . $row['sur_name']);
                     } elseif ($objectType == "docs") {$sql = "SELECT name FROM `informations` where id='$objectId';"; 
                         $result = mysqli_query($conn, $sql);
                         $row = mysqli_fetch_assoc($result);
-                        echo $row['name'];
+                        echo htmlspecialchars((string)$row['name']);
                     } elseif ($objectType == "faq" and $objectId != 0 and $type != 'delete') {$sql = "SELECT question FROM `faq` where id='$objectId';"; 
                         $result = mysqli_query($conn, $sql);
                         $row = mysqli_fetch_assoc($result);
-                        echo $row['question'];
+                        echo htmlspecialchars((string)$row['question']);
                     } elseif ($objectType == "teams" and $objectId != 0 and $type != 'delete') {$sql = "SELECT name FROM `teams` where team_id='$objectId';"; 
                         $result = mysqli_query($conn, $sql);
                         $row = mysqli_fetch_assoc($result);
-                        echo $row['name'];
+                        echo htmlspecialchars((string)$row['name']);
                     }
 
                     ?>" class="border border-gray-400 rounded-xl text-gray-900 px-4 py-2 focus:outline-none focus:border-indigo-500 transition-all duration-500 text-sm" disabled>

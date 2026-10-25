@@ -1,79 +1,112 @@
 <?php
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'domain' => 'homelist.rgbpc.pl',
-    'secure' => true,
-    'httponly' => true,
-    'samesite' => 'None',
-]);
-include '../conn_db.php';
+// Logowanie hasłem (formularz components/login/login_form.php).
+// Throttling brute-force z login_attempts: 5 nieudanych prób na konto i 20 na IP w 15 minut.
+require_once __DIR__ . '/../auth_lib.php';
+require_once __DIR__ . '/../password_helper.php';
+require_once __DIR__ . '/../csrf.php';
+include __DIR__ . '/../conn_db.php';
 
-$login_sha = $_POST['email'];
-$password_sha = hash('sha256', $_POST['password']);
-$remember = isset($_POST['remember-me']);
-
-$sql = "SELECT users.status_id, users.profile_picture, users.name, users.sur_name, status_privileges.login, users.id, user_roles.role, users.role_id, user_roles.dashboard FROM users join user_status on users.status_id=user_status.id join status_privileges on status_privileges.id=user_status.privileges join user_roles on user_roles.id=users.role_id WHERE users.login = '".$login_sha."' AND pswd = '".$password_sha."'";
-$result = mysqli_query($conn, $sql);
-
-if (mysqli_num_rows($result) > 0) {
-    $row = mysqli_fetch_assoc($result);
-    $login = $row['login'];
-    $name = $row['name'] . ' ' . $row['sur_name'];
-    $login_id = $row['id'];
-
-    if ($login == 1) {
-        // Zaloguj użytkownika
-        $sql = "UPDATE users SET last_log = NOW() WHERE id = '$login_id'";
-        mysqli_query($conn, $sql);
-
-        session_start();
-        $_SESSION['logged'] = true;
-        $_SESSION['user'] = $name;
-        $_SESSION['login'] = $login_sha;
-        $_SESSION['login_id'] = $login_id;
-        $_SESSION['role'] = $row['role'];
-        $_SESSION['role_id'] = $row['role_id'];
-        $_SESSION['dashboard'] = $row['dashboard'];
-        $_SESSION['alert'] = 'Zalogowano pomyślnie.';
-        $_SESSION['alert_type'] = 'success';
-        $_SESSION['profile_picture'] = $row['profile_picture'];
-
-        // Obsługa Remember Me
-        if ($remember) {
-            $selector = bin2hex(random_bytes(8));
-            $token = bin2hex(random_bytes(32));
-            $token_hash = hash('sha256', $token);
-            $expires = date('Y-m-d H:i:s', time() + (30 * 24 * 60 * 60)); // 30 dni
-
-            // Zapisz do bazy
-            $stmt = $conn->prepare("INSERT INTO remember_tokens (selector, token_hash, user_id, expires) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssis", $selector, $token_hash, $login_id, $expires);
-            $stmt->execute();
-
-            // Ustaw cookie
-            $cookie_value = "$selector:$token";
-            setcookie("remember_me", $cookie_value, [
-                'expires' => strtotime($expires),
-                'path' => '/',
-                'domain' => 'homelist.rgbpc.pl',
-                'secure' => true,
-                'httponly' => true,
-                'samesite' => 'None'
-            ]);
-        }
-
-        header('Location: ../../panel.php');
-    } else {
-        session_start();
-        $_SESSION['alert_type'] = "warning";
-        $_SESSION['alert'] = 'Konto nieaktywne, zablokowane lub wyłączone.<br><br> Skontaktuj się z administratorem.';
-        header('Location: ../../login.php');
-    }
-} else {
-    session_start();
-    $_SESSION['alert_type'] = "error";
-    $_SESSION['alert'] = 'Nieprawidłowy login lub hasło.';
-    header('Location: ../../login.php');
+function hl_login_fail(string $message, string $type = 'error', string $to = '../../login.php'): void
+{
+    $_SESSION['alert'] = $message;
+    $_SESSION['alert_type'] = $type;
+    header('Location: ' . $to);
+    exit();
 }
-?>
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    header('Location: ../../login.php');
+    exit();
+}
+if (!csrf_verify()) {
+    hl_login_fail('Formularz wygasł. Spróbuj zalogować się ponownie.', 'warning');
+}
+
+$login = trim((string)($_POST['email'] ?? ''));
+$password = (string)($_POST['password'] ?? '');
+$remember = isset($_POST['remember-me']);
+$ip = hl_client_ip();
+
+if ($login === '' || $password === '') {
+    hl_login_fail('Podaj adres email i hasło.', 'warning');
+}
+
+// nieudane próby sprzed ostatniego resetu hasła tego konta się nie liczą – inaczej poprawny reset
+// i tak zostawiałby użytkownika z blokadą, aż stare wpisy wypadną z okna 15 minut
+$stmt = $conn->prepare(
+    "SELECT COUNT(*) AS cnt FROM login_attempts la
+     WHERE LOWER(la.login_input) = LOWER(?) AND la.success = 0 AND la.method = 'password'
+       AND la.created_at > NOW() - INTERVAL 15 MINUTE
+       AND la.created_at > COALESCE((SELECT MAX(prt.used_at) FROM password_reset_tokens prt
+                                     JOIN users u ON u.id = prt.user_id
+                                     WHERE LOWER(u.login) = LOWER(?) AND prt.used_at IS NOT NULL), '1970-01-01')"
+);
+$stmt->bind_param('ss', $login, $login);
+$stmt->execute();
+$accountFails = (int)$stmt->get_result()->fetch_assoc()['cnt'];
+$stmt->close();
+
+if ($accountFails >= 5) {
+    record_login_attempt($conn, null, $login, false, 'password', 'account_locked');
+    hl_login_fail('Zbyt wiele nieudanych prób logowania na to konto. Spróbuj ponownie za 15 minut albo zresetuj hasło.');
+}
+if (hl_failed_attempts($conn, 'ip', $ip, ['password']) >= 20) {
+    record_login_attempt($conn, null, $login, false, 'password', 'ip_locked');
+    hl_login_fail('Zbyt wiele nieudanych prób logowania z tego adresu. Spróbuj ponownie później.');
+}
+
+$user = hl_auth_user($conn, 'login', $login);
+
+if (!$user || !verifyPassword($password, (string)$user['pswd'])) {
+    record_login_attempt($conn, $user ? (int)$user['id'] : null, $login, false, 'password', 'invalid_credentials');
+    hl_login_fail('Nieprawidłowy login lub hasło.');
+}
+
+$userId = (int)$user['id'];
+
+// stare hashe sha256 -> bcrypt przy okazji udanego logowania
+if (needsRehash((string)$user['pswd'])) {
+    $newHash = hashPassword($password);
+    $stmt = $conn->prepare('UPDATE users SET pswd = ? WHERE id = ?');
+    $stmt->bind_param('si', $newHash, $userId);
+    $stmt->execute();
+    $stmt->close();
+    $user['pswd'] = $newHash;
+}
+
+// konto czeka na aktywację kodem z maila
+if ((int)$user['status_id'] === 2) {
+    $stmt = $conn->prepare('SELECT id FROM activation_tokens WHERE user_id = ? AND used = 0 LIMIT 1');
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $pendingActivation = (bool)$stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($pendingActivation) {
+        record_login_attempt($conn, $userId, $login, false, 'password', 'account_inactive');
+        hl_login_fail('Twoje konto nie zostało jeszcze aktywowane. Wpisz kod z maila.', 'warning', '../../activate.php?email=' . urlencode($user['login']));
+    }
+}
+
+// hasło jest poprawne, więc komunikat o blokadzie niczego nie zdradza osobie postronnej
+if ((int)$user['can_login'] !== 1) {
+    record_login_attempt($conn, $userId, $login, false, 'password', 'account_blocked');
+    hl_login_fail('Konto jest nieaktywne, zablokowane lub wyłączone. Skontaktuj się z administratorem.', 'warning');
+}
+
+if (hl_user_has_2fa($conn, $userId)) {
+    if (!headers_sent()) header_remove('Set-Cookie');
+    session_regenerate_id(true);
+    $_SESSION['pending_2fa'] = [
+        'user_id' => $userId,
+        'login' => $user['login'],
+        'remember' => $remember ? 1 : 0,
+        'attempts' => 0,
+        'created_at' => time(),
+    ];
+    hl_login_fail('Podaj kod z aplikacji uwierzytelniającej lub kod zapasowy.', 'info');
+}
+
+hl_login_user($conn, $user, 'password', $remember);
+$_SESSION['alert'] = 'Zalogowano pomyślnie.';
+$_SESSION['alert_type'] = 'success';
+header('Location: ../../panel.php');

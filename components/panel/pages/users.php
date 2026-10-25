@@ -1,7 +1,8 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['users', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <section data-aos="fade-up" data-aos-delay="100">
     <div class="flex items-center justify-between">
         <span class="font-medium text-2xl text-black dark:text-gray-200">Konta użytkowników</span>
-        <div onclick="openPopupUsersAdd()"  class="hover:text-white hover:bg-green-500 hover:shadow-xl dark:text-gray-200 shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
+        <div onclick="openPopupUsersAdd()"  class="<?=hl_can('users', 'add') ? '' : 'hidden '?>hover:text-white hover:bg-green-500 hover:shadow-xl dark:text-gray-200 shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -30,23 +31,15 @@
         <div data-aos="fade-in" data-aos-delay="100">
             <?php
                             include '../../../scripts/conn_db.php';
-                            if (isset($_POST['search'])) {
-                                $search = $_POST['search'];
-                                $role = $_POST['role'];
-                                $status = $_POST['status'];
-                            }
-                            else {
-                                $search = "";
-                                $role = "";
-                                $status = "";
-                            }
-                            $sql = "SELECT users.id, users.name, users.sec_name, users.description, users.addres, users.mail, users.profile_picture, users.sur_name, user_roles.role, users.create_date, user_status.status, colors.name as status_color, last_log FROM `users` join user_roles on users.role_id=user_roles.id join user_status on user_status.id=users.status_id join colors on colors.id=user_status.color_id order by users.id asc;";
+                            $sql = "SELECT users.id, users.name, users.sec_name, users.description, users.addres, users.mail, users.profile_picture, users.sur_name, COALESCE(user_roles.role, '—') AS role, users.create_date, user_status.status, colors.name as status_color, last_log FROM `users` left join user_roles on users.role_id=user_roles.id join user_status on user_status.id=users.status_id join colors on colors.id=user_status.color_id order by users.id asc;";
                             $result = mysqli_query($conn, $sql);
                             if(mysqli_num_rows($result) > 0)
                             {
                                 //window.location=`?page=użytkownicy&action=edit&id='.$row['id'].'#edit`;
                                 while($row = mysqli_fetch_assoc($result))
                                 {
+                                    // wszystko poniżej trafia do HTML – dane wpisywane przez użytkowników
+                                    $row = array_map(fn($v) => $v === null ? null : htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'), $row);
                                     $create_date = $row['create_date'];
                                     $login_date = $row['last_log'];
                                     if ($row['profile_picture'] == NULL) {

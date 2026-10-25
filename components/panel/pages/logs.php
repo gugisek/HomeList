@@ -1,5 +1,10 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['logs', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <section data-aos="fade-up" data-aos-delay="100">
     <h1 class="font-medium text-2xl dark:text-gray-200">Archiwum zmian</h1>
+    <div class="mt-4 inline-flex rounded-2xl bg-gray-100 dark:bg-[#2c2c2c] p-1 text-sm font-medium">
+        <button type="button" id="logs_tab_changes" onclick="logsTab('changes')" class="logs-tab px-4 py-1.5 rounded-xl bg-white dark:bg-[#3d3d3d] shadow text-gray-900 dark:text-gray-100 duration-150">Zmiany</button>
+        <button type="button" id="logs_tab_logins" onclick="logsTab('logins')" class="logs-tab px-4 py-1.5 rounded-xl text-gray-500 dark:text-gray-400 duration-150">Logowania</button>
+    </div>
     <div class="mt-8 flow-root">
     <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
       <div class="inline-block min-w-full py-2 align-middle">
@@ -14,6 +19,27 @@
 </section>
 
 <script>
+    function logsTab(tab) {
+        document.querySelectorAll('.logs-tab').forEach(b => {
+            const on = b.id === 'logs_tab_' + tab;
+            b.classList.toggle('bg-white', on); b.classList.toggle('dark:bg-[#3d3d3d]', on); b.classList.toggle('shadow', on);
+            b.classList.toggle('text-gray-900', on); b.classList.toggle('dark:text-gray-100', on);
+            b.classList.toggle('text-gray-500', !on); b.classList.toggle('dark:text-gray-400', !on);
+        });
+        if (tab === 'logins') openLoginAttempts(1, false); else openPageArchive(1);
+    }
+
+    function openLoginAttempts(page, failed) {
+        var body = document.getElementById("table_body");
+        body.innerHTML = "<div class='w-full flex items-center mt-[20vh] justify-center'><div class='bg-black/90 p-4 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
+        fetch("components/panel/archive/login_attempts.php?page_id=" + page + (failed ? "&failed=1" : ""))
+            .then(response => response.text())
+            .then(data => {
+                const parsedDocument = new DOMParser().parseFromString(data, "text/html");
+                body.innerHTML = parsedDocument.body.innerHTML;
+            });
+    }
+
     function openPageArchive(number) {
     var body = document.getElementById("table_body");
     body.innerHTML = "<div data-aos='fade-up' data-aos-delay='100' class='w-full duartion-150 flex items-center mt-[20vh] justify-center z-[999]'><div class='z-[30] bg-black/90 p-4 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";

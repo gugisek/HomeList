@@ -1,21 +1,13 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['logs', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 
  <?php
- if (!isset($_GET['page_id']) or $_GET['page_id']==""){
-    $page_id = 1;
-}else{
-    $page_id = $_GET['page_id'];
-}
-if(isset($_GET['page_id'])) {
-    $page_id = $_GET['page_id'];
-}else {
-    $page_id = 1;
-} 
 include '../../../scripts/conn_db.php';
 $sql = "SELECT count(id) FROM logs";
 $result = mysqli_query($conn, $sql);
 $row = mysqli_fetch_row($result);
 $total_records = $row[0];
-$total_pages = ceil($total_records / 20);
+$total_pages = max(1, (int)ceil($total_records / 20));
+$page_id = min($total_pages, max(1, (int)($_GET['page_id'] ?? 1)));
  ?>
  
  <div class="w-full flex items-center px-12 mb-4 -mt-12 justify-end">
@@ -56,7 +48,8 @@ $total_pages = ceil($total_records / 20);
                             while($row = mysqli_fetch_assoc($result))
                             {
 
-                                echo "<tr class='hover:bg-gray-100 transition-all  duration-150 border-t-[0.5px] border-b-[0.5px] border-gray-200' style='cursor: pointer; cursor: hand;' onclick='openPopupLogs(".$row['id'].")'>";
+                                $row = array_map(fn($v) => $v === null ? null : htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'), $row);
+                                echo "<tr class='hover:bg-gray-100 dark:hover:bg-white/5 transition-all  duration-150 border-t-[0.5px] border-b-[0.5px] border-gray-200' style='cursor: pointer; cursor: hand;' onclick='openPopupLogs(".$row['id'].")'>";
                                     echo "<td class='py-3 text-gray-500 dark:text-gray-400 text-center text-sm md:table-cell hidden sm:pl-6 lg:pl-8'>".$row['id']."</td>";
                                     echo "<td class='py-3 text-gray-800 dark:text-gray-200 text-sm capitalize sm:pl-1 lg:pl-3'>".$row['name']." ".$row['sur_name']."</td>";
                                     echo "<td class='capitalize text-sm text-gray-600 dark:text-gray-400'>".$row['when']."</td>";

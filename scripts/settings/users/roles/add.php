@@ -1,53 +1,25 @@
 <?php
-
-
+$SECURITY_REQUIRED_MODULE = ['settings', 'add'];
 include '../../../security.php';
+include "../../../conn_db.php";
+require_once 'role_lib.php';
+require_once '../../../log_lib.php';
 
-$id = $_POST['id'];
-$role = $_POST['name'];
-$description = $_POST['description'];
-$dashboard = $_POST['dashboard'];
-$users = $_POST['users'];
-$logs = $_POST['logs'];
-$settings = $_POST['settings'];
-
-
-
-if ($role != "" && $description != "" && $dashboard != "" && $users != "" && $logs != "" && $settings != "") {
-    
-        //sprawdzenie czy w bazie danych jest już konto z tym adresem email
-        include "../../../conn_db.php";
-        $sql = "SELECT * FROM user_roles where role = '$role';";
-        $result = mysqli_query($conn, $sql);
-        if(mysqli_num_rows($result) > 0)
-        {
-            $_SESSION['alert'] = 'Rola z taką nazwą już istnieje';
-            $_SESSION['alert_type'] = 'error';
-        }else{
-                $sql = "INSERT INTO user_roles (role, description, dashboard, users, logs, settings) VALUES ('$role', '$description', $dashboard, $users, $logs, $settings);";
-                if (mysqli_query($conn, $sql)) {
-                    $id = mysqli_insert_id($conn);
-                    //log
-                    $before = '';
-                    $after = 'Nazwa: ' . $role . ' <br/>Opis: ' . $description . ' <br/>Dashboard: ' . $dashboard . ' <br/>Użytkownicy: ' . $users . ' <br/>Logi: ' . $logs . ' <br/>Ustawienia: ' . $settings;
-                    $object_id = $id;
-                    $object_type="settings";
-                    $action_type = '2';
-                    $desc = 'Dodano użytkownika rolę użytkownika';
-                    include "../../../log.php";
-                    //log
-
-                    $_SESSION['alert'] = 'Dane zostały dodane';
-                    $_SESSION['alert_type'] = 'success';
-                } else {
-                    $_SESSION['alert'] = 'Błąd aktualizacji danych';
-                    $_SESSION['alert_type'] = 'error';
-                }
-        }
-
-} else {
-    $_SESSION['alert'] = 'Nie wprowadzono wszystkich danych';
-    $_SESSION['alert_type'] = 'error';
+$role = hl_role_from_post();
+if ($role['role'] === '') {
+    hl_admin_back('Nie wprowadzono wszystkich danych', 'error');
 }
-header("Location: ../../../../panel.php");
-?>
+if (!hl_role_within_mine($role)) {
+    hl_admin_back('Rola nie może mieć wyższych uprawnień niż Twoje', 'error');
+}
+if (hl_role_name_taken($conn, $role['role'])) {
+    hl_admin_back('Rola z taką nazwą już istnieje', 'error');
+}
+
+$stmt = $conn->prepare('INSERT INTO user_roles (role, description, dashboard, users, logs, settings, faq) VALUES (?, ?, ?, ?, ?, ?, ?)');
+$stmt->bind_param('ssiiiii', $role['role'], $role['description'], $role['dashboard'], $role['users'], $role['logs'], $role['settings'], $role['faq']);
+if (!$stmt->execute()) {
+    hl_admin_back('Błąd aktualizacji danych', 'error');
+}
+hl_log($conn, $stmt->insert_id, 'settings', '', hl_role_summary($role), 2, 'Dodano rolę użytkownika');
+hl_admin_back('Rola została dodana', 'success');

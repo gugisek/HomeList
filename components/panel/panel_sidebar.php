@@ -12,15 +12,14 @@
           <?php
             
          
-          $role = $_SESSION['role_id'];
-
-          if($role != 1){
-            $name = ["Dashboard"];
-            $name_link = ["dashboard"];
-          }else{
-              
-          $name = ["Dashboard", "Users", "Logs", "Faq", "Settings"];
-          $name_link = ["dashboard", "users", "logs", "faq", "settings"];
+          // moduły widoczne według poziomów uprawnień roli (user_roles), ten sam check robi serwer w każdym widoku
+          $name = [];
+          $name_link = [];
+          foreach (["Dashboard" => "dashboard", "Users" => "users", "Logs" => "logs", "Faq" => "faq", "Settings" => "settings"] as $module_name => $module) {
+            if (hl_can($module, 'read')) {
+              $name[] = $module_name;
+              $name_link[] = $module;
+            }
           }
 
           for ($i = 0; $i < count($name); $i++) {

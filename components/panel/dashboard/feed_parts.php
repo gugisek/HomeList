@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
 // Wspólne elementy widoku feedu dnia i list rutyn: karta elementu + style + skrypty odhaczania/przeciągania.
 // Wymaga wcześniejszego includowania scripts/planner/planner_lib.php

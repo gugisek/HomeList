@@ -1,16 +1,14 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'edit']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
-include '../../../scripts/security.php';
-$element_id = $_GET['id'];
-$sql = "SELECT * FROM list_elements WHERE id = '$element_id'";
 include '../../../scripts/conn_db.php';
-$result = mysqli_query($conn, $sql);
-if(mysqli_num_rows($result) > 0) {
-    $row = mysqli_fetch_assoc($result);
-} else {
+include_once '../../../scripts/planner/planner_lib.php';
+include_once '../../../scripts/access.php';
+$user_id = (int)$_SESSION['login_id'];
+$row = hl_element_access($conn, $user_id, (int)($_GET['id'] ?? 0));
+if (!$row) {
     echo "Nie znaleziono elementu.";
     exit;
 }
-$user_id = $_SESSION['login_id'];
 ?>
 <div id="move_element_loading"></div>
 <section class="font-[poppins]">
@@ -23,7 +21,7 @@ $user_id = $_SESSION['login_id'];
         <div class="w-full">
             <label for="move_element_name" class="ml-px block pl-2 text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Zadanie</label>
             <div class="mt-2">
-                <h1 name="move_element_name" id="move_element_name" class="py-1.5 w-full px-4 text-md font-medium focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] rounded-xl dark:bg-[#3d3d3d] dark:text-gray-200 focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:font-normal focus:text-white"><?=$row['title']?></h1>
+                <h1 name="move_element_name" id="move_element_name" class="py-1.5 w-full px-4 text-md font-medium focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] rounded-xl dark:bg-[#3d3d3d] dark:text-gray-200 focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:font-normal focus:text-white"><?=hl_e($row['title'])?></h1>
             </div>
         </div>
     </div>
@@ -35,14 +33,17 @@ $user_id = $_SESSION['login_id'];
                 <select name="move_element_list" id="move_element_list" class="border rounded-xl py-1.5 w-full px-4 text-sm border-gray-400 focus:ring-0 focus:outline-0 focus:bg-[#1c1c1c] dark:bg-[#3d3d3d] dark:text-gray-200 dark:border-[#3d3d3d] focus:border-[#1c1c1c] focus:shadow-xl duration-150 font-medium focus:font-normal focus:text-white">
                     <option value="">Wybierz listę</option>
                     <?php
-                    $sql = "SELECT lists.id, lists.name, lists.full_name, list_invities.id as 'invite_id' FROM `lists` left join list_invities on list_invities.list_id=lists.id where lists.owner_id='$user_id' or list_invities.user_id='$user_id' ORDER BY lists.id asc;";
-                    $result = mysqli_query($conn, $sql);
+                    // tylko listy tego samego typu (zadanie <-> rutyna mają inne pola) – to samo sprawdza scripts/dashboard/move.php
+                    $stmt = $conn->prepare("SELECT DISTINCT lists.id, lists.name FROM `lists` left join list_invities on list_invities.list_id=lists.id where (lists.owner_id=? or list_invities.user_id=?) and lists.list_type=? ORDER BY lists.id asc");
+                    $stmt->bind_param('iis', $user_id, $user_id, $row['list_type']);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
                     while($list = mysqli_fetch_assoc($result)) {
                         echo '<option ';
                         if($list['id'] == $row['list_id']) {
                             echo 'selected ';
                         }
-                        echo 'value="'.$list['id'].'">'.$list['name'].'</option>';
+                        echo 'value="'.(int)$list['id'].'">'.hl_e($list['name']).'</option>';
                     }
                     ?>
                 </select>

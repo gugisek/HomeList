@@ -1,25 +1,25 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
-$list = $_GET['list'];
+$list = $_GET['list'] ?? '';
 include '../../../scripts/conn_db.php';
+include_once '../../../scripts/planner/planner_lib.php';
+include_once '../../../scripts/access.php';
 $list_type = 'normal';
 if ($list == "archive"){
   $list_full_name = "Archiwum";
   $list_id = 0;
   $list_name = "archive";
 }else{
-  $sql = "SELECT * FROM `lists` WHERE `id` = '$list'";
-  $result = mysqli_query($conn, $sql);
-  if(mysqli_num_rows($result) > 0)
-      {
-          $row = mysqli_fetch_assoc($result);
-          $list_id = $row['id'];
-          $list_name = $row['name'];
-          $list_full_name = $row['full_name'];
-          $list_type = $row['list_type'];
-      }
-  else {
-      echo 'Błąd listy';
+  $list_access = hl_list_access($conn, (int)$_SESSION['login_id'], (int)$list);
+  if (!$list_access) {
+      echo '<div class="mt-[30vh] text-center text-sm text-gray-500 dark:text-gray-400">Nie znaleziono listy albo nie masz do niej dostępu.</div>';
+      exit;
   }
+  $row = $list_access['list'];
+  $list_id = (int)$row['id'];
+  $list_name = $row['name'];
+  $list_full_name = hl_e($row['full_name']);
+  $list_type = $row['list_type'];
 }
 ?>
 <section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/70 dark:to-[#3d3d3d]/0">
@@ -201,10 +201,10 @@ if ($list == "archive"){
                                       <h2 class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate group-hover:text-gray-900 dark:group-hover:text-gray-300 transition-colors">
                                         <span class="truncate ';
                                             if($row['status_id'] == 2) echo 'line-through text-gray-600 dark:text-gray-500';
-                                            echo '">'.$row['title'].'</span>
+                                            echo '">'.hl_e($row['title']).'</span>
                                       </h2>
                                       <div class="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                        <span class="truncate"><span class="hidden sm:inline">Dodane przez </span>'.$row['name'].'</span>
+                                        <span class="truncate"><span class="hidden sm:inline">Dodane przez </span>'.hl_e($row['name']).'</span>
                                         <svg viewBox="0 0 2 2" class="h-0.5 w-0.5 fill-gray-300">
                                           <circle cx="1" cy="1" r="1" />
                                         </svg>';

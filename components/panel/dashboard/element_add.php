@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
 $list_name = $_GET['id'];
 
@@ -27,7 +28,7 @@ $is_routine = $list_type_row && $list_type_row['list_type'] === 'routine';
 ?>
 <div id="add_element_loading"></div>
 <section class="font-[poppins] p-1">
-    <input type="hidden" id="add_element_list_name" value="<?=$list_name?>">
+    <input type="hidden" id="add_element_list_name" value="<?=(int)$list_name?>">
     <div class="-mt-[45px] flex items-center justify-between">
         <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-200"><?=$is_routine ? 'Dodaj rutynę' : 'Dodaj zadanie'?></h1>
         <a class="flex items-center z-10 gap-2 hover:bg-green-400 dark:bg-green-400/20 cursor-pointer rounded-xl mr-9 p-1 px-3 ring-1 ring-green-400 text-green-400 hover:text-white duration-150 text-xs" onclick="addElement()">
@@ -43,7 +44,7 @@ $is_routine = $list_type_row && $list_type_row['list_type'] === 'routine';
             <label for="add_element_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Nazwa zadania <span class="text-red-400">*</span>
             </label>
-            <input id="add_element_name" name="add_element_name" type="text" placeholder="Podaj nazwę zadania" value="<?=$element_name?>" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400" required="">
+            <input id="add_element_name" name="add_element_name" type="text" placeholder="Podaj nazwę zadania" value="<?=htmlspecialchars($element_name)?>" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400" required="">
         </div>
     </div>
 
@@ -55,7 +56,7 @@ $is_routine = $list_type_row && $list_type_row['list_type'] === 'routine';
         <label for="add_element_deadline" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Deadline
         </label>
-        <input id="add_element_deadline" name="add_element_deadline" type="datetime-local" value="<?=$element_deadline?>" class="w-full cursor-pointer rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] dark:focus:bg-[#3d3d3d] focus:bg-white focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300">
+        <input id="add_element_deadline" name="add_element_deadline" type="datetime-local" value="<?=htmlspecialchars($element_deadline)?>" class="w-full cursor-pointer rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] dark:focus:bg-[#3d3d3d] focus:bg-white focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300">
         </div>
     </div>
     <?php endif; ?>
@@ -65,7 +66,7 @@ $is_routine = $list_type_row && $list_type_row['list_type'] === 'routine';
         <label for="add_element_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Opis
         </label>
-        <textarea id="add_element_description" name="add_element_description" placeholder="Opcjonalny opis zadania..." rows="4" class="w-full rounded-2xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300 resize-none"><?=$element_description?></textarea>
+        <textarea id="add_element_description" name="add_element_description" placeholder="Opcjonalny opis zadania..." rows="4" class="w-full rounded-2xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300 resize-none"><?=htmlspecialchars($element_description)?></textarea>
         </div>
     </div>
 

@@ -1,24 +1,24 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
-$id = $_GET['id'];
 include '../../../scripts/conn_db.php';
-include '../../../scripts/planner/planner_lib.php';
-$sql = "SELECT list_elements.*, lists.list_type, lists.full_name AS list_name, users.name, users.sur_name FROM list_elements left join users on users.id=list_elements.creator_id left join lists on lists.id=list_elements.list_id WHERE list_elements.id = $id";
-$result = mysqli_query($conn, $sql);
-if(mysqli_num_rows($result) > 0) {
-    $row = mysqli_fetch_assoc($result);
-
+include_once '../../../scripts/planner/planner_lib.php';
+include_once '../../../scripts/access.php';
+$id = (int)($_GET['id'] ?? 0);
+$row = hl_element_access($conn, (int)$_SESSION['login_id'], $id);
+if ($row) {
     // rutyny mają własny widok szczegółów
     if ($row['list_type'] === 'routine') {
         include 'routine_details.php';
         exit;
     }
     // plan dnia zalogowanego użytkownika dla tego zadania
-    include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
     $plan_row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT plan_date, day_part FROM day_plan WHERE user_id = '".(int)$_SESSION['login_id']."' AND element_id = '".(int)$row['id']."' LIMIT 1"));
 
-    //zmienie description aby działały entery z bazy danych
-    $row['description'] = str_replace("\n", "<br>", $row['description']);
-    $row['description'] = str_replace("\r", "", $row['description']);
+    // argumenty "Kopiuj" jako bezpieczne literały JS (wcześniej surowy tekst w szablonie `...`)
+    $copy_args = hl_e(implode(', ', array_map('json_encode', [$row['title'], (string)$row['description'], (string)$row['deadline_date'], (string)$row['list_id']])));
+
+    // escapowanie + entery z bazy danych jako <br>
+    $row['description'] = nl2br(hl_e((string)$row['description']), false);
 } else {
     echo "Nie znaleziono elementu.";
     exit;
@@ -26,7 +26,7 @@ if(mysqli_num_rows($result) > 0) {
 ?>
 <div class="-mt-10 font-[poppins] p-1 text-gray-800 dark:text-gray-200">
 <div id="element_loading"></div>
-    <h1 class="font-[poppins] font-medium pr-8 text-gray-800 dark:text-gray-200"><?=$row['title']?></h1>
+    <h1 class="font-[poppins] font-medium pr-8 text-gray-800 dark:text-gray-200"><?=hl_e($row['title'])?></h1>
     <?php
     if($row['deadline_date'] != null && $row['deadline_date'] != "0000-00-00 00:00:00") {
         $date = date_create($row['deadline_date']);
@@ -122,7 +122,7 @@ if(mysqli_num_rows($result) > 0) {
     </button>
     <?php endif; ?>
 
-    <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Dodano <?=date_format(date_create($row['create_date']), "H:i d.m")?> przez <?=$row['name']?> <?=$row['sur_name']?></a>
+    <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Dodano <?=date_format(date_create($row['create_date']), "H:i d.m")?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></a>
 
     <div class=" flex gap-2">
             <?php
@@ -171,7 +171,7 @@ if(mysqli_num_rows($result) > 0) {
                             </button>
 
                             <!-- KOPIUJ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement(`'. $row['title'] .'`,`'. $row['description'] .'`,`'. $row['deadline_date'] .'`,`'. $row['list_id'] .'`)"
+                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement('. $copy_args .')"
                                     class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
                                     style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
@@ -250,7 +250,7 @@ if(mysqli_num_rows($result) > 0) {
                             </button>
 
                             <!-- KOPIUJ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement(`'. $row['title'] .'`,`'. $row['description'] .'`,`'. $row['deadline_date'] .'`,`'. $row['list_id'] .'`)"
+                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement('. $copy_args .')"
                                     class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
                                     style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
@@ -328,7 +328,7 @@ if(mysqli_num_rows($result) > 0) {
                             </button>
 
                             <!-- KOPIUJ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement(`'. $row['title'] .'`,`'. $row['description'] .'`,`'. $row['deadline_date'] .'`,`'. $row['list_id'] .'`)"
+                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement('. $copy_args .')"
                                     class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
                                     style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">

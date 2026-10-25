@@ -1,85 +1,67 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 header('Content-Type: application/json'); // Nagłówek JSON
 
+$SECURITY_REQUIRED_MODULE = ['dashboard', 'edit'];
 include '../security_scripts.php';
+include "../conn_db.php";
+include "../planner/planner_lib.php";
+include "../access.php";
 
-$element_id = $_POST['element_id'];
-$name = $_POST['name'];
-$description = $_POST['description'];
-$deadline = empty($_POST['deadline']) ? null : $_POST['deadline'];
-$link_url = !empty($_POST['link_url']) && filter_var(trim($_POST['link_url']), FILTER_VALIDATE_URL) ? trim($_POST['link_url']) : null;
+$user_id = (int)$_SESSION['login_id'];
+$element_id = (int)($_POST['element_id'] ?? 0);
+$name = trim((string)($_POST['name'] ?? ''));
+$description = hl_substr((string)($_POST['description'] ?? ''), 1000);
+$deadline = hl_parse_deadline($_POST['deadline'] ?? '');
+$link_url = hl_parse_link($_POST['link_url'] ?? '');
 
-
-if ($name != "" && $element_id != "") {
-
-    include "../conn_db.php";
-        $sql_old = "SELECT list_elements.*, lists.list_type FROM list_elements LEFT JOIN lists ON lists.id=list_elements.list_id WHERE list_elements.id = '$element_id'";
-        $result_old = mysqli_query($conn, $sql_old);
-        $row_old = mysqli_fetch_assoc($result_old);
-
-        // rutyna: pola powtarzania (porównanie z poprzednimi wartościami, żeby wykryć zmiany)
-        $routine_set = '';
-        $routine_changed = false;
-        if ($row_old['list_type'] === 'routine') {
-            include "../planner/planner_lib.php";
-            $routine = hl_routine_fields_from_post();
-            if (is_string($routine)) {
-                echo json_encode(['status' => 'warning', 'message' => $routine]);
-                exit;
-            }
-            if ($routine['_start'] !== null) $routine['recurrence_start'] = "'".$routine['_start']."'";
-            unset($routine['_start']);
-            foreach ($routine as $col => $val) {
-                $routine_set .= ", $col = $val";
-                $new = $val === 'NULL' ? null : trim($val, "'");
-                if ((string)$row_old[$col] !== (string)$new) $routine_changed = true;
-            }
-            $deadline = $row_old['deadline_date'];
-        }
-
-        if($row_old['title'] != $name || $row_old['description'] != $description || $row_old['deadline_date'] != $deadline || $row_old['link_url'] != $link_url || $routine_changed) {
-
-            $link_url_escaped = $link_url ? mysqli_real_escape_string($conn, $link_url) : null;
-            $link_url_sql = $link_url_escaped ? "'$link_url_escaped'" : "NULL";
-            $deadline_sql = !empty($deadline) ? "'" . mysqli_real_escape_string($conn, $deadline) . "'" : "NULL";
-            $sql = "UPDATE list_elements SET title = '$name', description = '$description', deadline_date = $deadline_sql, link_url = $link_url_sql$routine_set WHERE id = '$element_id'";
-            if (mysqli_query($conn, $sql)) {
-                $id = mysqli_insert_id($conn);
-                
-                //log
-                $before = 'Nazwa: '.$row_old['title'].' <br/>Opis: '.$row_old['description'].' <br/>Deadline: '.($row_old['deadline_date'] ?: 'brak');
-                $after = 'Nazwa: '.$name.' <br/>Opis: '.$description.' <br/>Deadline: '.($deadline ?: 'brak');
-                $object_id = $element_id;
-                $object_type="ListElement";
-                $action_type = '1';
-                $desc = 'Zmieniono dane zadania';
-                include "../log_stripped_without_conn.php";
-                //log
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Zmieniono dane zadania'
-                ]);
-            } else {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Błąd edycji zadania'
-                ]);
-            }    
-        
-    }else {
-        echo json_encode([
-            'status' => 'warning',
-            'message' => 'Wprowadzono te same dane'
-        ]);
-    }
-        
-} else {
-    echo json_encode([
-        'status' => 'warning',
-        'message' => 'Wypełnij wszystkie pola'
-    ]);
+if ($name === '' || !$element_id) {
+    hl_json_exit('warning', 'Wypełnij wszystkie pola');
 }
-?>
+$name = hl_substr($name, 500);
+
+$row_old = hl_element_access($conn, $user_id, $element_id);
+if (!$row_old) {
+    hl_json_exit('error', 'Nie znaleziono zadania');
+}
+
+$cols = ['title' => $name, 'description' => $description, 'deadline_date' => $deadline, 'link_url' => $link_url];
+$routine_changed = false;
+
+// rutyna: pola powtarzania (porównanie z poprzednimi wartościami, żeby wykryć zmiany)
+if ($row_old['list_type'] === 'routine') {
+    $routine = hl_routine_fields_from_post();
+    if (is_string($routine)) {
+        hl_json_exit('warning', $routine);
+    }
+    $routine_cols = hl_routine_bind_values($routine);
+    if ($routine['_start'] !== null) $routine_cols['recurrence_start'] = $routine['_start'];
+    foreach ($routine_cols as $col => $val) {
+        if ((string)$row_old[$col] !== (string)$val) $routine_changed = true;
+    }
+    $cols = array_merge($cols, $routine_cols);
+    $cols['deadline_date'] = $row_old['deadline_date'];
+}
+
+if ($row_old['title'] === $name && (string)$row_old['description'] === $description && (string)$row_old['deadline_date'] === (string)$cols['deadline_date']
+    && (string)$row_old['link_url'] === (string)$link_url && !$routine_changed) {
+    hl_json_exit('warning', 'Wprowadzono te same dane');
+}
+
+$set = implode(', ', array_map(fn($c) => "$c = ?", array_keys($cols)));
+$values = array_values($cols);
+$values[] = $element_id;
+$stmt = $conn->prepare("UPDATE list_elements SET $set WHERE id = ?");
+$stmt->bind_param(str_repeat('s', count($values) - 1) . 'i', ...$values);
+if ($stmt->execute()) {
+    //log
+    $before = 'Nazwa: '.$row_old['title'].' <br/>Opis: '.$row_old['description'].' <br/>Deadline: '.($row_old['deadline_date'] ?: 'brak');
+    $after = 'Nazwa: '.$name.' <br/>Opis: '.$description.' <br/>Deadline: '.($cols['deadline_date'] ?: 'brak');
+    $object_id = $element_id;
+    $object_type="ListElement";
+    $action_type = '1';
+    $desc = 'Zmieniono dane zadania';
+    include "../log_stripped_without_conn.php";
+    //log
+    hl_json_exit('success', 'Zmieniono dane zadania');
+}
+hl_json_exit('error', 'Błąd edycji zadania');

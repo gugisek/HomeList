@@ -2,6 +2,7 @@
 ini_set('display_errors', 0);
 header('Content-Type: application/json');
 
+$SECURITY_REQUIRED_MODULE = ['dashboard', 'read'];
 include '../security_scripts.php';
 
 $url = $_GET['url'] ?? '';
@@ -24,23 +25,61 @@ if (!function_exists('curl_init')) {
     exit;
 }
 
-$ch = curl_init();
-curl_setopt_array($ch, [
-    CURLOPT_URL            => $url,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_MAXREDIRS      => 3,
-    CURLOPT_TIMEOUT        => 10,
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_SSL_VERIFYHOST => false,
-    CURLOPT_ENCODING       => '',
-    CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; LinkPreviewBot/1.0)',
-    CURLOPT_HTTPHEADER     => ['Accept: text/html,application/xhtml+xml'],
-]);
-$html = curl_exec($ch);
-$curlError = curl_error($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+// Ochrona SSRF: serwer pobiera tylko publiczne adresy (nie localhost / sieć domowa / Home Assistant).
+// Każdy hop przekierowania jest sprawdzany osobno, a cURL łączy się dokładnie z zweryfikowanym IP
+// (CURLOPT_RESOLVE), żeby podmiana DNS między sprawdzeniem a połączeniem nic nie dała.
+function lp_public_ip(string $host): ?string {
+    $host = trim($host, '[]');
+    $ips = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : (gethostbynamel($host) ?: []);
+    if (!$ips) return null;
+    foreach ($ips as $ip) {
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return null;
+    }
+    return $ips[0];
+}
+
+$html = false;
+$curlError = '';
+$httpCode = 0;
+for ($hop = 0; $hop <= 3; $hop++) {
+    $parts = parse_url($url);
+    $scheme = strtolower($parts['scheme'] ?? '');
+    $host = $parts['host'] ?? '';
+    $port = (int)($parts['port'] ?? ($scheme === 'https' ? 443 : 80));
+    if (!in_array($scheme, ['http', 'https'], true) || $host === '' || !in_array($port, [80, 443], true)) {
+        echo json_encode(['error' => 'Invalid URL']);
+        exit;
+    }
+    $ip = lp_public_ip($host);
+    if ($ip === null) {
+        echo json_encode(['error' => 'Blocked host']);
+        exit;
+    }
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $url,
+        CURLOPT_RESOLVE        => [$host . ':' . $port . ':' . (strpos($ip, ':') !== false ? '[' . $ip . ']' : $ip)],
+        CURLOPT_PROTOCOLS      => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_HEADER         => false,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => false,
+        CURLOPT_ENCODING       => '',
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; LinkPreviewBot/1.0)',
+        CURLOPT_HTTPHEADER     => ['Accept: text/html,application/xhtml+xml'],
+    ]);
+    $html = curl_exec($ch);
+    $curlError = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $redirect = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+    curl_close($ch);
+
+    if ($html === false || $httpCode < 300 || $httpCode >= 400 || !$redirect) break;
+    $url = $redirect;
+}
 
 if ($html === false) {
     echo json_encode(['error' => 'cURL failed: ' . $curlError]);

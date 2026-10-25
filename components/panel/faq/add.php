@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['faq', 'add']; include __DIR__.'/../../../scripts/security.php'; ?>
 
 <div class="-mt-10 mb-4">
         <h1 class="text-lg font-semibold font-[poppins]">Dodaj pytanie FAQ</h1>

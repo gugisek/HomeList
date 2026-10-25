@@ -159,7 +159,7 @@
           </div>
         </div>`;
         popup<?=$name_in_scripts?>OpenClose();
-        const url = "<?=$path?>?name="+name+"&description="+description+"&deadline="+deadline+"&id="+list_id;
+        const url = "<?=$path?>?name="+encodeURIComponent(name)+"&description="+encodeURIComponent(description)+"&deadline="+encodeURIComponent(deadline)+"&id="+encodeURIComponent(list_id);
         fetch(url)
             .then(response => response.text())
             .then(data => {

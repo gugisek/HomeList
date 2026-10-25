@@ -1,9 +1,10 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
 $list_name = $_GET['id'];
 ?>
 <div id="add_element_loading"></div>
 <section class="font-[poppins] p-1">
-    <input type="hidden" id="add_element_list_name" value="<?=$list_name?>">
+    <input type="hidden" id="add_element_list_name" value="<?=(int)$list_name?>">
     <div class="-mt-[45px] flex items-center justify-between">
         <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Dodaj zadanie</h1>
         <a class="flex items-center z-10 gap-2 hover:bg-green-400 dark:bg-green-400/20 cursor-pointer rounded-xl mr-9 p-1 px-3 ring-1 ring-green-400 text-green-400 hover:text-white duration-150 text-xs" onclick="addElement()">

@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
 // Zawartość listy typu 'routine' – includowane z todo.php wewnątrz <ul>. Wymaga $list_id, $conn.
 include_once __DIR__.'/../../../scripts/planner/planner_lib.php';

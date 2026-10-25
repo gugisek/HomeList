@@ -5,8 +5,10 @@ include 'scripts/security.php';
 <html lang="pl">
 <head>
 <?php
-$title = "panel WSZM";
-include 'components/head.php'; ?>    
+$title = "panel";
+include 'components/head.php'; ?>
+<?php include 'components/panel/csrf_js.php'; ?>
+<?php include 'components/panel/push_js.php'; ?>
 </head>
 <body id="overflow_body" class="dark:bg-[#3d3d3d]">
     <?php include 'components/alert.php'; ?>

@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
 // Feed dnia: zaplanowane zadania + rutyny, podzielone na pory dnia
 include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();

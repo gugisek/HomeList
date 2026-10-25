@@ -1,3 +1,4 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <div class="-mt-[43px]">
 <div id="element_loading"></div>
     <h1 class="font-[poppins] font-semibold text-lg pr-8 dark:text-gray-200">Edytuj listy</h1>
@@ -20,7 +21,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                                 </svg>
                             </div>
-                            <h1 class="font-medium text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">'.$row['full_name'].'</h1>
+                            <h1 class="font-medium text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">'.htmlspecialchars($row['full_name']).'</h1>
                             <div onclick="openPopupInfoLists(`'.$row['id'].'`)" class="flex-shrink-0 p-2 text-gray-400 dark:text-gray-500 hover:bg-[#3d3d3d] hover:text-white cursor-pointer duration-150 rounded-xl">
                         ';
                         if($row['invite_id'] == null) {

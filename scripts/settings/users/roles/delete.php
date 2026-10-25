@@ -1,35 +1,33 @@
 <?php
+$SECURITY_REQUIRED_MODULE = ['settings', 'full'];
 include '../../../security.php';
-
-$id = $_POST['id'];
 include "../../../conn_db.php";
-    if($id != "") {
-        $sql_old = "Select * from user_roles where id='$id'";
-        $result_old = $conn->query($sql_old);
-        $row_old = $result_old->fetch_assoc();
+require_once 'role_lib.php';
+require_once '../../../log_lib.php';
+require_once '../../../app_settings.php';
 
-        $sql = "DELETE FROM user_roles WHERE id='$id'";
-        if ($conn->query($sql) === TRUE) {
-            //log
-                    $before = 'Role: ' . $row_old['role'] . ' <br/>Opis: '. $row_old['description'] .' <br/> Dashboard: ' . $row_old['dashboard'] . '<br/> Users: ' . $row_old['users'] . '<br/> Logs: ' . $row_old['logs'] . '<br/> Settings: ' . $row_old['settings'];
-                    $after = "";
-                    $object_id=$id;
-                    $object_type="settings";
-                    $action_type="3";
-                    $desc="Usunięto rolę użytkownika";
-                    include "../../../log.php";
-            //log
-            $_SESSION['alert'] = 'Pomyślnie usunięto rolę użytkownika';
-            $_SESSION['alert_type'] = 'success';
-        } else {
-            $_SESSION['alert'] = 'Wystąpił błąd podczas usuwania roli użytkownika';
-            $_SESSION['alert_type'] = 'error';
-        }
-    } else {
-        $_SESSION['alert'] = 'Nie wybrano roli użytkownika';
-        $_SESSION['alert_type'] = 'warning';
-    }
+$id = (int)($_POST['id'] ?? 0);
+$old = hl_role_row($conn, $id);
+if (!$old) {
+    hl_admin_back('Nie wybrano roli użytkownika', 'warning');
+}
+if (!hl_role_within_mine($old)) {
+    hl_admin_back('Nie możesz usunąć roli z wyższymi uprawnieniami niż Twoje', 'error');
+}
+$stmt = $conn->prepare('SELECT COUNT(*) AS cnt FROM users WHERE role_id = ?');
+$stmt->bind_param('i', $id);
+$stmt->execute();
+if ((int)$stmt->get_result()->fetch_assoc()['cnt'] > 0) {
+    hl_admin_back('Rola jest przypisana do kont – najpierw zmień im rolę', 'error');
+}
+if ((int)hl_setting($conn, 'registration_role', '3') === $id) {
+    hl_admin_back('To domyślna rola nowych kont (Ustawienia > Rejestracja) – wybierz najpierw inną', 'error');
+}
 
-header("Location: ../../../../panel.php");
-
-?>
+$stmt = $conn->prepare('DELETE FROM user_roles WHERE id = ?');
+$stmt->bind_param('i', $id);
+if (!$stmt->execute()) {
+    hl_admin_back('Wystąpił błąd podczas usuwania roli użytkownika', 'error');
+}
+hl_log($conn, $id, 'settings', hl_role_summary($old), '', 3, 'Usunięto rolę użytkownika');
+hl_admin_back('Pomyślnie usunięto rolę użytkownika', 'success');

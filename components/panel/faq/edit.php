@@ -1,12 +1,19 @@
+<?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['faq', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <?php
-$id = $_GET['id'];
+$id = (int)($_GET['id'] ?? 0);
 
     include "../../../scripts/conn_db.php";
 
-        $sql = "SELECT * FROM faq where id=$id";
-
-    $result = mysqli_query($conn, $sql);
-    $row = mysqli_fetch_assoc($result);
+    $stmt = $conn->prepare("SELECT * FROM faq where id=?");
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    if (!$row) {
+        echo '<p class="text-sm text-gray-500">Nie znaleziono pytania.</p>';
+        exit;
+    }
+    // answer to oczyszczony HTML z edytora (scripts/settings/faq/edit_faq.php); question – zwykły tekst
+    $row['question'] = htmlspecialchars($row['question'], ENT_QUOTES, 'UTF-8');
 
 ?>
 <div class="-mt-10 mb-4">
@@ -22,7 +29,7 @@ $id = $_GET['id'];
         </div>
     </div>
         <div class="h-full max-h-[45vh] text-gray-900" id="editor-container-popup"><?=$row['answer']?></div>
-        <input type="hidden" id="editorContent-faq" name="answer" value='<?=$row['answer']?>'>
+        <input type="hidden" id="editorContent-faq" name="answer" value="<?=htmlspecialchars($row['answer'], ENT_QUOTES, 'UTF-8')?>">
     <div class="mt-4 mb-2 sm:flex sm:flex-row-reverse">
         <button class="active:scale-95 duration-150 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-green-500 sm:ml-2 sm:w-auto">Zapisz</button>
         <button onclick="popupFaqEditOpenClose()" type="button" class="active:scale-95 duration-150 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Nie zapisuj</button>

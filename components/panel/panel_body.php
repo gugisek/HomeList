@@ -28,6 +28,11 @@
         .then(data => {
             const parser = new DOMParser();
             const parsedDocument = parser.parseFromString(data, "text/html");
+            // brak uprawnień do zapamiętanej podstrony (np. po zmianie roli) – wracamy na listy
+            if (parsedDocument.querySelector('[data-panel-forbidden]') && site !== 'dashboard') {
+                openPanelSite('dashboard', '');
+                return;
+            }
             body.innerHTML = parsedDocument.body.innerHTML;
 
             // Wywołaj funkcję do wykonania skryptów
@@ -69,6 +74,8 @@ console.log(site);
       nazwa = "Archiwum zamian"
     }else if(site == 'settings'){
       nazwa = "Ustawienia"
+    }else if(site == 'profile'){
+      nazwa = "Konto i ustawienia"
     }
 
     if(site != 'dashboard'){
