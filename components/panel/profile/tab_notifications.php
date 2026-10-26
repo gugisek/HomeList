@@ -6,6 +6,9 @@ $acc_push_toggles = [
     'notify_timed' => ['Zadania z godziną', '5 minut przed zaplanowaną godziną'],
     'notify_routines' => ['Rutyny', 'Uwzględniaj rutyny (pojedyncze możesz wyciszyć w ich szczegółach)'],
 ];
+if (hl_can('reports', 'read')) {
+    $acc_push_toggles['notify_reports'] = ['Zgłoszenia błędów', 'Gdy użytkownik zgłosi błąd w aplikacji (dla administratorów)'];
+}
 $acc_row = 'flex items-center justify-between gap-3 rounded-2xl bg-gray-50 dark:bg-[#3d3d3d]/60 p-3 cursor-pointer';
 ?>
 <p class="<?=$acc_title?>">Powiadomienia</p>

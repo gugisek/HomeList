@@ -48,7 +48,7 @@ if (!function_exists('hl_report_dir')) {
         return $os . ' · ' . $br;
     }
 
-    // aktywne konta z dostępem do modułu zgłoszeń i poprawnym adresem email
+    // aktywne konta z dostępem do modułu zgłoszeń (adres email sprawdza dopiero wysyłka maila)
     function hl_report_recipients(mysqli $conn): array
     {
         $out = [];
@@ -60,7 +60,7 @@ if (!function_exists('hl_report_dir')) {
              WHERE user_roles.reports IN (1, 2, 3, 4) AND status_privileges.login = 1'
         );
         while ($row = $result->fetch_assoc()) {
-            if (filter_var($row['mail'], FILTER_VALIDATE_EMAIL)) $out[] = $row;
+            $out[] = $row;
         }
         return $out;
     }

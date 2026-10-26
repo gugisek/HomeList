@@ -34,6 +34,10 @@ self.addEventListener('notificationclick', event => {
     event.waitUntil((async () => {
         const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
         const client = all.find(c => c.url.startsWith(self.registration.scope));
+        // adres z parametrem (np. panel.php?site=reports) – otwarte okno przechodzi na wskazaną podstronę
+        if (client && url && new URL(url).search && 'navigate' in client) {
+            try { await client.navigate(url); } catch (e) {}
+        }
         if (client) return client.focus();
         return self.clients.openWindow(url || self.registration.scope);
     })());
