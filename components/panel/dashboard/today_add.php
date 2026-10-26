@@ -26,18 +26,18 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
     <input type="hidden" id="today_add_part" value="<?=$sel_part?>">
     <input type="hidden" id="today_add_list" value="">
 
-    <h1 class="text-lg font-semibold pr-8">Nowe zadanie na: <span class="text-green-400"><?=$day_label?></span></h1>
+    <h1 class="hl-popup-title">Nowe zadanie na: <span class="text-green-400"><?=$day_label?></span></h1>
 
     <?php if (!$lists): ?>
     <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Najpierw utwórz zwykłą listę zadań – nowe zadanie musi do jakiejś należeć.</p>
     <?php else: ?>
     <label for="today_add_title" class="<?=$label?>">Nazwa zadania <span class="text-red-400">*</span></label>
-    <input id="today_add_title" type="text" maxlength="500" placeholder="Co do zrobienia?" onkeydown="if(event.key==='Enter'){todayAddSave();}" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400">
+    <input id="today_add_title" type="text" maxlength="500" placeholder="Co do zrobienia?" onkeydown="if(event.key==='Enter'){todayAddSave();}" class="hl-input w-full">
 
     <!-- opis i link chowane domyślnie, żeby popup nie wymagał scrollowania -->
-    <textarea id="today_add_desc" rows="2" maxlength="1000" placeholder="Opis zadania..." oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'" class="hidden mt-2 w-full rounded-2xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400 resize-none"></textarea>
+    <textarea id="today_add_desc" rows="2" maxlength="1000" placeholder="Opis zadania..." oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'" class="hl-input hidden mt-2 w-full resize-none"></textarea>
     <div id="today_add_link_box" class="hidden relative mt-2">
-        <input id="today_add_link" type="url" maxlength="2000" placeholder="https://..." onkeydown="if(event.key==='Enter'){todayAddSave();}" class="w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 pr-10 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400">
+        <input id="today_add_link" type="url" maxlength="2000" placeholder="https://..." onkeydown="if(event.key==='Enter'){todayAddSave();}" class="hl-input w-full pr-10">
         <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400"><?=hl_icon('link', 'size-4')?></div>
     </div>
     <div id="today_add_extras" class="mt-2 flex gap-1.5">
@@ -67,13 +67,13 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
     </div>
 
     <label for="today_add_time" class="<?=$label?>">Godzina <span class="font-normal text-gray-400">(opcjonalnie)</span></label>
-    <input id="today_add_time" type="time" class="w-full cursor-pointer rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300">
+    <input id="today_add_time" type="time" class="hl-input w-full cursor-pointer">
 
     <div class="mt-6 flex flex-row-reverse gap-2">
-        <button onclick="todayAddSave()" class="active:scale-95 duration-150 flex w-full justify-center shadow-xl cursor-pointer rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ring-1 font-medium ring-green-400 px-4 py-2 text-sm text-white items-center gap-1 hover:bg-white hover:text-green-400">
+        <button onclick="todayAddSave()" class="hl-btn hl-btn-primary flex-1">
             <?=hl_icon('check', 'size-5', '1.8')?>Dodaj do planu
         </button>
-        <button onclick="popupTodayAddOpenClose()" class="active:scale-95 duration-150 flex w-full justify-center cursor-pointer rounded-2xl font-medium ring-rose-400 ring-1 px-4 py-2 text-sm text-rose-400 items-center gap-1 hover:bg-rose-400 hover:text-white">
+        <button onclick="popupTodayAddOpenClose()" class="hl-btn hl-btn-ghost flex-1">
             Anuluj
         </button>
     </div>

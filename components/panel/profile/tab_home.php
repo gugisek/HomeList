@@ -4,6 +4,7 @@ $acc_home_cards = [
     'security' => ['Hasło i weryfikacja dwuetapowa', 'Weryfikacja dwuetapowa ' . ($acc_2fa ? 'włączona' : 'wyłączona')],
     'devices' => ['Zapamiętane logowania', $acc_devices ? count($acc_devices) . ' ' . $acc_plural(count($acc_devices), 'urządzenie', 'urządzenia', 'urządzeń') : 'Brak zapamiętanych urządzeń'],
     'notifications' => ['Przypomnienia push i pory dnia', 'Przypomnienia ' . ($ps['enabled'] ? 'włączone' : 'wyłączone')],
+    'report' => ['Coś nie działa? Daj znać twórcom', 'Krótki opis i zrzut ekranu'],
 ];
 ?>
 <div class="flex flex-col items-center text-center pt-2 md:pt-6">

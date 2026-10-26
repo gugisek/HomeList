@@ -34,24 +34,23 @@ $description = htmlspecialchars((string)$row['description'], ENT_QUOTES, 'UTF-8'
                     <div class="flex flex-col w-full md:w-1/2">
                         <div class="flex flex-col">
                             <label for="user_id" class="pb-2 pt-2 font-medium text-xs text-[#5d5d5d]">Użytkownik</label>
-                            <input type="text" name="user_id" id="user_id" value="<?php echo $row['name'] . ' ' . $row['sur_name']; ?>" class="text-sm border border-gray-400 text-gray-900 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500 transition-all duration-500" disabled>
+                            <input type="text" name="user_id" id="user_id" value="<?php echo $row['name'] . ' ' . $row['sur_name']; ?>" class="hl-input" disabled>
                         </div>
                     </div>
                     <div class="flex flex-col w-full md:w-1/2">
                         <div class="flex flex-col">
                             <label for="when" class="pb-2 pt-2 font-medium text-xs text-[#5d5d5d]">Kiedy</label>
-                            <input type="text" name="when" id="when" value="<?php echo $when; ?>" class="text-sm border border-gray-400 text-gray-900 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500 transition-all duration-500" disabled>
+                            <input type="text" name="when" id="when" value="<?php echo $when; ?>" class="hl-input" disabled>
                         </div>
                     </div>
                 </div>
                 <div class="flex flex-col">
                     <label for="object_id" class="pb-2 font-medium pt-2 text-xs text-[#5d5d5d]">Id obiektu</label>
-                    <input type="text" name="object_id" id="object_id" value="<?php echo $objectId; ?>" class="text-sm border border-gray-400 text-gray-900 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500 transition-all duration-500" disabled>
+                    <input type="text" name="object_id" id="object_id" value="<?php echo $objectId; ?>" class="hl-input" disabled>
                 </div>
                 <div class="flex flex-col">
                     <label for="object_type" class="pb-2 pt-2 font-medium text-xs text-[#5d5d5d]">Typ obiektu</label>
-                    <input type="text" name="object_type" id="object_type" value="<?php echo $objectType; ?>" class="text-sm border border-gray-400 text-gray-900 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500 transition-all
-                    duration-500" disabled>
+                    <input type="text" name="object_type" id="object_type" value="<?php echo $objectType; ?>" class="hl-input" disabled>
                 </div>
                 <div class="flex flex-col h-full">
                     <label for="before" class="pb-2 pt-2 font-medium text-xs text-[#5d5d5d]">Przed</label>
@@ -90,7 +89,7 @@ $description = htmlspecialchars((string)$row['description'], ENT_QUOTES, 'UTF-8'
                 </div>
                 <div class="flex flex-col">
                     <label for="description" class="pb-2 text-xs pt-2 font-medium text-[#5d5d5d]">Opis</label>
-                    <textarea name="description" id="description" cols="30" rows="1" class="text-sm border border-gray-400 text-gray-900 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500 transition-all duration-500" disabled><?php echo $description; ?></textarea>
+                    <textarea name="description" id="description" cols="30" rows="1" class="hl-input" disabled><?php echo $description; ?></textarea>
                 </div>
                 <div class="flex flex-col h-full">
                     <label for="after" class="pb-2 pt-2 font-medium text-xs text-[#5d5d5d]">Po</label>

@@ -65,6 +65,24 @@ if (!function_exists('hl_list_access')) {
         return $count > 0;
     }
 
+    // osoby z dostępem do listy (właściciel pierwszy, potem zaproszeni wg kolejności dołączenia)
+    function hl_list_members(mysqli $conn, int $listId): array
+    {
+        $stmt = $conn->prepare(
+            'SELECT users.id, users.name, users.sur_name, users.profile_picture
+             FROM users JOIN lists ON lists.id = ?
+             LEFT JOIN list_invities ON list_invities.list_id = lists.id AND list_invities.user_id = users.id
+             WHERE users.id = lists.owner_id OR list_invities.user_id IS NOT NULL
+             GROUP BY users.id
+             ORDER BY MAX(users.id = lists.owner_id) DESC, MIN(list_invities.id) ASC'
+        );
+        $stmt->bind_param('i', $listId);
+        $stmt->execute();
+        $members = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $members;
+    }
+
     // <img> z profilowym autora zadania (img/users_images/, brak -> default.png)
     function hl_avatar_img(?string $file, string $class = 'size-4'): string
     {

@@ -31,7 +31,7 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
     <input type="hidden" id="plan_sheet_date" value="<?=$sel_date?>">
     <input type="hidden" id="plan_sheet_part" value="<?=$sel_part?>">
 
-    <h1 class="text-lg font-semibold pr-8">Zaplanuj</h1>
+    <h1 class="hl-popup-title">Zaplanuj</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400 truncate pr-8"><?=hl_e($el['title'])?></p>
     <?php if ($plan): ?>
     <span class="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-400/20">
@@ -68,14 +68,14 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
     </div>
 
     <label for="plan_sheet_time" class="<?=$label?>">Godzina <span class="font-normal text-gray-400">(opcjonalnie)</span></label>
-    <input id="plan_sheet_time" type="time" value="<?=$sel_time?>" class="w-full cursor-pointer rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-300">
+    <input id="plan_sheet_time" type="time" value="<?=$sel_time?>" class="hl-input w-full cursor-pointer">
 
     <div class="mt-6 flex flex-row-reverse gap-2">
-        <button onclick="planSheetSave()" class="active:scale-95 duration-150 flex w-full justify-center shadow-xl cursor-pointer rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ring-1 font-medium ring-green-400 px-4 py-2 text-sm text-white items-center gap-1 hover:bg-white hover:text-green-400">
+        <button onclick="planSheetSave()" class="hl-btn hl-btn-primary flex-1">
             <?=hl_icon('check', 'size-5', '1.8')?>Zapisz
         </button>
         <?php if ($plan): ?>
-        <button onclick="planSheetUnplan()" class="active:scale-95 duration-150 flex w-full justify-center cursor-pointer rounded-2xl font-medium ring-rose-400 ring-1 px-4 py-2 text-sm text-rose-400 items-center gap-1 hover:bg-rose-400 hover:text-white">
+        <button onclick="planSheetUnplan()" class="hl-btn hl-btn-danger flex-1">
             Usuń z planu
         </button>
         <?php endif; ?>

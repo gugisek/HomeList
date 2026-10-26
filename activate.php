@@ -1,6 +1,9 @@
 <?php
 $title = "aktywacja konta";
-$auth_heading = 'Aktywacja konta';
+$auth_heading = 'Aktywuj konto';
+$auth_subheading = 'Na Twój adres wysłaliśmy 6-cyfrowy kod. Wpisz go poniżej – jest ważny 24 godziny.';
 $auth_form = 'activate_form.php';
-$auth_footer = '<a href="login.php" class="font-semibold leading-6 text-green-400 hover:text-green-300 duration-150">Wróć do logowania</a>';
+$auth_visual = 'lock';
+$auth_note = ['Poczta · HomeList', 'Twój kod aktywacyjny – ważny 24 godziny'];
+$auth_footer = '<a href="login.php" class="lp-link">Wróć do logowania</a>';
 include 'components/login/auth_layout.php';

@@ -2,10 +2,10 @@
 <?php
 include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
 ?>
-<section id="dashboard_body" data-aos="fade-up" data-aos-delay="100" class="mb-10">
+<section id="dashboard_body" data-aos="fade-up" data-aos-delay="100" class="mb-10 max-w-5xl mx-auto">
     
 </section>
-<section onclick="moreMenu()" id="more_menu_bg" class="bg-black/40 z-[2] fixed top-0 left-0 h-screen w-screen hidden duration-150"></section>
+<section onclick="moreMenu()" id="more_menu_bg" class="hl-scrim z-[48] md:hidden"></section>
 <div id="lists" class="flex items-center justify-center z-50">
 <?php include '../dashboard/lists.php'; ?>
 </div>
@@ -13,7 +13,7 @@ include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start()
 
 <script>
     
-    const storageKey = "todoOrder_<?php echo $_SESSION['login_id']; ?>";
+    var storageKey = "todoOrder_<?php echo $_SESSION['login_id']; ?>";
 
     function applyTodoNavOrder(body) {
         const container = document.getElementById(body);
@@ -74,20 +74,17 @@ applyTodoNavOrder('more_nav_body');
 fixRoundedCorners();
 </script>
 <script>
-    function moreMenu() {
+    // menu „więcej” dolnego paska (telefon): szkło wysuwa się nad pigułką, kropki zamieniają się w X
+    function moreMenu(open) {
         var menu = document.getElementById("more_menu");
-        menu.classList.toggle("scale-y-0");
-        var menu_bg = document.getElementById("more_menu_bg");
-        menu_bg.classList.toggle("hidden");
+        if (!menu) return;
+        if (open === undefined) open = !menu.classList.contains("is-open");
+        menu.classList.toggle("is-open", open);
+        document.getElementById("more_menu_bg")?.classList.toggle("is-open", open);
+        document.getElementById("more_btn")?.classList.toggle("is-open", open);
     }
     function moreMenuClose() {
-        var menu = document.getElementById("more_menu");
-        if (menu.classList.contains("scale-y-0")) {
-            return;
-        }
-        menu.classList.add("scale-y-0");
-        var menu_bg = document.getElementById("more_menu_bg");
-        menu_bg.classList.add("hidden");
+        moreMenu(false);
     }
 </script>
 
@@ -165,6 +162,7 @@ fixRoundedCorners();
     }
 
     localStorage.setItem("current_todo", link);
+    if (typeof hlRailSync === "function") hlRailSync();
     if(restore_scroll === 'restore_scroll'){
         // Przywrócenie pozycji scrolla po odświeżeniu
         // poczekaj 150ms na animacje
@@ -197,6 +195,8 @@ fixRoundedCorners();
         var link = localStorage.getItem("current_todo") || 'list=today';
         if (tabSiteFor(link) === 'today') {
             reloadTabSilently();
+        } else if (tabSiteFor(link) === 'todo') {
+            hlMorphTab();
         } else {
             openDetailTab(tabSiteFor(link), link, restore_scroll);
         }
@@ -223,6 +223,100 @@ fixRoundedCorners();
                 });
                 html.scrollTop = scroll;
             });
+    }
+
+    // aktualizacja listy zadań w miejscu: bez spinnera i skoku scrolla; podmieniany jest tylko nagłówek
+    // i #hl_morph_list (popup szczegółów w tej samej zakładce dokańcza animację zamknięcia)
+    function hlMorphTab() {
+        var link = localStorage.getItem("current_todo") || 'list=today';
+        var oldList = document.getElementById('hl_morph_list');
+        if (!oldList) return reloadTabSilently();
+        var seq = window.hlMorphSeq = (window.hlMorphSeq || 0) + 1;
+        // chwila na zamknięcie popupu, żeby zmiana była widoczna, a nie schowana pod tłem
+        var wait = new Promise(resolve => setTimeout(resolve, 180));
+        var load = fetch("components/panel/dashboard/" + tabSiteFor(link) + ".php?" + link).then(response => response.text());
+        return Promise.all([load, wait])
+            .then(([data]) => {
+                if (seq !== window.hlMorphSeq || localStorage.getItem("current_todo") !== link || !document.body.contains(oldList)) return;
+                var parsedDocument = new DOMParser().parseFromString(data, "text/html");
+                var newList = parsedDocument.getElementById('hl_morph_list');
+                if (!newList) return reloadTabSilently();
+                var oldHead = document.getElementById('sticky_nav_body');
+                var newHead = parsedDocument.getElementById('sticky_nav_body');
+                if (oldHead && newHead && oldHead.innerHTML !== newHead.innerHTML) oldHead.innerHTML = newHead.innerHTML;
+                return hlMorphList(oldList, newList);
+            })
+            .catch(error => {
+                console.error('Błąd odświeżania listy:', error);
+                reloadTabSilently();
+            });
+    }
+
+    // podmiana elementów z data-key: usunięte się zwijają, nowe wjeżdżają z poświatą,
+    // zmienione błyskają, a przesunięte płyną na nowe miejsce (FLIP)
+    function hlMorphList(oldUl, newUl) {
+        var keyed = ul => {
+            var map = {};
+            ul.querySelectorAll('[data-key]').forEach(el => { map[el.dataset.key] = el; });
+            return map;
+        };
+        var oldItems = keyed(oldUl);
+        var newItems = keyed(newUl);
+        var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var removed = Object.keys(oldItems).filter(key => !newItems[key]);
+
+        removed.forEach(key => {
+            var el = oldItems[key];
+            el.style.maxHeight = el.offsetHeight + 'px';
+            el.style.pointerEvents = 'none';
+            requestAnimationFrame(() => el.classList.add('hl-morph-out'));
+        });
+
+        return new Promise(resolve => setTimeout(resolve, removed.length && !calm ? 340 : 0)).then(() => {
+            var rects = {};
+            var before = {};
+            Object.keys(oldItems).forEach(key => {
+                if (!newItems[key]) return;
+                rects[key] = oldItems[key].getBoundingClientRect();
+                before[key] = hlMorphSig(oldItems[key]);
+            });
+            var hadItems = Object.keys(oldItems).length > 0;
+
+            oldUl.innerHTML = newUl.innerHTML;
+            if (calm) return;
+
+            oldUl.querySelectorAll('[data-key]').forEach(el => {
+                var key = el.dataset.key;
+                if (!rects[key]) {
+                    if (hadItems) hlMorphMark(el, 'hl-morph-in');
+                    return;
+                }
+                if (before[key] !== hlMorphSig(el)) hlMorphMark(el, 'hl-morph-changed');
+                var now = el.getBoundingClientRect();
+                var dx = rects[key].left - now.left;
+                var dy = rects[key].top - now.top;
+                if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+                el.style.transition = 'none';
+                el.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+                el.offsetWidth;
+                el.style.transition = 'transform .5s cubic-bezier(.16, 1, .3, 1)';
+                el.style.transform = '';
+                setTimeout(() => { el.style.transition = ''; }, 520);
+            });
+        });
+    }
+
+    // treść elementu bez śladów animacji (klasy hl-morph-*, style FLIP), żeby dało się porównać stary z nowym
+    function hlMorphSig(el) {
+        var clone = el.cloneNode(true);
+        clone.classList.remove('hl-morph-in', 'hl-morph-changed');
+        clone.removeAttribute('style');
+        return clone.outerHTML;
+    }
+
+    function hlMorphMark(el, cls) {
+        el.classList.add(cls);
+        setTimeout(() => el.classList.remove(cls), 1600);
     }
 
     // kilka szybkich zmian (np. planowanie z backlogu) = jedno przeładowanie
@@ -447,9 +541,11 @@ function moveElement() {
                 scriptElement.classList.add("popup-script"); // Dodaj klasę, by łatwiej usuwać
                 document.body.appendChild(scriptElement);
             });
+            applyTodoNavOrder('todo-nav');
+            applyTodoNavOrder('more_nav_body');
+            fixRoundedCorners();
         });
-    applyTodoNavOrder('todo-nav');
-    fixRoundedCorners();
+    if (typeof hlRailRefresh === "function") hlRailRefresh();
     }
 
     function addList() {
@@ -874,7 +970,7 @@ function updateListName() {
                         if(i==1){
                           
                           popupInfoListsOpenClose();
-                          openPanelSite(`dashboard`)
+                          openPanelSite(`dashboard`); hlRailRefresh();
                         }
                         break;
                     case 'error':

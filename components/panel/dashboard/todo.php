@@ -25,16 +25,30 @@ if ($list == "archive"){
 ?>
 <section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/70 dark:to-[#3d3d3d]/0">
     <div class="flex items-center justify-between">
-        <div class="text-gray-400">
-            <span class="font-medium text-2xl text-black dark:text-white font-[poppins]"><?=$list_full_name?></span>
+        <div class="flex items-center gap-3 min-w-0 text-gray-400">
+            <span class="font-medium text-2xl text-black dark:text-white font-[poppins] truncate"><?=$list_full_name?></span>
+            <?php if (!empty($list_shared)):
+                $members = hl_list_members($conn, $list_id);
+                $shown = array_slice($members, 0, 4);
+                $rest = count($members) - count($shown);
+            ?>
+            <span class="flex-none inline-flex items-center pl-1.5" title="<?=hl_e(implode(', ', array_column($members, 'name')))?>">
+                <?php foreach ($shown as $member): ?>
+                <span class="-ml-1.5 inline-flex rounded-full duration-150 hover:-translate-y-0.5 hover:z-[1]" title="<?=hl_e(trim($member['name'].' '.$member['sur_name']))?>"><?=hl_avatar_img($member['profile_picture'], 'size-7 ring-2 ring-[#fdfdfd] dark:ring-[#3d3d3d]')?></span>
+                <?php endforeach; ?>
+                <?php if ($rest > 0): ?>
+                <span class="-ml-1.5 inline-grid place-items-center size-7 rounded-full bg-gray-200 text-[11px] font-semibold text-gray-600 ring-2 ring-[#fdfdfd] dark:bg-[#525252] dark:text-gray-200 dark:ring-[#3d3d3d]">+<?=$rest?></span>
+                <?php endif; ?>
+            </span>
+            <?php endif; ?>
             <?php if ($list_type == 'routine'): ?>
-            <span class="ml-1 align-middle inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-orange-500 bg-orange-100 dark:text-orange-400 dark:bg-orange-400/15">
+            <span class="flex-none inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-orange-500 bg-orange-100 dark:text-orange-400 dark:bg-orange-400/15">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
                 Rutyny
             </span>
             <?php endif; ?>
         </div>
-        <div onclick="openPopupElementAdd('<?=$list_id?>')"  class="<?php if($list == "archive"){echo 'hidden ';}?> hover:text-white hover:bg-green-400 dark:text-white hover:shadow-xl shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
+        <div onclick="openPopupElementAdd('<?=$list_id?>')" title="Dodaj zadanie" class="<?php if($list == "archive"){echo 'hidden ';}?>hl-icon-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -43,7 +57,7 @@ if ($list == "archive"){
 </section>
 
 <section class="mt-2" data-aos="fade-right" data-aos-delay="150">
-<ul role="list" class=" h-full">
+<ul id="hl_morph_list" role="list" class=" h-full">
     <?php
     
     include '../../../scripts/conn_db.php';
@@ -60,77 +74,43 @@ if ($list == "archive"){
                 ";
         $result = mysqli_query($conn, $sql);
         if(mysqli_num_rows($result) > 0) {
+          // grupy według dnia wykonania / archiwizacji; najnowszy dzień rozwinięty
           $grouped = [];
           while($row = mysqli_fetch_assoc($result)) {
-              $done_date_key = date('Y-m-d', strtotime($row['done_date']));
-              $grouped[$done_date_key][] = $row;
+              $grouped[date('Y-m-d', strtotime($row['done_date']))][] = $row;
           }
-      
-          echo '<div class="bg-white dark:bg-[#3d3d3d]">
-                  <div class="mx-auto max-w-7xl px-6 pb-12 sm:pb-16 lg:px-8 lg:py-20">
-                    <div class="mx-auto max-w-4xl divide-y divide-gray-900/10">
-                      <dl class="space-y-6 divide-y divide-gray-900/10 dark:divide-[#525252]">';
-      
+          $today_ymd = date('Y-m-d');
           $index = 0;
           foreach ($grouped as $date => $records) {
-              $formattedDate = strftime('%d.%m.%Y', strtotime($date)); // np. "Środa 28.04.2024"
-              echo '<div class="pt-6">
-                      <dt>
-                        <button type="button" onclick="toggleAccordion(\'faq-'.$index.'\', this)" class="flex w-full items-start justify-between text-left text-gray-900 dark:text-gray-200" aria-controls="faq-'.$index.'" aria-expanded="false">
-                          <span class="text-base font-semibold leading-7">';
-                          //przetłumaczenie dnia tygodnia
-                          $day = strftime('%A', strtotime($date));
-                          if($day == "Monday") $day = "Poniedziałek";
-                          else if($day == "Tuesday") $day = "Wtorek";
-                          else if($day == "Wednesday") $day = "Środa";
-                          else if($day == "Thursday") $day = "Czwartek";
-                          else if($day == "Friday") $day = "Piątek";
-                          else if($day == "Saturday") $day = "Sobota";
-                          else if($day == "Sunday") $day = "Niedziela";
-                          echo $day.' '.$formattedDate.' ('.count($records).')</span>
-                          <span class="ml-6 flex h-7 items-center dark:text-gray-200">
-                            <svg class="plus-icon h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
-                            </svg>
-                            <svg class="minus-icon hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6" />
-                            </svg>
-                          </span>
-                        </button>
-                      </dt>
-                      <dd class="accordion-content" id="faq-'.$index.'">
-                        <ul class="list-disc ml-5 space-y-2">';
-              
+              $open = $index === 0;
+              echo '<li class="arch-group mt-3">
+                      <button type="button" onclick="archToggle(this)" aria-expanded="'.($open ? 'true' : 'false').'" class="w-full flex items-center gap-2 px-1 py-2 text-left rounded-2xl group">
+                        <span class="text-green-400">'.hl_icon('check', 'size-5', '2').'</span>
+                        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 first-letter:uppercase">'.hl_e(hl_relative_day($date, $today_ymd) === hl_day_name($date) ? hl_long_date($date) : hl_relative_day($date, $today_ymd).', '.(int)date('j', strtotime($date)).' '.hl_month_name(date('n', strtotime($date)))).'</h3>
+                        <span class="text-xs text-gray-400">'.count($records).'</span>
+                        <span class="arch-chevron ml-auto text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 duration-200'.($open ? ' rotate-90' : '').'">'.hl_icon('right', 'size-4', '2').'</span>
+                      </button>
+                      <ul class="arch-list'.($open ? '' : ' hidden').'">';
               foreach ($records as $row) {
-                  echo '<li onclick="openPopupDetailsElement('.$row['id'].')" class="cursor-pointer hover:text-green-400 dark:text-gray-200 duration-150 text-sm">';
-                  echo htmlspecialchars($row['title']);
-                  echo '</li>';
+                  $archived = (int)$row['status_id'] === 4;
+                  echo '<li data-key="e'.(int)$row['id'].'" onclick="openPopupDetailsElement('.(int)$row['id'].')" class="group relative flex items-center gap-3 my-1.5 py-3 pl-3 pr-4 sm:mx-0 -mx-4 rounded-2xl bg-white dark:bg-[#2f2f2f] border border-black/10 dark:border-white/5 shadow-sm hover:shadow-md transition-[box-shadow,transform] duration-200 md:hover:scale-[1.01] active:scale-[0.98] cursor-pointer">
+                          <span class="flex size-[1.6rem] flex-none items-center justify-center rounded-full '.($archived ? 'bg-amber-400/15 text-amber-500' : 'bg-green-400/90 text-white').'">'.hl_icon($archived ? 'archive' : 'check', 'size-3.5', '2.5').'</span>
+                          <div class="min-w-0 flex-1">
+                            <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">'.hl_e($row['title']).'</h2>
+                            <p class="text-xs text-gray-400 mt-0.5 truncate">'.($archived ? 'Zarchiwizowane' : 'Zrobione').' · '.hl_e($row['name']).'</p>
+                          </div>
+                          <span class="text-gray-300 dark:text-gray-500 group-hover:text-gray-500 duration-150">'.hl_icon('right', 'size-4', '2').'</span>
+                        </li>';
               }
-      
-              echo '    </ul>
-                      </dd>
-                    </div>';
+              echo '</ul></li>';
               $index++;
           }
-      
-          echo '    </dl>
-                  </div>
-                </div>
-              </div>';
       }else{
-        echo '
-                            <li class="flex ictems-center justify-center py-4 h-full">
-                              <div class="text-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mx-auto h-12 w-12 text-green-400">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-                                </svg>
-                                <h3 class="mt-2 text-sm font-semibold text-gray-900">Brak zadań w archiwum</h3>
-                                <p class="mt-1 text-sm text-gray-500">Trafiają tu zadania po jednym dniu od daty ich wykonania.</p>
-                              </div>
-    
-                            </li>
-                        ';
-  
+        echo '<li class="hl-empty">
+                <span class="hl-empty-ico">'.hl_icon('archive', '').'</span>
+                <h3>Archiwum jest puste</h3>
+                <p>Trafiają tu zadania po jednym dniu od ich wykonania i te zarchiwizowane ręcznie.</p>
+              </li>';
       }
       
     }else if($list_type == "routine"){
@@ -155,7 +135,7 @@ if ($list == "archive"){
                     while($row = mysqli_fetch_assoc($result))
                         {
                             echo '
-                                <li onclick="openPopupDetailsElement('.$row['id'].')" class="group border ';
+                                <li data-key="e'.(int)$row['id'].'" onclick="openPopupDetailsElement('.$row['id'].')" class="group border ';
                                         if($row['deadline_date'] != "" && $row['deadline_date'] != "0000-00-00 00:00:00"){
                                           if($row['deadline_date'] < date('Y-m-d H:i:s') && $row['status_id'] != 2){
                                             echo 'border-red-400/30';
@@ -263,26 +243,12 @@ if ($list == "archive"){
                         }
                     }
                     else {
-                        echo '
-                            <li class="flex ictems-center justify-center py-4 h-full">
-                              <div class="text-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mx-auto h-12 w-12 text-green-400">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-                                </svg>
-                                <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-200">Wszystko zrobione!</h3>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Dodaj nowe zadania na tej liście i będą tu widoczne.</p>
-                                <div class="mt-6">
-                                  <button onclick="openPopupElementAdd(`'.$list_id.'`)" type="button" class="inline-flex items-center rounded-full bg-[#3d3d3d] dark:bg-[#2f2f2f] px-4 py-2 text-sm text-white shadow-sm hover:bg-green-400 hover:scale-105 active:scale-95 duration-150 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                    <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                      <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                    </svg>
-                                    Nowe zadanie
-                                  </button>
-                                </div>
-                              </div>
-    
-                            </li>
-                        ';
+                        echo '<li class="hl-empty">
+                                <span class="hl-empty-ico">'.hl_icon('check', '', '1.8').'</span>
+                                <h3>Wszystko zrobione!</h3>
+                                <p>Dodaj nowe zadania na tej liście i będą tu widoczne.</p>
+                                <button onclick="openPopupElementAdd(`'.$list_id.'`)" type="button" class="hl-btn hl-btn-primary mt-6">'.hl_icon('plus', '', '2').'Nowe zadanie</button>
+                              </li>';
                     }
     }
     
@@ -298,22 +264,12 @@ if ($list == "archive"){
 </section>
 
 <script>
-function toggleAccordion(id, button) {
-    const content = document.getElementById(id);
-    const isOpen = content.classList.contains('open');
-
-    // Zwiń wszystko
-    document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('open'));
-    document.querySelectorAll('.plus-icon').forEach(el => el.classList.remove('hidden'));
-    document.querySelectorAll('.minus-icon').forEach(el => el.classList.add('hidden'));
-
-    // Jeśli nie było otwarte, otwórz kliknięty
-    if (!isOpen) {
-        content.classList.add('open');
-        const icons = button.querySelectorAll('svg');
-        icons[0].classList.add('hidden');  // plus
-        icons[1].classList.remove('hidden');  // minus
-    }
+// dzień w archiwum: zwijanie / rozwijanie listy zadań
+function archToggle(btn) {
+    var list = btn.parentElement.querySelector('.arch-list');
+    var open = list.classList.toggle('hidden') === false;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.querySelector('.arch-chevron').classList.toggle('rotate-90', open);
 }
 </script>
 

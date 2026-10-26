@@ -1,5 +1,5 @@
 
-<section id="popup<?=$name_in_scripts?>Bg" class="fixed backdrop-blur-lg z-[70] h-0 opacity-0 top-0 left-0 w-full h-full bg-[#0000009f] transition-opacity duration-300"></section>
+<section id="popup<?=$name_in_scripts?>Bg" class="fixed backdrop-blur-md z-[70] h-0 opacity-0 top-0 left-0 w-full h-full bg-black/50 transition-opacity duration-300"></section>
   <section id="popup<?=$name_in_scripts?>" 
             <?php
             if(isset($close) and $close == 'true'){
@@ -10,7 +10,7 @@
             ?>
    class="z-[80] fixed scale-0 top-0 left-0 w-full h-full">
     <div class="flex flex-col gap-8 items-center justify-center w-full h-full px-2">
-      <div name="popul_l2" onclick="event.cancelBubble=true;" class="bg-white dark:bg-[#2f2f2f] shadow-xl md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[28px] sm:px-6 sm:py-6  -xl">
+      <div name="popul_l2" onclick="event.cancelBubble=true;" class="bg-white dark:bg-[#1e1e1e] shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-black/[0.06] dark:ring-white/[0.06] md:min-w-[400px] md:w-auto w-full max-w-[800px] max-h-[80vh] min-h-[20vh] overflow-y-auto flex flex-col items-center py-5 px-5 gap-4 rounded-[28px] sm:px-6 sm:py-6  -xl">
         <div class="w-full flex flex-row justify-end z-10">
             <button 
             <?php
@@ -20,7 +20,7 @@
               echo 'onclick="popup'.$name_in_scripts.'CloseConfirm()"';
             }
             ?>
-             type="button" class="rounded-md text-gray-800 hover:text-gray-400 flex flex-row gap-2 text-sm items-center duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
+             type="button" class="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white transition-colors duration-150 focus:outline-none">
                 <!-- <span class="sr-only">Zamknij</span>Zamknij -->
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -35,13 +35,13 @@
     </div>
 </section>
 
-<section id="popup<?=$name_in_scripts?>CloseBg" class="fixed z-[85] backdrop-blur-lg h-0 opacity-0 top-0 left-0 w-full h-full bg-[#0000009f] transition-opacity duration-300"></section>
+<section id="popup<?=$name_in_scripts?>CloseBg" class="fixed z-[85] backdrop-blur-md h-0 opacity-0 top-0 left-0 w-full h-full bg-black/50 transition-opacity duration-300"></section>
   <section id="popup<?=$name_in_scripts?>Close" onclick="popup<?=$name_in_scripts?>CloseConfirm()" class="z-[90] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
     <div class="flex items-center justify-center w-full h-full px-2">
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
-        <div class="relative transform overflow-hidden rounded-[28px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+        <div class="relative transform overflow-hidden rounded-[28px] bg-white dark:bg-[#1e1e1e] ring-1 ring-black/[0.06] dark:ring-white/[0.06] px-5 pb-5 pt-5 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="rounded-md text-gray-800 dark:text-gray-200 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
+            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white transition-colors duration-150 focus:outline-none">
               <span class="sr-only">Zamknij</span>
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -49,34 +49,34 @@
             </button>
           </div>
           <div class="sm:flex sm:items-start">
-            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-[#3d3d3d] sm:mx-0 sm:h-10 sm:w-10">
+            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-400/10 text-amber-500 sm:mx-0 sm:h-10 sm:w-10">
               <svg class="h-6 w-6 text-gray-900 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
             </div>
             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-              <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-gray-300" id="modal-title">Masz niezapisane zmiany</h3>
+              <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100" id="modal-title">Masz niezapisane zmiany</h3>
               <div class="mt-2">
                 <p class="text-sm text-gray-700 dark:text-gray-400">Czy na pewno chcesz wyjść mając niezapisane zmiany? Nie ma możliwości przywrócenia tych zmian.</p>
               </div>
             </div>
           </div>
           <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto dark:text-gray-200 dark:border-gray-300">Zostań</button>
-            <button onclick="popup<?=$name_in_scripts?>OpenClose();popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Nie zapisuj</button>
+            <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="hl-btn hl-btn-primary w-full sm:w-auto">Zostań</button>
+            <button onclick="popup<?=$name_in_scripts?>OpenClose();popup<?=$name_in_scripts?>CloseConfirm()" type="button" class="hl-btn hl-btn-ghost w-full sm:w-auto mt-2 sm:mt-0 sm:mr-2">Nie zapisuj</button>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-<section id="popup<?=$name_in_scripts?>DeleteBg" class="fixed z-[85] backdrop-blur-lg	h-0 opacity-0 top-0 left-0 w-full h-full bg-[#0000009f] transition-opacity duration-300"></section>
+<section id="popup<?=$name_in_scripts?>DeleteBg" class="fixed z-[85] backdrop-blur-md	h-0 opacity-0 top-0 left-0 w-full h-full bg-black/50 transition-opacity duration-300"></section>
   <section id="popup<?=$name_in_scripts?>Delete" onclick="popup<?=$name_in_scripts?>Delete()" class="z-[90] fixed scale-0 top-0 left-0 w-full h-full font-[poppins]">
     <div class="flex items-center justify-center w-full h-full px-2">
       <div onclick="event.cancelBubble=true;" id="pupupFaqDeleteOutput">
-        <div class="relative transform overflow-hidden rounded-[28px] bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+        <div class="relative transform overflow-hidden rounded-[28px] bg-white dark:bg-[#1e1e1e] ring-1 ring-black/[0.06] dark:ring-white/[0.06] px-5 pb-5 pt-5 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
           <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
-            <button onclick="popup<?=$name_in_scripts?>Delete()" type="button" class="rounded-md text-gray-800 hover:text-gray-600 hover:rotate-90 duration-150 focus:outline-none focus:ring-2 ring-green-400 focus:ring-offset-2">
+            <button onclick="popup<?=$name_in_scripts?>Delete()" type="button" class="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white transition-colors duration-150 focus:outline-none">
               <span class="sr-only">Zamknij</span>
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -103,14 +103,14 @@
           <?php
           if($delete_v2 == 'true'){
             echo '
-                <a onclick="'.$name_in_scripts.'Delete()" class="active:scale-95 cursor-pointer mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm sm:ml-3 ring-inset ring-1 ring-[#3d3d3d] hover:ring-red-500 hover:bg-red-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Usuń</a>
-                <a onclick="popup'.$name_in_scripts.'Delete()" type="button" class="sm:mt-0 mt-3 cursor-pointer active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Anuluj</a>
+                <a onclick="'.$name_in_scripts.'Delete()" class="hl-btn w-full sm:w-auto mt-2 sm:mt-0 sm:ml-2 bg-red-500 text-white hover:bg-red-600 cursor-pointer">Usuń</a>
+                <a onclick="popup'.$name_in_scripts.'Delete()" type="button" class="hl-btn hl-btn-ghost w-full sm:w-auto mt-2 sm:mt-0 cursor-pointer">Anuluj</a>
             ';
           }else{
             echo '
             
-                <button class="active:scale-95 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm sm:ml-3 ring-inset ring-1 ring-[#3d3d3d] hover:ring-red-500 hover:bg-red-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Usuń</button>
-                <button onclick="popup'.$name_in_scripts.'Delete()" type="button" class="sm:mt-0 mt-3 active:scale-95 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-gray-500 sm:ml-3 sm:w-auto">Anuluj</button>
+                <button class="hl-btn w-full sm:w-auto mt-2 sm:mt-0 sm:ml-2 bg-red-500 text-white hover:bg-red-600">Usuń</button>
+                <button onclick="popup'.$name_in_scripts.'Delete()" type="button" class="hl-btn hl-btn-ghost w-full sm:w-auto mt-2 sm:mt-0 cursor-pointer">Anuluj</button>
             ';
           }
           ?>
@@ -240,7 +240,7 @@
                                           if(i==1){
                                             
                                             popup'.$name_in_scripts.'Delete();
-                                            openPanelSite(`dashboard`);
+                                            openPanelSite(`dashboard`); if (typeof hlRailRefresh === "function") hlRailRefresh();
                                           }
                                           break;
                                       case `error`:

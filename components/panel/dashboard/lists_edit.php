@@ -1,7 +1,7 @@
 <?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['dashboard', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
 <div class="-mt-[43px]">
 <div id="element_loading"></div>
-    <h1 class="font-[poppins] font-semibold text-lg pr-8 dark:text-gray-200">Edytuj listy</h1>
+    <h1 class="hl-popup-title">Edytuj listy</h1>
     <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Przytrzymaj i przeciągnij aby zmienić kolejność</p>
     <div id="items-container" class="flex flex-col mt-4 gap-1 overflow-y-auto max-h-[55vh] pr-1">
         <?php
@@ -22,7 +22,7 @@
                                 </svg>
                             </div>
                             <h1 class="font-medium text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">'.htmlspecialchars($row['full_name']).'</h1>
-                            <div onclick="openPopupInfoLists(`'.$row['id'].'`)" class="flex-shrink-0 p-2 text-gray-400 dark:text-gray-500 hover:bg-[#3d3d3d] hover:text-white cursor-pointer duration-150 rounded-xl">
+                            <div onclick="openPopupInfoLists(`'.$row['id'].'`)" class="flex-shrink-0 p-2 text-gray-400 dark:text-gray-500 hover:bg-green-400 hover:text-white hover:shadow-lg hover:shadow-green-400/40 active:scale-90 cursor-pointer duration-150 rounded-full">
                         ';
                         if($row['invite_id'] == null) {
                            echo '
@@ -87,6 +87,7 @@ function saveOrder() {
     applyTodoNavOrder('todo-nav');
     applyTodoNavOrder('more_nav_body');
     fixRoundedCorners();
+    if (typeof hlRailOrder === "function") hlRailOrder();
 }
 </script>
 

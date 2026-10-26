@@ -40,7 +40,7 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
                 </svg>
                 <span id="feed-ring-text" class="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-gray-700 dark:text-gray-200"><?=$feed['done']?>/<?=$feed['total']?></span>
             </div>
-            <div onclick="openPopupTodayAdd('<?=$date?>')" title="Dodaj zadanie do planu" class="hover:text-white hover:bg-green-400 dark:text-white hover:shadow-xl shadow-green-300 hover:scale-105 active:scale-90 duration-150 group flex gap-x-3 rounded-xl p-3 cursor-pointer">
+            <div onclick="openPopupTodayAdd('<?=$date?>')" title="Dodaj zadanie do planu" class="hl-icon-btn">
                 <?=hl_icon('plus', 'size-6', '2')?>
             </div>
         </div>
@@ -113,10 +113,10 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
             <h3 class="mt-3 text-sm font-semibold text-gray-900 dark:text-gray-200">Nic tu jeszcze nie ma</h3>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Wybierz zadania z list albo dodaj nowe prosto do planu. Rutyny pojawią się tu same.</p>
             <div class="mt-6 flex items-center justify-center gap-2">
-                <button onclick="openPopupBacklog('<?=$date?>')" type="button" class="inline-flex items-center gap-1.5 rounded-full bg-[#3d3d3d] dark:bg-[#2f2f2f] px-4 py-2 text-sm text-white shadow-sm hover:bg-green-400 hover:scale-105 active:scale-95 duration-150 hover:shadow-xl">
+                <button onclick="openPopupBacklog('<?=$date?>')" type="button" class="hl-btn hl-btn-primary">
                     <?=hl_icon('queue', 'size-5')?>Zaplanuj z list
                 </button>
-                <button onclick="openPopupTodayAdd('<?=$date?>')" type="button" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 ring-1 ring-gray-300 dark:ring-white/10 hover:bg-gray-100 dark:hover:bg-white/5 active:scale-95 duration-150">
+                <button onclick="openPopupTodayAdd('<?=$date?>')" type="button" class="hl-btn hl-btn-ghost">
                     <?=hl_icon('plus', 'size-5')?>Nowe
                 </button>
             </div>

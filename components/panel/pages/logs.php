@@ -1,21 +1,13 @@
 <?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['logs', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
-<section data-aos="fade-up" data-aos-delay="100">
-    <h1 class="font-medium text-2xl dark:text-gray-200">Archiwum zmian</h1>
-    <div class="mt-4 inline-flex rounded-2xl bg-gray-100 dark:bg-[#2c2c2c] p-1 text-sm font-medium">
-        <button type="button" id="logs_tab_changes" onclick="logsTab('changes')" class="logs-tab px-4 py-1.5 rounded-xl bg-white dark:bg-[#3d3d3d] shadow text-gray-900 dark:text-gray-100 duration-150">Zmiany</button>
-        <button type="button" id="logs_tab_logins" onclick="logsTab('logins')" class="logs-tab px-4 py-1.5 rounded-xl text-gray-500 dark:text-gray-400 duration-150">Logowania</button>
+<section data-aos="fade-up" data-aos-delay="100" class="max-w-6xl mx-auto mb-28 md:mb-10">
+    <div class="pt-2"><h1 class="hl-title">Archiwum zmian</h1><p class="hl-sub">Kto, co i kiedy zmienił oraz historia logowań.</p></div>
+    <div class="mt-5 inline-flex rounded-full bg-gray-100 dark:bg-white/5 p-1 text-sm font-medium">
+        <button type="button" id="logs_tab_changes" onclick="logsTab('changes')" class="logs-tab px-4 py-1.5 rounded-full active:scale-95 bg-white dark:bg-[#3d3d3d] shadow text-gray-900 dark:text-gray-100 duration-150">Zmiany</button>
+        <button type="button" id="logs_tab_logins" onclick="logsTab('logins')" class="logs-tab px-4 py-1.5 rounded-full active:scale-95 text-gray-500 dark:text-gray-400 duration-150">Logowania</button>
     </div>
-    <div class="mt-8 flow-root">
-    <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
-      <div class="inline-block min-w-full py-2 align-middle">
-        <section class="w-full">
-            <div id="table_body">
-                <?php include '../archive/table.php'; ?>
-            </div>
-        </section>
-      </div>
+    <div id="table_body" class="mt-4">
+        <?php include '../archive/table.php'; ?>
     </div>
-  </div>
 </section>
 
 <script>
@@ -31,7 +23,7 @@
 
     function openLoginAttempts(page, failed) {
         var body = document.getElementById("table_body");
-        body.innerHTML = "<div class='w-full flex items-center mt-[20vh] justify-center'><div class='bg-black/90 p-4 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
+        body.innerHTML = "<div class='w-full flex items-center mt-[20vh] justify-center'><div><div class='lds-dual-ring'></div></div></div>";
         fetch("components/panel/archive/login_attempts.php?page_id=" + page + (failed ? "&failed=1" : ""))
             .then(response => response.text())
             .then(data => {

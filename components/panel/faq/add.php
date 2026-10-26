@@ -1,22 +1,20 @@
 <?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['faq', 'add']; include __DIR__.'/../../../scripts/security.php'; ?>
 
 <div class="-mt-10 mb-4">
-        <h1 class="text-lg font-semibold font-[poppins]">Dodaj pytanie FAQ</h1>
+        <h1 class="hl-popup-title">Dodaj pytanie FAQ</h1>
 </div>
-<form action="scripts/settings/faq/edit_faq.php" method="POST" class="text-white flex flex-col h-full gap-4 pt-2 px-2 font-[poppins]">
+<form action="scripts/settings/faq/edit_faq.php" method="POST" class="flex flex-col h-full gap-4 pt-2 font-[poppins]">
     <input type="hidden" name="id" value="add">
 
-    <div class="flex flex-row gap-4 w-full">
-        <div class="relative z-0 w-full">
-            <input required type="text" id="question" name="question" class="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-[1px] border-gray-300 appearance-none text-gray-900 focus:text-black dark:border-gray-600 dark:focus:theme-border focus:outline-none focus:ring-0 theme-border-focus peer" value="" />
-            <label for="question" class="absolute text-sm text-gray-900 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 theme-text-focus peer-focus:dark:text-[--text] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Pytanie</label>
-        </div>
+    <div>
+        <label for="question" class="hl-label">Pytanie</label>
+        <input required type="text" id="question" name="question" class="hl-input" value="" />
     </div>
-        <div class="h-full max-h-[45vh] text-gray-900" id="editor-container-popup"></div>
+        <div class="h-full max-h-[45vh] text-gray-900 dark:text-gray-200 rounded-b-2xl" id="editor-container-popup"></div>
         <input type="hidden" id="editorContent-faq" name="answer" value=''>
-    <div class="mt-4 mb-2 sm:flex sm:flex-row-reverse">
-        <button class="active:scale-95 duration-150 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-green-500 sm:ml-2 sm:w-auto">Zapisz</button>
-        <button onclick="popupFaqAddOpenClose()" type="button" class="active:scale-95 duration-150 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Nie zapisuj</button>
+    <div class="mt-2 flex flex-row-reverse items-center gap-2">
+        <button class="hl-btn hl-btn-primary flex-1">Zapisz</button>
+        <button onclick="popupFaqAddOpenClose()" type="button" class="hl-btn hl-btn-ghost flex-1">Nie zapisuj</button>
         
     </div>
 </form>

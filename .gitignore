@@ -2,3 +2,7 @@ scripts/push/vapid_keys.php
 
 # Sekrety aplikacji (klucz 2FA) – generowane automatycznie
 scripts/app_secrets.php
+
+# Pliki wgrywane przez użytkowników (zrzuty ze zgłoszeń błędów)
+uploads/*
+!uploads/.htaccess

@@ -25,26 +25,26 @@ $device = function ($ua) {
     return trim($br . ($os ? ' · ' . $os : ''));
 };
 ?>
-<div class="px-4 sm:px-6 lg:px-8">
+<div>
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
             <input type="checkbox" class="size-4 accent-green-400" <?=$only_failed ? 'checked' : ''?> onchange="openLoginAttempts(1, this.checked)"> Tylko nieudane
         </label>
         <div class="flex items-center gap-2 text-sm text-gray-400">
-            <button type="button" onclick="openLoginAttempts(<?=max(1, $page - 1)?>, <?=$only_failed ? 'true' : 'false'?>)" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5">‹</button>
+            <button type="button" onclick="openLoginAttempts(<?=max(1, $page - 1)?>, <?=$only_failed ? 'true' : 'false'?>)" class="hl-icon-btn hl-icon-btn-sm text-lg">‹</button>
             Strona <?=$page?> z <?=$total_pages?>
-            <button type="button" onclick="openLoginAttempts(<?=min($total_pages, $page + 1)?>, <?=$only_failed ? 'true' : 'false'?>)" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5">›</button>
+            <button type="button" onclick="openLoginAttempts(<?=min($total_pages, $page + 1)?>, <?=$only_failed ? 'true' : 'false'?>)" class="hl-icon-btn hl-icon-btn-sm text-lg">›</button>
         </div>
     </div>
-    <div class="overflow-x-auto rounded-2xl bg-white dark:bg-[#2c2c2c] ring-1 ring-black/5 shadow-xl">
+    <div class="hl-card overflow-x-auto p-2">
     <table class="w-full text-sm">
-        <tr class="text-left text-gray-900 dark:text-gray-200 border-b border-gray-200 dark:border-white/5">
-            <th class="py-3 px-4 font-semibold">Kiedy</th>
-            <th class="py-3 px-4 font-semibold">Konto / wpisany login</th>
-            <th class="py-3 px-4 font-semibold">Metoda</th>
-            <th class="py-3 px-4 font-semibold">Wynik</th>
-            <th class="py-3 px-4 font-semibold hidden md:table-cell">IP</th>
-            <th class="py-3 px-4 font-semibold hidden lg:table-cell">Urządzenie</th>
+        <tr class="text-left">
+            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Kiedy</th>
+            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Konto / wpisany login</th>
+            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Metoda</th>
+            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Wynik</th>
+            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold hidden md:table-cell">IP</th>
+            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold hidden lg:table-cell">Urządzenie</th>
         </tr>
         <?php if ($result->num_rows === 0): ?>
         <tr><td colspan="6" class="py-6 px-4 text-center text-gray-500 dark:text-gray-400">Brak wpisów</td></tr>
@@ -52,7 +52,7 @@ $device = function ($ua) {
         <?php while ($row = $result->fetch_assoc()):
             $ok = (int)$row['success'] === 1;
         ?>
-        <tr class="border-b border-gray-100 dark:border-white/5 text-gray-700 dark:text-gray-300">
+        <tr class="border-t border-black/5 dark:border-white/5 text-gray-700 dark:text-gray-300 hover:bg-black/[.03] dark:hover:bg-white/5 duration-150">
             <td class="py-2.5 px-4 whitespace-nowrap text-gray-500 dark:text-gray-400"><?=$e(date('d.m H:i', strtotime($row['created_at'])))?></td>
             <td class="py-2.5 px-4">
                 <?=$row['name'] !== null ? '<span class="font-medium">' . $e(trim($row['name'] . ' ' . $row['sur_name'])) . '</span><br>' : ''?>
@@ -60,7 +60,7 @@ $device = function ($ua) {
             </td>
             <td class="py-2.5 px-4 whitespace-nowrap"><?=$e($methods[$row['method']] ?? $row['method'])?></td>
             <td class="py-2.5 px-4">
-                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 <?=$ok ? 'text-green-800 bg-green-100' : 'text-red-800 bg-red-100'?>"><?=$ok ? 'OK' : 'Odmowa'?></span>
+                <span class="hl-badge <?=$ok ? 'text-green-600 !bg-green-100 dark:text-green-400 dark:!bg-green-400/15' : 'text-rose-600 !bg-rose-100 dark:text-rose-400 dark:!bg-rose-400/15'?>"><?=$ok ? 'OK' : 'Odmowa'?></span>
                 <?php if ($row['failure_reason']): ?><span class="block text-xs text-gray-500 dark:text-gray-400"><?=$e($reasons[$row['failure_reason']] ?? $row['failure_reason'])?></span><?php endif; ?>
             </td>
             <td class="py-2.5 px-4 hidden md:table-cell text-gray-500 dark:text-gray-400"><?=$e($row['ip_address'] ?? '—')?></td>

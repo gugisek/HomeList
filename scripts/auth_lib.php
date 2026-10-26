@@ -15,6 +15,7 @@ if (!function_exists('hl_auth_user')) {
             'logs' => 'Archiwum i logowania',
             'settings' => 'Ustawienia',
             'faq' => 'FAQ',
+            'reports' => 'Zgłoszenia błędów',
         ];
     }
 
@@ -40,7 +41,7 @@ if (!function_exists('hl_auth_user')) {
             "SELECT users.id, users.login, users.mail, users.name, users.sur_name, users.pswd, users.security_stamp,
                     users.status_id, users.profile_picture, users.role_id,
                     user_roles.role, user_roles.dashboard, user_roles.users AS perm_users, user_roles.logs,
-                    user_roles.settings, user_roles.faq, COALESCE(status_privileges.login, 0) AS can_login
+                    user_roles.settings, user_roles.faq, user_roles.reports, COALESCE(status_privileges.login, 0) AS can_login
              FROM users
              LEFT JOIN user_status ON user_status.id = users.status_id
              LEFT JOIN status_privileges ON status_privileges.id = user_status.privileges
@@ -77,6 +78,7 @@ if (!function_exists('hl_auth_user')) {
             'logs' => (int)$user['logs'],
             'settings' => (int)$user['settings'],
             'faq' => (int)$user['faq'],
+            'reports' => (int)$user['reports'],
         ];
         $_SESSION['auth_fp'] = hl_auth_fingerprint($user);
     }

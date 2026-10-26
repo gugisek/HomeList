@@ -26,14 +26,15 @@ if ($row) {
 ?>
 <div class="-mt-10 font-[poppins] p-1 text-gray-800 dark:text-gray-200">
 <div id="element_loading"></div>
-    <h1 class="font-[poppins] font-medium pr-8 text-gray-800 dark:text-gray-200"><?=hl_e($row['title'])?></h1>
+    <h1 class="hl-popup-title"><?=hl_e($row['title'])?></h1>
     <?php
     if($row['deadline_date'] != null && $row['deadline_date'] != "0000-00-00 00:00:00") {
     $date = hl_short_date($row['deadline_date'], true);
-    echo '<span class="text-sm text-red-500 dark:text-red-400">Deadline: '.$date.'</span>';
+    $late = $row['deadline_date'] < date('Y-m-d H:i:s') && !in_array((int)$row['status_id'], [2, 4], true);
+    echo '<span class="hl-badge mt-2 '.($late ? 'text-red-500 dark:text-red-400 !bg-red-400/10' : 'text-rose-500 dark:text-rose-400 !bg-rose-400/10').'">'.hl_icon('flag', 'size-3.5').'Deadline '.$date.'</span>';
     }
     ?>
-    <p class="pt-4 text-wrap text-gray-800 dark:text-gray-300"><?=$row['description']?></p>
+    <p class="pt-4 text-sm leading-relaxed break-words text-gray-600 dark:text-gray-300"><?=$row['description']?></p>
 
     <?php if (!empty($row['link_url'])): ?>
     <div id="link_preview_badge" class="mt-4">
@@ -123,266 +124,40 @@ if ($row) {
 
     <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center gap-2 mb-4 w-full text-gray-600 dark:text-gray-400"><?php if (hl_list_is_shared($conn, (int)$row['list_id'])) echo hl_avatar_img($row['profile_picture'], 'size-6'); ?><span>Dodano <?=hl_short_date($row['create_date'], true)?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></span></a>
 
-    <div class=" flex gap-2">
-            <?php
-
-            switch ($row['status_id']) {
-
-                
-                case 1:
-                    echo '
-                    <div class="relative inline-block group" style="overflow: visible !important;">
-
-
-                        <!-- PRZYCISK TRZY KROPKI -->
-                        <button 
-                            onclick="toggleMenu(this)"
-                            style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" 
-                            class="active:scale-95 items-center duration-150 inline-flex justify-center rounded-2xl px-2 py-2 hover:scale-110 font-medium text-[#3d3d3d] dark:text-gray-200 shadow-sm hover:bg-[#3d3d3d] hover:text-white"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/>
-                            </svg>
-                        </button>
-
-                        <!-- MENU ROZWALANE -->
-                        <div class="absolute left-0 bottom-full hidden rounded-xl py-4 z-[999] space-y-2 menu-dropdown">
-
-                            <!-- EDYCJA -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupEditElement(`'. $row['id'] .'`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-[#3d3d3d] hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
-                                </svg>
-                                Edytuj
-                            </button>
-
-                            <!-- PRZENIEŚ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupMoveElement(`'. $row['id'] .'`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                                </svg>
-                                Przenieś
-                            </button>
-
-                            <!-- KOPIUJ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement('. $copy_args .')"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25" />
-                                </svg>
-                                Kopiuj
-                            </button>
-
-                            <!-- ARCHIWIZUJ -->
-                            <button onclick="updateStatus('.$row['id'].', `4`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-amber-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-                                </svg>
-                                Archiwizuj
-                            </button>
-
-                        </div>
-                    </div>
-
-                    <button onclick="updateStatus('.$row['id'].', `3`)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl bg-[#3d3d3d] dark:bg-[#2b2b2b] duration-150 px-4 py-2 hover:scale-105 font-medium text-white xs:text-normal text-sm shadow-sm hover:shadow-xl hover:bg-gray-300 hover:text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.1" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
-                        </svg>
-
-                        <span class="sm:block hidden">W trakcie</span>
-                    </button>
-                    <button onclick="updateStatus('.$row['id'].', `2`)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 duration-150 px-4 py-2 hover:scale-105 font-medium text-white shadow-sm xs:text-normal text-sm hover:shadow-xl hover:bg-gray-200 hover:text-green-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-
-                        Zrobione!
-                    </button>
-                    ';
-                    break;
-                case 2:
-                    echo '
-                    <div class="relative inline-block group" style="overflow: visible !important;">
-
-
-                        <!-- PRZYCISK TRZY KROPKI -->
-                        <button 
-                            onclick="toggleMenu(this)"
-                            style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" 
-                            class="active:scale-95 items-center duration-150 inline-flex justify-center rounded-2xl px-2 py-2 hover:scale-110 font-medium text-[#3d3d3d] dark:text-gray-200 shadow-sm hover:bg-[#3d3d3d] hover:text-white"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/>
-                            </svg>
-                        </button>
-
-                        <!-- MENU ROZWALANE -->
-                        <div class="absolute left-0 bottom-full hidden rounded-xl py-4 z-[999] space-y-2 menu-dropdown">
-
-                            <!-- EDYCJA -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupEditElement(`'. $row['id'] .'`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-[#3d3d3d] hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
-                                </svg>
-                                Edytuj
-                            </button>
-
-                            <!-- PRZENIEŚ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupMoveElement(`'. $row['id'] .'`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                                </svg>
-                                Przenieś
-                            </button>
-
-                            <!-- KOPIUJ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement('. $copy_args .')"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25" />
-                                </svg>
-                                Kopiuj
-                            </button>
-
-                            <!-- ARCHIWIZUJ -->
-                            <button onclick="updateStatus('.$row['id'].', `4`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-amber-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-                                </svg>
-                                Archiwizuj
-                            </button>
-
-                        </div>
-                    </div>
-                    <button onclick="updateStatus('.$row['id'].', `3`)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl bg-[#3d3d3d] dark:bg-[#2b2b2b] duration-150 px-4 py-2 hover:scale-105 font-medium text-white xs:text-normal text-sm shadow-sm hover:shadow-xl hover:bg-gray-300 hover:text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.1" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
-                        </svg>
-
-                        <span class="sm:block hidden">W trakcie</span>
-                    </button>
-                    <button onclick="updateStatus('.$row['id'].', `1`)" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl hover:bg-green-400 duration-150 px-4 py-2 hover:scale-105 font-medium hover:text-white xs:text-normal text-sm shadow-sm hover:shadow-xl bg-gray-200 dark:bg-[#3d3d3d] dark:text-gray-300 text-green-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-
-                        Zrobione!
-                    </button>
-                    ';
-                    break;
-                case 3:
-                    echo '
-                    <div class="relative inline-block group" style="overflow: visible !important;">
-
-
-                        <!-- PRZYCISK TRZY KROPKI -->
-                        <button 
-                            onclick="toggleMenu(this)"
-                            style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" 
-                            class="active:scale-95 items-center duration-150 inline-flex justify-center rounded-2xl px-2 py-2 hover:scale-110 font-medium text-[#3d3d3d] dark:text-gray-200 shadow-sm hover:bg-[#3d3d3d] hover:text-white"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/>
-                            </svg>
-                        </button>
-
-                        <!-- MENU ROZWALANE -->
-                        <div class="absolute left-0 bottom-full hidden rounded-xl py-4 z-[999] space-y-2 menu-dropdown">
-
-                            <!-- EDYCJA -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupEditElement(`'. $row['id'] .'`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-[#3d3d3d] hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
-                                </svg>
-                                Edytuj
-                            </button>
-
-                            <!-- PRZENIEŚ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupMoveElement(`'. $row['id'] .'`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                                </svg>
-                                Przenieś
-                            </button>
-
-                            <!-- KOPIUJ -->
-                            <button onclick="popupDetailsElementOpenClose(); openPopupCopyElement('. $copy_args .')"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-sky-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25" />
-                                </svg>
-                                Kopiuj
-                            </button>
-
-                            <!-- ARCHIWIZUJ -->
-                            <button onclick="updateStatus('.$row['id'].', `4`)"
-                                    class="active:scale-95 flex items-center duration-150 rounded-2xl px-3 py-2 w-full bg-white dark:bg-[#2c2c2c] hover:scale-105 font-medium text-[#3d3d3d] dark:text-gray-200 hover:bg-amber-400 hover:text-white"
-                                    style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-                                </svg>
-                                Archiwizuj
-                            </button>
-
-                        </div>
-                    </div>
-
-                    <button onclick="updateStatus('.$row['id'].', `1`)" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl hover:bg-[#3d3d3d] duration-150 px-4 py-2 hover:scale-105 font-medium hover:text-white xs:text-normal text-sm shadow-sm hover:shadow-xl bg-gray-300 dark:bg-[#3d3d3d] dark:text-gray-300 text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.1" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
-                        </svg>
-
-                        <span class="sm:block hidden">W trakcie</span>
-                    </button>
-                    <button onclick="updateStatus('.$row['id'].', `2`)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center active:scale-95 rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 duration-150 px-4 py-2 hover:scale-105 font-medium text-white xs:text-normal text-sm shadow-sm hover:shadow-xl hover:bg-gray-200 hover:text-green-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-
-                        Zrobione!
-                    </button>
-                    ';
-                    break;
-                case 4:
-                    echo '
-                    <span class="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium text-amber-500 bg-amber-100 dark:text-amber-400 dark:bg-amber-400/15 whitespace-nowrap">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-                        </svg>
-                        Zarchiwizowane
-                    </span>
-                    <button onclick="updateStatus('.$row['id'].', `1`)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center rounded-2xl bg-[#3d3d3d] dark:bg-[#2b2b2b] px-4 py-2 hover:scale-105 font-medium text-white xs:text-normal text-sm shadow-sm hover:shadow-xl hover:bg-gray-300 hover:text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-                        </svg>
-                        Przywróć
-                    </button>
-                    ';
-                    break;
-            }
-            ?>
+    <?php
+    $st = (int)$row['status_id'];
+    $menu_btn = function ($onclick, $icon, $label, $tone = '') {
+        return '<button type="button" onclick="'.$onclick.'" class="hl-menu-item'.($tone ? ' '.$tone : '').'">'.hl_icon($icon, '').$label.'</button>';
+    };
+    ?>
+    <div class="flex items-center gap-2">
+        <?php if ($st === 4): ?>
+        <span class="hl-badge !px-4 !py-2.5 !text-sm text-amber-600 dark:text-amber-400 !bg-amber-100 dark:!bg-amber-400/15"><?=hl_icon('archive', 'size-5')?>Zarchiwizowane</span>
+        <button onclick="updateStatus(<?=$row['id']?>, `1`)" class="hl-btn hl-btn-primary flex-1"><?=hl_icon('undo')?>Przywróć</button>
+        <?php else: ?>
+        <div class="relative flex-none">
+            <button type="button" onclick="toggleMenu(this)" title="Więcej" class="hl-btn hl-btn-soft hl-btn-square"><?=hl_icon('dots', '', '2')?></button>
+            <div class="menu-dropdown hl-pop hidden min-w-[200px]">
+                <div class="hl-menu flex flex-col gap-0.5">
+                    <?=$menu_btn("popupDetailsElementOpenClose(); openPopupEditElement(`".$row['id']."`)", 'pencil', 'Edytuj')?>
+                    <?=$menu_btn("popupDetailsElementOpenClose(); openPopupMoveElement(`".$row['id']."`)", 'move', 'Przenieś', 'is-sky')?>
+                    <?=$menu_btn("popupDetailsElementOpenClose(); openPopupCopyElement(".$copy_args.")", 'copy', 'Kopiuj', 'is-sky')?>
+                    <span class="hl-menu-sep"></span>
+                    <?=$menu_btn("updateStatus(".$row['id'].", `4`)", 'archive', 'Archiwizuj', 'is-amber')?>
+                </div>
+            </div>
+        </div>
+        <?php if ($st === 3): ?>
+        <button onclick="updateStatus(<?=$row['id']?>, `1`)" title="Cofnij „W trakcie”" class="hl-btn flex-1 bg-sky-400/15 text-sky-500 dark:text-sky-400 hover:bg-sky-400 hover:text-white"><?=hl_icon('progress')?><span class="hidden sm:inline">W trakcie</span></button>
+        <?php else: ?>
+        <button onclick="updateStatus(<?=$row['id']?>, `3`)" class="hl-btn hl-btn-ghost flex-1"><?=hl_icon('progress')?><span class="hidden sm:inline">W trakcie</span></button>
+        <?php endif; ?>
+        <?php if ($st === 2): ?>
+        <button onclick="updateStatus(<?=$row['id']?>, `1`)" title="Cofnij wykonanie" class="hl-btn hl-btn-accent flex-1"><?=hl_icon('check', '', '2')?>Zrobione</button>
+        <?php else: ?>
+        <button onclick="updateStatus(<?=$row['id']?>, `2`)" class="hl-btn hl-btn-green flex-1"><?=hl_icon('check', '', '2')?>Zrobione!</button>
+        <?php endif; ?>
+        <?php endif; ?>
     </div>
 </div>
 <script>
@@ -455,12 +230,13 @@ if ($row) {
     
 </script>
 <script>
+// menu „więcej” w szczegółach: pozycjonowane fixed (omija overflow karty popupu), wjeżdża jak menu nawigacji
 function toggleMenu(btn) {
     const menu = btn.parentElement.querySelector(".menu-dropdown");
-    const isHidden = menu.classList.contains("hidden");
+    const isHidden = !menu.classList.contains("is-open");
 
-    // Zamknij wszystkie otwarte menus
     document.querySelectorAll(".menu-dropdown").forEach(m => {
+        m.classList.remove("is-open");
         m.classList.add("hidden");
         m.style.cssText = "";
     });
@@ -468,17 +244,18 @@ function toggleMenu(btn) {
     if (isHidden) {
         const rect = btn.getBoundingClientRect();
         menu.classList.remove("hidden");
-        // Fixed pozycjonowanie omija overflow wszystkich rodziców (scroll container, popup karta)
         menu.style.position = "fixed";
         menu.style.left = rect.left + "px";
-        menu.style.bottom = (window.innerHeight - rect.top) + "px";
+        menu.style.bottom = (window.innerHeight - rect.top + 8) + "px";
         menu.style.top = "auto";
         menu.style.zIndex = "9999";
+        menu.style.transformOrigin = "left bottom";
+        requestAnimationFrame(() => menu.classList.add("is-open"));
 
         document.addEventListener("click", function handler(e) {
-            if (!btn.parentElement.contains(e.target)) {
-                menu.classList.add("hidden");
-                menu.style.cssText = "";
+            if (!btn.parentElement.contains(e.target) || e.target.closest(".hl-menu-item")) {
+                menu.classList.remove("is-open");
+                setTimeout(() => { if (!menu.classList.contains("is-open")) { menu.classList.add("hidden"); menu.style.cssText = ""; } }, 200);
                 document.removeEventListener("click", handler);
             }
         });

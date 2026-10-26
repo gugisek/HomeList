@@ -1,0 +1,137 @@
+/* HomeList – logowanie, rejestracja, reset hasła, aktywacja. Rozszerza css/landing.css */
+
+:root { --auth-panel: #ebebe8; --auth-dots: rgba(0, 0, 0, .06); }
+@media (prefers-color-scheme: dark) {
+  :root { --auth-panel: #2e2e2e; --auth-dots: rgba(255, 255, 255, .05); }
+}
+
+.lp-auth-top { max-width: none; padding: 22px clamp(20px, 3vw, 40px); }
+
+.lp-auth-grid { min-height: 100vh; min-height: 100svh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
+.lp-auth-pane { display: flex; align-items: center; justify-content: center; padding: 110px clamp(20px, 5vw, 64px) 56px; }
+.lp-auth-box { width: 100%; max-width: 420px; animation: lp-up .9s cubic-bezier(.16, 1, .3, 1) both; }
+.lp-auth-box .lp-eyebrow { margin-bottom: 22px; white-space: nowrap; }
+@media (max-width: 480px) { .lp-auth-box .lp-eyebrow em { display: none; } }
+.lp-auth-h { margin: 0; font-size: clamp(2.4rem, 4.4vw, 3.5rem); font-weight: 600; letter-spacing: -.045em; line-height: 1; }
+.lp-auth-sub { margin: 16px 0 0; font-size: 1rem; line-height: 1.6; color: var(--ink-2); }
+.lp-auth-body { margin-top: 34px; }
+.lp-auth-foot { margin: 28px 0 0; font-size: 14px; color: var(--muted); }
+
+.lp-link { color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-color: #4ade80; text-decoration-thickness: 2px; text-underline-offset: 4px; transition: color .15s; }
+.lp-link:hover { color: #22c55e; }
+.lp-link-muted { font-size: 13px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: color .15s; }
+.lp-link-muted:hover { color: #22c55e; }
+
+/* ---------- formularz ---------- */
+.lp-auth-form { display: flex; flex-direction: column; gap: 18px; }
+.lp-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.lp-input {
+  display: block; width: 100%; height: 50px; padding: 0 16px;
+  border: 0; border-radius: 14px;
+  background: var(--card); color: var(--ink);
+  font: 400 15px 'Poppins', system-ui, sans-serif;
+  box-shadow: inset 0 0 0 1px var(--card-line), var(--shadow-item);
+  transition: box-shadow .2s ease, background-color .2s ease;
+  -webkit-appearance: none; appearance: none;
+}
+.lp-input::placeholder { color: var(--muted); opacity: .7; }
+.lp-input:hover { box-shadow: inset 0 0 0 1px var(--ghost-ring), var(--shadow-item); }
+.lp-input:focus { outline: none; box-shadow: inset 0 0 0 2px #4ade80, 0 0 0 4px rgba(74, 222, 128, .16); }
+.lp-input:-webkit-autofill { -webkit-text-fill-color: var(--ink); -webkit-box-shadow: inset 0 0 0 1px var(--card-line), inset 0 0 0 100px var(--card); }
+.lp-input-code { text-align: center; font-size: 20px; font-weight: 600; letter-spacing: .45em; padding-left: calc(16px + .45em); }
+
+.lp-pass { position: relative; }
+.lp-pass .lp-input { padding-right: 52px; }
+.lp-pass button { position: absolute; right: 6px; top: 50%; translate: 0 -50%; display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; transition: color .15s, background-color .15s; }
+.lp-pass button:hover { color: var(--ink); background: var(--chip); }
+.lp-pass .lp-eye-off, .lp-pass button.is-shown .lp-eye-on { display: none; }
+.lp-pass button.is-shown .lp-eye-off { display: block; }
+
+/* wymagania hasła jako małe „zadania” odhaczane w trakcie pisania */
+.lp-pass-rules { display: flex; flex-wrap: wrap; gap: 6px; margin: -8px 0 0; padding: 0; list-style: none; }
+.lp-pass-rules li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px; border-radius: 999px; font-size: 12px; background: var(--chip); color: var(--chip-ink); transition: background-color .25s, color .25s; }
+.lp-pass-rules li::before { content: ""; width: 14px; height: 14px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--check-ring); background: center / 10px no-repeat; transition: background-color .25s, box-shadow .25s; }
+.lp-pass-rules li.is-done { background: var(--green-chip); color: var(--green-chip-ink); }
+.lp-pass-rules li.is-done::before { background-color: #4ade80; box-shadow: inset 0 0 0 1.5px #4ade80; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); animation: lp-pop .4s cubic-bezier(.34, 1.56, .64, 1); }
+
+.lp-auth-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.lp-checkbox { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-strong); cursor: pointer; user-select: none; }
+.lp-checkbox input {
+  width: 22px; height: 22px; margin: 0; flex: none; cursor: pointer;
+  border-radius: 999px; -webkit-appearance: none; appearance: none;
+  box-shadow: inset 0 0 0 2px var(--check-ring);
+  background: center / 13px no-repeat;
+  transition: background-color .2s, box-shadow .2s, transform .15s;
+}
+.lp-checkbox input:hover { box-shadow: inset 0 0 0 2px #4ade80; }
+.lp-checkbox input:active { transform: scale(.85); }
+.lp-checkbox input:checked { background-color: #4ade80; box-shadow: inset 0 0 0 2px #4ade80; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.lp-checkbox input:focus-visible { outline: 2px solid #4ade80; outline-offset: 2px; }
+
+.lp-btn-block { width: 100%; justify-content: center; margin-top: 6px; border: 0; cursor: pointer; font-family: inherit; }
+.lp-btn-block:hover { transform: scale(1.015); }
+.lp-btn:disabled { opacity: .55; pointer-events: none; }
+.lp-auth-legal { margin: -4px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+.lp-text-btn { display: block; width: 100%; padding: 6px; border: 0; background: none; font: 400 13px 'Poppins', system-ui, sans-serif; color: var(--muted); text-align: center; text-decoration: none; cursor: pointer; transition: color .15s; }
+.lp-text-btn:hover { color: #22c55e; }
+.lp-text-btn:disabled { opacity: .5; cursor: default; }
+
+.lp-auth-info { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 16px; background: rgba(74, 222, 128, .1); box-shadow: inset 0 0 0 1px rgba(74, 222, 128, .3); }
+.lp-auth-info .lp-i { color: #22c55e; width: 22px; height: 22px; }
+.lp-auth-info p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+
+.lp-auth-state { display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; }
+.lp-auth-state p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+.lp-auth-state-ico { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: var(--chip); color: var(--ink-2); }
+.lp-auth-state-ico .lp-i { width: 28px; height: 28px; }
+.lp-auth-state-ico.is-amber { background: rgba(251, 191, 36, .14); color: #f59e0b; }
+
+/* ---------- panel z makietą ---------- */
+.lp-auth-visual {
+  position: relative; margin: 16px; border-radius: 36px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background-color: var(--auth-panel);
+  background-image: radial-gradient(var(--auth-dots) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+  box-shadow: inset 0 0 0 1px var(--line);
+  perspective: 1600px;
+}
+.lp-auth-stage {
+  position: relative; transform-style: preserve-3d;
+  transform: rotateY(calc(-14deg + var(--mx, 0deg))) rotateX(calc(7deg + var(--my, 0deg)));
+  transition: transform .8s cubic-bezier(.16, 1, .3, 1);
+  animation: lp-auth-in 1.4s cubic-bezier(.16, 1, .3, 1) .15s both;
+}
+.lp-auth-stage .lp-screen-phone { width: 360px; height: min(720px, calc(100vh - 150px)); }
+.lp-auth-stage .lp-float { animation: lp-bob 7s ease-in-out infinite; }
+.lp-auth-float-a { top: 16%; left: -150px; width: 300px; }
+.lp-auth-float-b { left: auto; right: -80px; bottom: 20%; animation-delay: -3s !important; }
+.lp-auth-float-ico { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 10px; background: #1c1c1e; color: #fff; }
+.lp-auth-lock { width: 380px; height: 420px; }
+.lp-auth-lock .lp-notes { height: auto; }
+
+.lp-auth-empty { display: flex; flex-direction: column; align-items: center; padding: 56px 14px 0; text-align: center; }
+.lp-auth-empty-ico { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: rgba(74, 222, 128, .1); color: #4ade80; }
+.lp-auth-empty-ico .lp-i { width: 32px; height: 32px; }
+.lp-auth-empty b { margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--ink-strong); }
+.lp-auth-empty small { max-width: 260px; margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.lp-auth-empty > div { display: flex; gap: 8px; margin-top: 22px; }
+.lp-auth-fake-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; font-size: 13px; color: var(--ink-strong); box-shadow: inset 0 0 0 1px var(--ghost-ring); }
+.lp-auth-fake-btn.is-dark { background: #3d3d3d; color: #fff; box-shadow: none; }
+
+/* toasty – wspólne z panelem: css/toast.css + js/toast.js */
+
+@keyframes lp-auth-in { from { opacity: 0; translate: 0 90px; scale: .9; } to { opacity: 1; translate: 0 0; scale: 1; } }
+
+@media (max-width: 1180px) {
+  .lp-auth-float-a { left: -60px; }
+  .lp-auth-float-b { right: -30px; }
+}
+@media (max-width: 1000px) {
+  .lp-auth-grid { grid-template-columns: minmax(0, 1fr); }
+  .lp-auth-visual { display: none; }
+  .lp-auth-pane { align-items: flex-start; padding-top: clamp(110px, 18vh, 160px); }
+}
+@media (max-width: 640px) {
+  .lp-auth-top .lp-top-login { font-size: 13px; }
+}

@@ -81,11 +81,11 @@ function backlog_group($key, $title, array $items, array $parts, $open, $show_li
         <button type="button" title="<?=$info['label']?>" data-part="<?=$p?>" class="bl-btn <?=$info['color']?>"><?=hl_icon_use($info['icon'], 'size-4')?></button>
         <?php endforeach; ?>
     </template>
-    <h1 class="text-lg font-semibold pr-8">Zaplanuj na: <span class="text-green-400"><?=$day_label?></span></h1>
+    <h1 class="hl-popup-title">Zaplanuj na: <span class="text-green-400"><?=$day_label?></span></h1>
     <p class="text-xs text-gray-400 dark:text-gray-500 pr-8">Stuknij porę dnia przy zadaniu, aby dodać je do planu</p>
 
     <?php if ($count): ?>
-    <input id="backlog_search" type="text" oninput="backlogFilter(this.value)" placeholder="Szukaj w <?=$count?> zadaniach..." class="mt-4 w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-300 font-medium placeholder-gray-400">
+    <input id="backlog_search" type="text" oninput="backlogFilter(this.value)" placeholder="Szukaj w <?=$count?> zadaniach..." class="hl-input mt-4 w-full">
     <div class="mt-3 flex items-center justify-end gap-3 px-1 text-[10px] text-gray-400">
         <?php foreach ($parts as $p => $info): ?>
         <span class="flex items-center gap-0.5"><span class="<?=$info['color']?>"><?=hl_icon_use($info['icon'], 'size-3.5')?></span><?=$info['label']?></span>
@@ -107,7 +107,7 @@ function backlog_group($key, $title, array $items, array $parts, $open, $show_li
     </div>
     <?php endif; ?>
 
-    <button onclick="popupBacklogOpenClose()" class="mt-6 active:scale-95 duration-150 flex w-full justify-center cursor-pointer rounded-2xl bg-[#3d3d3d] dark:bg-white/10 font-medium px-4 py-2 text-sm text-white hover:bg-green-400">Gotowe</button>
+    <button onclick="popupBacklogOpenClose()" class="hl-btn hl-btn-primary hl-btn-block mt-6">Gotowe</button>
 </div>
 <script>
 (function () {

@@ -310,6 +310,14 @@ section.active > div > span:nth-child(2) {
   }
 }
 
+/* Menu „więcej” na telefonie (dashboard/lists.php) – na całą szerokość ekranu z marginesem 0.75rem.
+   Pasek nad nim ma scale-90, więc szerokość jest dzielona przez 0.9, a środek wyrównany do środka paska. */
+#more_menu {
+  left: 50%;
+  width: calc((100vw - 1.5rem) / 0.9);
+  margin-left: calc((100vw - 1.5rem) / -1.8);
+}
+
 /* Bardzo wąskie ekrany (np. zewnętrzny ekran Galaxy Z Fold, ~344px) – zwykłe telefony (od 375px) bez zmian */
 @media (max-width: 360px) {
   .liquid-glass.liquid-glass-pill {

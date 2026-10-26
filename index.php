@@ -5,43 +5,38 @@ if (hl_session_start()) {
     header("Location: panel.php");
     exit();
 }
+include 'components/landing/ui.php';
 ?>
 <!DOCTYPE html>
-<html lang="pl" style="overflow-x: hidden!important;">
-    <?php include 'components/landing_page/header.php'; ?>
-    <body style="overflow-x: hidden;" class="bg-[#fdfdfd]">
-            <?php include 'components/landing_page/hero.php'; ?>
-    <div class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]" aria-hidden="true">
-      <div class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-violet-800 to-red-800 opacity-20 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>HomeList – plan dnia, rutyny i wspólne listy dla domu</title>
+    <meta name="description" content="HomeList to listy zadań dla domu i dla siebie: plan dnia w porach, rutyny z seriami, wspólne listy z domownikami i przypomnienia bez spamu.">
+    <meta name="theme-color" content="#f5f5f3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#262626" media="(prefers-color-scheme: dark)">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="img/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="css/landing.css?v=<?=filemtime(__DIR__.'/css/landing.css')?>" rel="stylesheet">
+</head>
+<body class="lp">
+    <div class="lp-sky" aria-hidden="true">
+        <span data-sky-layer="green"></span><span data-sky-layer="amber"></span><span data-sky-layer="orange"></span><span data-sky-layer="indigo"></span><span data-sky-layer="gray"></span>
     </div>
-    <svg viewBox="0 0 1208 1024" aria-hidden="true" class="-z-10 absolute md:top-[2100px] top-[2100px] left-1/2 md:h-[64rem] h-[20rem] -translate-x-1/2 translate-y-1/2 [mask-image:radial-gradient(closest-side,white,transparent)] lg:bottom-auto lg:translate-y-0">
-          <ellipse cx="604" cy="512" fill="url(#d25c25d4-6d43-4bf9-b9ac-1842a30a4867)" rx="604" ry="512" />
-          <defs>
-            <radialGradient id="d25c25d4-6d43-4bf9-b9ac-1842a30a4867">
-              <stop stop-color="#67ff80" />
-              <stop offset="1" stop-color="#67ff80" />
-            </radialGradient>
-          </defs>
-        </svg>
-        <?php include 'components/landing_page/stats.php'; ?>
-        <?php include 'components/landing_page/pricing.php'; ?>
-        <?php include 'components/landing_page/faq.php'; ?>
-        <?php include 'components/landing_page/cta.php'; ?>
-        <svg viewBox="0 0 1024 1024" class="absolute left-[0px] -z-10 md:h-[34rem] h-[20rem] w-[20rem] md:w-[34rem] blur-[300px] top-[3200px] [mask-image:radial-gradient(closest-side,white,transparent)]" aria-hidden="true">
-        <circle cx="512" cy="512" r="512" fill="url(#827591b1-ce8c-4110-b064-7cb85a0b1217)" fill-opacity="0.7" />
-        <defs>
-          <radialGradient id="827591b1-ce8c-4110-b064-7cb85a0b1217">
-            <stop stop-color="#67ff80" />
-            <stop offset="1" stop-color="#67ff80" />
-          </radialGradient>
-        </defs>
-      </svg>
-        
-            <?php include 'components/landing_page/footer.php'; ?>
-        <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
-        <script>
-            AOS.init();
-            var theme = localStorage.getItem("theme");
-        </script>
-    </body>
+    <main>
+        <?php include 'components/landing/hero.php'; ?>
+        <?php include 'components/landing/morning.php'; ?>
+        <?php include 'components/landing/together.php'; ?>
+        <?php include 'components/landing/evening.php'; ?>
+        <?php include 'components/landing/anytime.php'; ?>
+    </main>
+    <?php include 'components/landing/finale.php'; ?>
+    <script src="js/landing.js?v=<?=filemtime(__DIR__.'/js/landing.js')?>"></script>
+</body>
 </html>

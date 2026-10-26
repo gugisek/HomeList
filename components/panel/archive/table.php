@@ -1,151 +1,53 @@
 <?php /* HL_GUARD */ $SECURITY_REQUIRED_MODULE = ['logs', 'read']; include __DIR__.'/../../../scripts/security.php'; ?>
-
- <?php
+<?php
+// Dziennik zmian (logs) – zakładka „Zmiany” w Archiwum, 20 wpisów na stronę
 include '../../../scripts/conn_db.php';
-$sql = "SELECT count(id) FROM logs";
-$result = mysqli_query($conn, $sql);
-$row = mysqli_fetch_row($result);
-$total_records = $row[0];
+$e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+$total_records = (int)mysqli_fetch_row(mysqli_query($conn, "SELECT count(id) FROM logs"))[0];
 $total_pages = max(1, (int)ceil($total_records / 20));
 $page_id = min($total_pages, max(1, (int)($_GET['page_id'] ?? 1)));
- ?>
- 
- <div class="w-full flex items-center px-12 mb-4 -mt-12 justify-end">
-                    <div onclick="openPageArchive('<?php if($page_id > 1) {echo $page_id - 1;}else {echo $page_id;} ?>')" class="flex items-center">
-                            <button type="submit">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                                </svg>
-                            </button>
-                    </div>
-                    <div onclick="openPageArchive('<?php if($page_id < $total_pages) {echo $page_id + 1;}else {echo $page_id;} ?>')" class="flex items-center">
+$result = mysqli_query($conn, "SELECT logs.id, users.name, users.sur_name, logs.when, logs.object_id, logs.object_type, log_types.type, logs.description FROM `logs` LEFT JOIN users ON users.id = logs.user_id JOIN log_types ON log_types.id = logs.type ORDER BY id DESC LIMIT 20 OFFSET ".(($page_id - 1) * 20));
 
-                            <button type="submit">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                </svg>
-                            </button>
-                    </div>
-                    </div>
-                <table class="w-full" data-aos="fade-in" data-aos-delay="100">
-                    <tr class=" text-left text-xs text-gray-400 ">
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell px-3 text-center md:w-auto md:table-cell sm:pl-6 lg:pl-8">ID</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-1/6">Użytkownik</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell py-3 w-1/6">Data</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[35%] md:table-cell">Opis</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">ID obiektu</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">Obiekt</th>
-                        <th class="sticky top-0 z-10 hidden border-b border-gray-300 bg-white dark:text-gray-200 dark:bg-[#2c2c2c] bg-opacity-75 px-3 py-3.5 text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter lg:table-cell w-[9%] text-center">Typ</th>
-                    </tr>
-                    <?php
-                    
-                    
-                        include '../../../scripts/conn_db.php';
-                        $sql = "SELECT logs.id, users.name, users.sur_name, logs.when, logs.object_id, logs.object_type, log_types.type,logs.description FROM `logs` left join users on users.id=logs.user_id join log_types on log_types.id=logs.type order by id desc limit 20 offset ".($page_id - 1) * 20;
-                        $result = mysqli_query($conn, $sql);
-                        if(mysqli_num_rows($result) > 0)
-                        {
-                            while($row = mysqli_fetch_assoc($result))
-                            {
+$types = [
+    'create' => ['Dodanie', 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-400/15'],
+    'modify' => ['Zmiana', 'text-sky-600 bg-sky-100 dark:text-sky-400 dark:bg-sky-400/15'],
+    'delete' => ['Usunięcie', 'text-rose-600 bg-rose-100 dark:text-rose-400 dark:bg-rose-400/15'],
+];
+$pager_btn = 'hl-icon-btn hl-icon-btn-sm';
+?>
+<div class="flex items-center justify-end gap-1 mb-3 text-sm text-gray-400">
+    <button type="button" onclick="openPageArchive(<?=max(1, $page_id - 1)?>)" title="Nowsze" class="<?=$pager_btn?>"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg></button>
+    <span class="px-1">Strona
+        <input id="hide_arrows" type="number" min="1" max="<?=$total_pages?>" value="<?=$page_id?>" onchange="openPageArchive(this.value)" class="hl-input !inline-block !w-14 !min-h-0 !py-1 !px-2 text-center mx-1">
+        z <?=$total_pages?></span>
+    <button type="button" onclick="openPageArchive(<?=min($total_pages, $page_id + 1)?>)" title="Starsze" class="<?=$pager_btn?>"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg></button>
+</div>
 
-                                $row = array_map(fn($v) => $v === null ? null : htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'), $row);
-                                echo "<tr class='hover:bg-gray-100 dark:hover:bg-white/5 transition-all  duration-150 border-t-[0.5px] border-b-[0.5px] border-gray-200' style='cursor: pointer; cursor: hand;' onclick='openPopupLogs(".$row['id'].")'>";
-                                    echo "<td class='py-3 text-gray-500 dark:text-gray-400 text-center text-sm md:table-cell hidden sm:pl-6 lg:pl-8'>".$row['id']."</td>";
-                                    echo "<td class='py-3 text-gray-800 dark:text-gray-200 text-sm capitalize sm:pl-1 lg:pl-3'>".$row['name']." ".$row['sur_name']."</td>";
-                                    echo "<td class='capitalize text-sm text-gray-600 dark:text-gray-400'>".$row['when']."</td>";
-                                    $description = $row['description'];
-                                    if (strlen($description) > 50) {
-                                        $description = substr($description, 0, 50)."...";
-                                    }
-                                    echo "<td class='text-sm md:table-cell hidden text-gray-600 dark:text-gray-400'>".$description."</td>";
-                                    echo "<td class='text-center text-sm text-gray-500 dark:text-gray-400'>".$row['object_id']."</td>";
-                                    echo "<td class='text-center text-sm capitalize ";
-                                    if ($row['object_type'] == "users") {
-                                        echo " text-yellow-500";
-                                    }
-                                    else if ($row['object_type'] == "products") {
-                                        echo " text-purple-500";
-                                    }
-                                    else if ($row['object_type'] == "orders") {
-                                        echo " text-yellow-500";
-                                    }
-                                    else if ($row['object_type'] == "finances") {
-                                        echo " text-blue-500";
-                                    }
-                                    else if ($row['object_type'] == "user_roles") {
-                                        echo " text-red-500";
-                                    }
-                                    else if ($row['object_type'] == "user_status") {
-                                        echo " text-pink-500";
-                                    }
-                                    else if ($row['object_type'] == "log_types") {
-                                        echo " text-gray-500";
-                                    }else{
-                                        echo " text-gray-800 dark:text-gray-200";
-                                    }
-                                    echo "'>".$row['object_type']."</td>";
-                                    echo "<td class='text-center text-sm capitalize ";
-                                    if ($row['type'] == "create") {
-                                        echo " text-green-500";
-                                    }
-                                    else if ($row['type'] == "modify") {
-                                        echo " text-blue-500";
-                                    }
-                                    else if ($row['type'] == "delete") {
-                                        echo " text-red-500";
-                                    }
-                                    echo "'>".$row['type']."</td>";
-                                echo "</tr>";
-                                ;
-                            }
-                        } else {
-                            echo "<tr class='border-t-[0.5px] border-b-[0.5px]'>";
-                                echo "<td class='py-3 text-gray-800 dark:text-gray-200 leading-4 text-sm'>Brak wyników</td>";
-                                echo "<td class='text-center capitalize text-sm text-gray-500 dark:text-gray-400'></td>";
-                                echo "<td class='text-center capitalize text-sm text-gray-500 dark:text-gray-400'></td>";
-                                echo "<td class='text-center text-sm text-gray-500 dark:text-gray-400'></td>";
-                                echo "<td class='text-center text-sm dark:text-gray-400'></td>";
-                            echo "</tr>";
-                        }
-                    ?>
-                </table>
-                <div class="w-full flex items-center justify-between mt-2 mb-[-16px]">
-                    <div class="w-1/3"></div>
-                            <div class="flex items-center">
-                    
-                        <form onclick="openPageArchive('<?php if($page_id > 1) {echo $page_id - 1;}else {echo $page_id;} ?>')" class="flex items-center">
-                            <input type="hidden" name="page" value="archiwum">
-                            <input type="hidden" name="action" value="">
-                            <input type="hidden" name="page_id" value="<?php if($page_id > 1) {
-                                echo $page_id - 1;
-                            }else {
-                                echo $page_id;
-                            } ?>">
-                            <button type="submit">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                                </svg>
-                            </button>
-                        </form>
-                        <form action="panel.php?page=archiwum&action=" method="GET">
-                            <input type="hidden" name="page" value="archiwum">
-                            <input type="hidden" name="action" value="">
-                            <input id="hide_arrows" onchange="openPageArchive(this.value)" type="number" class=" px-2 rounded-md mx-1 text-center font-light outline-none focus:drop-shadow-[0_3px_10px_rgba(55,254,37,1)] border border-black/10 transition-all duration-300" name="page_id" value="<?=$page_id?>" max="<?=$total_pages?>" min="1"> 
-                        </form>
-                        <form onclick="openPageArchive('<?php if($page_id < $total_pages) {echo $page_id + 1;}else {echo $page_id;} ?>')" class="flex items-center">
-                            <input type="hidden" name="page" value="archiwum">
-                            <input type="hidden" name="action" value="">
-                            <input type="hidden" name="page_id" value="<?php if($page_id < $total_pages) {
-                                echo $page_id + 1;
-                            }else {
-                                echo $page_id;
-                            } ?>">
-                            <button type="submit">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                </svg>
-                            </button>
-                        </form>
-                    </div>
-                    <span class="text-right w-1/3 text-sm text-gray-400 px-4">Strona <?=$page_id?> z <?=$total_pages?></span>   
-                </div>
+<div class="hl-card p-2" data-aos="fade-in" data-aos-delay="100">
+    <div class="hidden lg:grid grid-cols-12 gap-4 px-4 pt-3 pb-2">
+        <span class="hl-eyebrow col-span-3">Kto</span>
+        <span class="hl-eyebrow col-span-2">Kiedy</span>
+        <span class="hl-eyebrow col-span-4">Opis</span>
+        <span class="hl-eyebrow col-span-2">Obiekt</span>
+        <span class="hl-eyebrow col-span-1 text-right">Akcja</span>
+    </div>
+    <div class="hl-divide">
+        <?php if (mysqli_num_rows($result) === 0): ?>
+        <p class="py-10 text-center text-sm text-gray-400">Brak wpisów</p>
+        <?php endif; ?>
+        <?php while ($row = mysqli_fetch_assoc($result)):
+            [$type_label, $type_cls] = $types[$row['type']] ?? [$row['type'], ''];
+        ?>
+        <div onclick="openPopupLogs(<?=(int)$row['id']?>)" class="hl-row lg:grid lg:grid-cols-12 lg:gap-4">
+            <div class="min-w-0 flex-1 lg:col-span-3">
+                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate"><?=$e(trim($row['name'].' '.$row['sur_name']) ?: '—')?></p>
+                <p class="lg:hidden text-xs text-gray-400 truncate"><?=$e(date('d.m.Y H:i', strtotime($row['when'])))?> · <?=$e($row['object_type'])?> #<?=(int)$row['object_id']?></p>
+            </div>
+            <span class="hidden lg:block lg:col-span-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap"><?=$e(date('d.m.Y H:i', strtotime($row['when'])))?></span>
+            <span class="hidden lg:block lg:col-span-4 text-sm text-gray-500 dark:text-gray-400 truncate"><?=$e($row['description'])?></span>
+            <span class="hidden lg:block lg:col-span-2 text-sm text-gray-500 dark:text-gray-400 truncate"><?=$e($row['object_type'])?> <span class="text-gray-400">#<?=(int)$row['object_id']?></span></span>
+            <span class="lg:col-span-1 lg:justify-self-end hl-badge flex-none <?=$type_cls?>"><?=$e($type_label)?></span>
+        </div>
+        <?php endwhile; ?>
+    </div>
+</div>

@@ -36,7 +36,7 @@ $description = str_replace("\r", '', nl2br(hl_e($row['description'])));
 ?>
 <div class="-mt-10 font-[poppins] p-1 text-gray-800 dark:text-gray-200">
     <div id="element_loading"></div>
-    <h1 class="font-[poppins] font-medium pr-8 text-gray-800 dark:text-gray-200"><?=hl_e($row['title'])?></h1>
+    <h1 class="hl-popup-title"><?=hl_e($row['title'])?></h1>
     <div class="mt-2 flex flex-wrap gap-1.5">
         <span class="<?=$chip?>"><?=hl_icon('repeat', 'size-3.5')?><?=hl_e(hl_routine_summary($row))?></span>
         <span class="<?=$chip?>"><span class="<?=$parts[$part]['color']?>"><?=hl_icon($parts[$part]['icon'], 'size-3.5')?></span><?=$parts[$part]['label']?></span>
@@ -66,25 +66,18 @@ $description = str_replace("\r", '', nl2br(hl_e($row['description'])));
         </div>
     </div>
 
-    <a class="mt-5 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Lista <?=hl_e($row['list_name'])?> · dodano <?=date_format(date_create($row['create_date']), "d.m.Y")?> przez <?=$row['name']?> <?=$row['sur_name']?></a>
+    <a class="mt-5 text-xs flex items-center justify-center mb-4 w-full text-gray-600 dark:text-gray-400">Lista <?=hl_e($row['list_name'])?> · dodano <?=date_format(date_create($row['create_date']), "d.m.Y")?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></a>
 
     <div class="flex gap-2">
-        <button onclick="popupDetailsElementOpenClose(); openPopupEditElement(`<?=$rid?>`)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" title="Edytuj" class="active:scale-95 items-center duration-150 inline-flex justify-center rounded-2xl px-3 py-2 hover:scale-110 font-medium text-[#3d3d3d] dark:text-gray-200 shadow-sm hover:bg-[#3d3d3d] hover:text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
-            </svg>
-        </button>
+        <button onclick="popupDetailsElementOpenClose(); openPopupEditElement(`<?=$rid?>`)" title="Edytuj" class="hl-btn hl-btn-soft hl-btn-square flex-none"><?=hl_icon('pencil')?></button>
         <?php if (!$occurs_today): ?>
-        <span class="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-[#3d3d3d] text-gray-400">Dziś wolne od tej rutyny</span>
+        <span class="hl-btn flex-1 bg-gray-100 dark:bg-white/5 text-gray-400 pointer-events-none">Dziś wolne od tej rutyny</span>
         <?php elseif ($done_today): ?>
-        <button onclick="routineDetailsToggle(<?=$rid?>, 0)" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center rounded-2xl hover:bg-gray-300 dark:hover:bg-[#4a4a4a] px-4 py-2 hover:scale-105 font-medium text-sm shadow-sm bg-gray-200 dark:bg-[#3d3d3d] dark:text-gray-300 text-green-500">
+        <button onclick="routineDetailsToggle(<?=$rid?>, 0)" class="hl-btn hl-btn-accent flex-1">
             <?=hl_icon('check', 'size-5', '2')?>Zrobione dziś<?=$done_by ? ' ('.hl_e($done_by).')' : ''?> · cofnij
         </button>
         <?php else: ?>
-        <button onclick="routineDetailsToggle(<?=$rid?>, 1)" style="box-shadow: 0px 5px 15px 0px rgba(66, 68, 90, 0.6);" class="active:scale-95 items-center gap-2 duration-150 inline-flex w-full justify-center rounded-2xl bg-green-400 dark:bg-green-400/20 dark:text-green-400 px-4 py-2 hover:scale-105 font-medium text-white shadow-sm text-sm hover:shadow-xl hover:bg-gray-200 hover:text-green-500">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
+        <button onclick="routineDetailsToggle(<?=$rid?>, 1)" class="hl-btn hl-btn-green flex-1"><?=hl_icon('check', '', '2')?>
             Zrobione dziś!
         </button>
         <?php endif; ?>

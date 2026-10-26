@@ -1,5 +1,5 @@
 <?php
-// „Konto i ustawienia” (na wzór konta Google): Start, Dane osobowe, Bezpieczeństwo, Urządzenia, Powiadomienia.
+// „Konto i ustawienia” (na wzór konta Google): Start, Dane osobowe, Bezpieczeństwo, Urządzenia, Powiadomienia, Zgłoś błąd.
 // Jedno źródło dla components/panel/pages/profile.php (avatar w sidebarze) i components/panel/dashboard/settings_app.php
 // (Ustawienia w menu list). Podstrona: ?tab=..., inaczej ostatnio otwarta w tej sesji (sessionStorage), inaczej Start.
 include_once __DIR__ . '/../../../scripts/security.php';
@@ -38,12 +38,12 @@ $acc_plural = fn($n, $one, $few, $many) => $n == 1 ? $one : (($n % 10 >= 2 && $n
 
 $ps = hl_push_settings($conn, $acc_id);
 
-$acc_card = 'rounded-3xl bg-white dark:bg-[#2c2c2c] shadow-sm ring-1 ring-black/5 dark:ring-white/5 p-5 sm:p-6';
-$acc_input = 'w-full rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-4 py-2 text-sm text-gray-800 dark:text-gray-200 font-medium';
-$acc_label = 'block pl-1 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
-$acc_btn = 'active:scale-95 duration-150 inline-flex justify-center items-center gap-1 rounded-full ring-green-400 ring-1 px-4 py-2 text-sm text-green-500 hover:shadow-xl hover:bg-green-400 hover:text-white disabled:opacity-50';
-$acc_btn_muted = 'active:scale-95 duration-150 inline-flex justify-center rounded-full ring-gray-300 dark:ring-gray-600 ring-1 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5';
-$acc_title = 'font-medium text-xl text-black dark:text-gray-200 font-[poppins]';
+$acc_card = 'hl-card hl-card-pad';
+$acc_input = 'hl-input';
+$acc_label = 'hl-label';
+$acc_btn = 'hl-btn hl-btn-primary';
+$acc_btn_muted = 'hl-btn hl-btn-ghost';
+$acc_title = 'hl-title !text-xl';
 $acc_subtitle = 'mt-1 mb-5 text-sm text-gray-500 dark:text-gray-400';
 
 $acc_icon = fn($d, $cls = 'size-5') => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="' . $cls . ' flex-none"><path stroke-linecap="round" stroke-linejoin="round" d="' . $d . '" /></svg>';
@@ -53,6 +53,7 @@ $acc_tabs = [
     'security' => ['Bezpieczeństwo', 'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z'],
     'devices' => ['Urządzenia', 'M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3'],
     'notifications' => ['Powiadomienia', 'M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0'],
+    'report' => ['Zgłoś błąd', 'M12 12.75c1.148 0 2.278.08 3.383.237 1.037.146 1.866.966 1.866 2.013 0 3.728-2.35 6.75-5.25 6.75S6.75 18.728 6.75 15c0-1.046.83-1.867 1.866-2.013A24.204 24.204 0 0 1 12 12.75Zm0 0c2.883 0 5.647.508 8.207 1.44a23.91 23.91 0 0 1-1.152 6.06M12 12.75c-2.883 0-5.647.508-8.208 1.44.125 2.104.52 4.136 1.153 6.06M12 12.75a2.25 2.25 0 0 0 2.248-2.354M12 12.75a2.25 2.25 0 0 1-2.248-2.354M12 8.25c.995 0 1.971-.08 2.922-.236.403-.066.74-.358.795-.762a3.778 3.778 0 0 0-.399-2.25M12 8.25c-.995 0-1.97-.08-2.922-.236-.402-.066-.74-.358-.795-.762a3.734 3.734 0 0 1 .4-2.253M12 8.25a2.25 2.25 0 0 0-2.248 2.146M12 8.25a2.25 2.25 0 0 1 2.248 2.146M8.683 5a6.032 6.032 0 0 1-1.155-1.002c.07-.63.27-1.222.574-1.747m.581 2.749A3.75 3.75 0 0 1 15.318 5m0 0c.427-.283.815-.62 1.155-.999a4.471 4.471 0 0 0-.575-1.752M4.921 6a24.048 24.048 0 0 0-.392 3.314c1.668.546 3.416.914 5.223 1.082M19.08 6c.205 1.08.337 2.187.392 3.314a23.882 23.882 0 0 1-5.223 1.082'],
 ];
 $acc_icon_chevron = 'm8.25 4.5 7.5 7.5-7.5 7.5';
 $acc_icon_logout = 'M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15';
@@ -64,11 +65,11 @@ $acc_side_off = 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:b
 $acc_pill_on = 'bg-green-400 text-white ring-green-400';
 $acc_pill_off = 'bg-white dark:bg-[#2c2c2c] text-gray-700 dark:text-gray-300 ring-black/5 dark:ring-white/10';
 ?>
-<div id="acc_root" data-initial="<?=$acc_e($acc_initial)?>" class="max-w-5xl mx-auto mb-28 lg:mb-10">
+<div id="acc_root" data-initial="<?=$acc_e($acc_initial)?>" class="max-w-5xl mx-auto mb-28 md:mb-10">
 
     <!-- nagłówek + zakładki (telefon: przyklejone u góry) -->
     <div data-aos="fade-up" data-aos-delay="100" class="sticky md:static top-0 z-[2] pt-6 pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 bg-gradient-to-b from-[#fdfdfd] via-[#fdfdfd]/90 via-80% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/90 dark:to-[#3d3d3d]/0 md:bg-none">
-        <h1 class="font-medium text-2xl text-black font-[poppins] dark:text-gray-200">Konto i ustawienia</h1>
+        <h1 class="hl-title">Konto i ustawienia</h1>
         <nav class="md:hidden mt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <?php foreach ($acc_tabs as $k => [$label, $d]): ?>
             <button type="button" data-acc-tab="<?=$k?>" data-pill="1" data-on="<?=$acc_pill_on?>" data-off="<?=$acc_pill_off?>" onclick="accTab('<?=$k?>', true)" class="flex-none inline-flex items-center gap-1.5 rounded-full ring-1 px-3.5 py-1.5 text-sm font-medium whitespace-nowrap active:scale-95 duration-150 <?=$acc_pill_off?>">

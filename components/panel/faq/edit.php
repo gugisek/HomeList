@@ -17,23 +17,21 @@ $id = (int)($_GET['id'] ?? 0);
 
 ?>
 <div class="-mt-10 mb-4">
-        <h1 class="text-lg font-semibold font-[poppins]">Edytuj pytanie FAQ</h1>
+        <h1 class="hl-popup-title">Edytuj pytanie FAQ</h1>
 </div>
-<form action="scripts/settings/faq/edit_faq.php" method="POST" class="text-white flex flex-col h-full gap-4 pt-2 px-2 font-[poppins]">
+<form action="scripts/settings/faq/edit_faq.php" method="POST" class="flex flex-col h-full gap-4 pt-2 font-[poppins]">
     <input type="hidden" name="id" value="<?=$row['id']?>">
     <input type="hidden" name="type" value="<?=$type?>">
-    <div class="flex flex-row gap-4 w-full">
-        <div class="relative z-0 w-full">
-            <input required type="text" id="question" name="question" class="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-[1px] border-gray-300 appearance-none text-gray-900 focus:text-black dark:border-gray-600 dark:focus:theme-border focus:outline-none focus:ring-0 theme-border-focus peer" value="<?=$row['question']?>" />
-            <label for="question" class="absolute text-sm text-gray-900 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 theme-text-focus peer-focus:dark:text-[--text] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Pytanie</label>
-        </div>
+    <div>
+        <label for="question" class="hl-label">Pytanie</label>
+        <input required type="text" id="question" name="question" class="hl-input" value="<?=$row['question']?>" />
     </div>
-        <div class="h-full max-h-[45vh] text-gray-900" id="editor-container-popup"><?=$row['answer']?></div>
+        <div class="h-full max-h-[45vh] text-gray-900 dark:text-gray-200 rounded-b-2xl" id="editor-container-popup"><?=$row['answer']?></div>
         <input type="hidden" id="editorContent-faq" name="answer" value="<?=htmlspecialchars($row['answer'], ENT_QUOTES, 'UTF-8')?>">
-    <div class="mt-4 mb-2 sm:flex sm:flex-row-reverse">
-        <button class="active:scale-95 duration-150 inline-flex w-full justify-center rounded-full bg-gray-900 duration-150 px-4 py-2 text-sm font-medium text-white shadow-sm hover:shadow-xl hover:bg-green-500 sm:ml-2 sm:w-auto">Zapisz</button>
-        <button onclick="popupFaqEditOpenClose()" type="button" class="active:scale-95 duration-150 mt-3 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-gray-500 hover:bg-gray-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Nie zapisuj</button>
-        <button type="button" onclick="popupFaqEditDelete()" class="active:scale-95 duration-150 mt-3 sm:mr-2 inline-flex w-full justify-center rounded-full px-4 py-2 text-sm font-medium text-gray-900 shadow-sm ring-inset ring-1 ring-[#3d3d3d] hover:ring-red-500 hover:bg-red-500 hover:text-white hover:shadow-xl duration-150 sm:mt-0 sm:w-auto">Usuń</button>
+    <div class="mt-2 flex flex-row-reverse items-center gap-2">
+        <button class="hl-btn hl-btn-primary flex-1">Zapisz</button>
+        <button onclick="popupFaqEditOpenClose()" type="button" class="hl-btn hl-btn-ghost flex-1">Nie zapisuj</button>
+        <button type="button" onclick="popupFaqEditDelete()" title="Usuń" class="hl-btn hl-btn-danger hl-btn-square"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg></button>
     </div>
 </form>
 

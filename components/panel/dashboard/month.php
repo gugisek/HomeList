@@ -25,7 +25,7 @@ foreach ($counts as $d => $c) {
 ?>
 <div class="-mt-10 font-[poppins] p-1 text-gray-800 dark:text-gray-200">
     <div class="flex items-center gap-2 pr-10">
-        <h1 class="text-lg font-semibold flex-1"><?=hl_month_name(date('n', strtotime($first)), false)?> <span class="text-gray-400 font-normal"><?=date('Y', strtotime($first))?></span></h1>
+        <h1 class="hl-popup-title !pr-0 flex-1"><?=hl_month_name(date('n', strtotime($first)), false)?> <span class="text-gray-400 font-normal"><?=date('Y', strtotime($first))?></span></h1>
         <button type="button" onclick="monthLoad('<?=$prev?>')" class="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 active:scale-90 duration-150"><?=hl_icon('left', 'size-5', '2')?></button>
         <button type="button" onclick="monthLoad('<?=$next?>')" class="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 active:scale-90 duration-150"><?=hl_icon('right', 'size-5', '2')?></button>
     </div>

@@ -90,11 +90,11 @@
       </div>
       <div class="px-5 pb-6 pt-4 flex flex-col sm:flex-row-reverse gap-2 sm:gap-3">
         <button onclick="popup<?=$name_in_scripts?>CloseConfirm()" type="button"
-                class="w-full sm:w-auto active:scale-95 inline-flex justify-center rounded-xl bg-[#1c1c1e] dark:bg-white/10 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-gray-700 dark:hover:bg-white/20 transition-colors duration-150">
+                class="hl-btn hl-btn-primary w-full sm:w-auto">
           Zostań
         </button>
         <button onclick="popup<?=$name_in_scripts?>OpenClose();popup<?=$name_in_scripts?>CloseConfirm()" type="button"
-                class="w-full sm:w-auto active:scale-95 inline-flex justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150">
+                class="hl-btn hl-btn-ghost w-full sm:w-auto">
           Nie zapisuj
         </button>
       </div>
@@ -129,13 +129,13 @@
         <?php
         if($delete_v2 == 'true'){
           echo '
-            <a onclick="'.$name_in_scripts.'Delete()" class="w-full sm:w-auto active:scale-95 cursor-pointer inline-flex justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 shadow-sm transition-colors duration-150">Usuń</a>
-            <a onclick="popup'.$name_in_scripts.'Delete()" type="button" class="w-full sm:w-auto cursor-pointer active:scale-95 inline-flex justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150">Anuluj</a>
+            <a onclick="'.$name_in_scripts.'Delete()" class="hl-btn w-full sm:w-auto bg-red-500 text-white hover:bg-red-600 cursor-pointer">Usuń</a>
+            <a onclick="popup'.$name_in_scripts.'Delete()" type="button" class="hl-btn hl-btn-ghost w-full sm:w-auto cursor-pointer">Anuluj</a>
           ';
         }else{
           echo '
-            <button class="w-full sm:w-auto active:scale-95 inline-flex justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 shadow-sm transition-colors duration-150">Usuń</button>
-            <button onclick="popup'.$name_in_scripts.'Delete()" type="button" class="w-full sm:w-auto active:scale-95 inline-flex justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150">Anuluj</button>
+            <button class="hl-btn w-full sm:w-auto bg-red-500 text-white hover:bg-red-600 cursor-pointer">Usuń</button>
+            <button onclick="popup'.$name_in_scripts.'Delete()" type="button" class="hl-btn hl-btn-ghost w-full sm:w-auto">Anuluj</button>
           ';
         }
         ?>

@@ -11,7 +11,7 @@ include 'components/head.php'; ?>
 <?php include 'components/panel/push_js.php'; ?>
 <?php include 'components/panel/install_js.php'; ?>
 </head>
-<body id="overflow_body" class="dark:bg-[#3d3d3d]">
+<body id="overflow_body" class="bg-[#fdfdfd] dark:bg-[#3d3d3d]">
     <?php include 'components/alert.php'; ?>
     <?php include 'components/alert_js.php'; ?>
     <?php include 'components/panel/panel_body.php'; ?>
