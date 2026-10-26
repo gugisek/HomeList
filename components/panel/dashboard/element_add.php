@@ -31,7 +31,7 @@ $is_routine = $list_type_row && $list_type_row['list_type'] === 'routine';
     <input type="hidden" id="add_element_list_name" value="<?=(int)$list_name?>">
     <div class="-mt-[45px] flex items-center justify-between">
         <h1 class="hl-popup-title"><?=$is_routine ? 'Dodaj rutynę' : 'Dodaj zadanie'?></h1>
-        <a title="Zapisz" class="sm:mr-9 z-10 hl-icon-btn hl-icon-btn-sm !text-green-500 hover:!text-white" onclick="addElement()">
+        <a title="Zapisz" class="sm:mr-9 z-10 mr-8 hl-icon-btn hl-icon-btn-sm !text-green-500 hover:!text-white" onclick="addElement()">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
             </svg>
