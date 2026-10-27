@@ -110,25 +110,64 @@ if (!function_exists('hl_food_norm')) {
     }
 
     // jednostki porcji: własne (sztuka, kromka…), porcja i opakowanie z etykiety, zawsze też 100 g/ml
-    function hl_food_units(mysqli $conn, array $products): array
+    // jednostki zgłoszone przez użytkownika widzi od razu on sam, pozostali po akceptacji (mine + id = może je usunąć)
+    function hl_food_units(mysqli $conn, array $products, int $userId): array
     {
         $ids = array_map(fn($p) => (int)$p['id'], $products);
         $custom = [];
         if ($ids) {
-            $res = $conn->query('SELECT product_id, label, grams FROM food_product_units WHERE product_id IN (' . implode(',', $ids) . ') ORDER BY product_id, sort, id');
-            while ($row = $res->fetch_assoc()) $custom[(int)$row['product_id']][] = ['label' => $row['label'], 'grams' => (float)$row['grams']];
+            $res = $conn->query('SELECT id, product_id, label, grams, owner_id, status FROM food_product_units
+                                 WHERE product_id IN (' . implode(',', $ids) . ") AND (status = 'approved' OR owner_id = " . (int)$userId . ')
+                                 ORDER BY product_id, sort, id');
+            while ($row = $res->fetch_assoc()) {
+                $u = ['label' => $row['label'], 'grams' => (float)$row['grams']];
+                if ((int)$row['owner_id'] === $userId && $row['status'] !== 'approved') $u += ['id' => (int)$row['id'], 'mine' => true, 'status' => $row['status']];
+                $custom[(int)$row['product_id']][] = $u;
+            }
         }
         $out = [];
         foreach ($products as $p) {
             $units = $custom[(int)$p['id']] ?? [];
-            if ($p['serving_g'] !== null) $units[] = ['label' => 'porcja', 'grams' => (float)$p['serving_g']];
-            if ($p['package_g'] !== null && (float)$p['package_g'] <= 1500 && (float)$p['package_g'] !== (float)$p['serving_g']) {
-                $units[] = ['label' => 'opakowanie', 'grams' => (float)$p['package_g']];
-            }
+            $sg = $p['serving_g'] !== null ? (float)$p['serving_g'] : null;
+            $pg = $p['package_g'] !== null && (float)$p['package_g'] <= 1500 ? (float)$p['package_g'] : null;
+            $sl = $p['serving_label'] ?? null;
+            // porcja równa opakowaniu (baton, butelka) = jedna jednostka „opakowanie”, chyba że etykieta mówi konkretniej
+            if ($sg !== null) $units[] = ['label' => $sl ?? ($sg === $pg ? 'opakowanie' : 'porcja'), 'grams' => $sg];
+            if ($pg !== null && $pg !== $sg) $units[] = ['label' => $sl === 'opakowanie' ? 'całe opakowanie' : 'opakowanie', 'grams' => $pg];
+            // ta sama jednostka z kilku źródeł (np. zgłoszone opakowanie, które potem trafiło do OFF) tylko raz
+            $seen = [];
+            $units = array_values(array_filter($units, function ($u) use (&$seen) {
+                $k = mb_strtolower($u['label'], 'UTF-8') . '|' . $u['grams'];
+                if (isset($seen[$k])) return false;
+                return $seen[$k] = true;
+            }));
             $units[] = ['label' => $p['per_ml'] ? '100 ml' : '100 g', 'grams' => 100.0, 'base' => true];
             $out[(int)$p['id']] = $units;
         }
         return $out;
+    }
+
+    // etykieta porcji z opisu OFF (serving_size: „1 bottle (555 ml)”, „2 wafle (20 g)”); null = zwykła „porcja”
+    function hl_food_serving_label(string $s): ?string
+    {
+        $s = mb_strtolower($s, 'UTF-8');
+        $map = [
+            'łyżeczka' => '/teaspoon|\btsp\b|łyżeczk/u',
+            'łyżka' => '/tablespoon|\btbsp\b|łyżk/u',
+            'butelka' => '/bottle|butel/u',
+            'puszka' => '/\bcan\b|puszk/u',
+            'saszetka' => '/sachet|saszet/u',
+            'opakowanie' => '/\bpack|\bbag\b|pouch|\bopak|torebk/u',
+            'baton' => '/\bbar\b|baton/u',
+            'wafel' => '/wafer|wafel|wafl/u',
+            'ciastko' => '/cookie|biscuit|\bciast|herbatnik/u',
+            'kromka' => '/kromk/u',
+            'plaster' => '/slice|plast/u',
+            'szklanka' => '/\bcup\b|\bglass|szklank|kub(ek|k)/u',
+            'sztuka' => '/piece|\bpcs?\b|\bszt|\begg|\bjaj/u',
+        ];
+        foreach ($map as $label => $re) if (preg_match($re, $s)) return $label;
+        return null;
     }
 
     // ostatnio wpisana gramatura i jednostka danego produktu (domyślna porcja = „jak zwykle”)
@@ -150,7 +189,7 @@ if (!function_exists('hl_food_norm')) {
     function hl_food_rows(mysqli $conn, int $userId, array $products): array
     {
         if (!$products) return [];
-        $units = hl_food_units($conn, $products);
+        $units = hl_food_units($conn, $products, $userId);
         $last = hl_food_last_portions($conn, $userId, array_column($products, 'id'));
         $rows = [];
         foreach ($products as $p) {
@@ -191,7 +230,7 @@ if (!function_exists('hl_food_norm')) {
     // pola potrzebne do mapowania produktu (API produktu i wyszukiwarka OFF)
     function hl_food_off_fields(): string
     {
-        return 'code,product_name,product_name_pl,generic_name,brands,quantity,product_quantity,serving_quantity,nutriments,'
+        return 'code,product_name,product_name_pl,generic_name,brands,quantity,product_quantity,serving_quantity,serving_size,nutriments,'
              . 'ingredients_text,ingredients_text_pl,lang,allergens_tags,traces_tags,additives_tags,nova_group,nutriscore_grade,'
              . 'ingredients_analysis_tags,image_front_small_url,last_modified_t,unique_scans_n';
     }
@@ -207,6 +246,7 @@ if (!function_exists('hl_food_norm')) {
             'generic_name' => (string)($p['generic_name'] ?? ''),
             'brands' => $join($p['brands'] ?? ''), 'quantity' => (string)($p['quantity'] ?? ''),
             'product_quantity' => (string)($p['product_quantity'] ?? ''), 'serving_quantity' => (string)($p['serving_quantity'] ?? ''),
+            'serving_size' => (string)($p['serving_size'] ?? ''),
             'ingredients_text' => $plIngredients !== '' ? $plIngredients : (string)($p['ingredients_text'] ?? ''),
             'ingredients_lang' => $plIngredients !== '' ? 'pl' : (($p['ingredients_text'] ?? '') !== '' ? ($p['lang'] ?? null) : null),
             'allergens' => $join($p['allergens_tags'] ?? ''), 'traces_tags' => $join($p['traces_tags'] ?? ''),
@@ -260,12 +300,23 @@ if (!function_exists('hl_food_norm')) {
         $quantity = $cut($r['quantity'] ?? null, 60);
         $pq = $num($r['product_quantity'] ?? null);
         $sq = $num($r['serving_quantity'] ?? null);
+        $serving = $sq !== null && $sq >= 1 && $sq <= 2000 ? round($sq, 1) : null;
+        $servingSize = (string)($r['serving_size'] ?? '');
+        $servingLabel = $serving !== null ? hl_food_serving_label($servingSize) : null;
+        // „3 ciastka (25 g)” – jednostką jest jedna sztuka
+        if ($servingLabel !== null && preg_match('/^\s*(\d+)\s*(?:x\s*)?\p{L}/u', $servingSize, $m) && (int)$m[1] > 1) {
+            $n = (int)$m[1];
+            if ($n <= 20 && $serving / $n >= 1) $serving = round($serving / $n, 1);
+            else $servingLabel = null;
+        }
+        // „1 serving (100 g)” to tylko przeliczenie etykiety na 100 g – dubluje jednostkę 100 g
+        if ($serving === 100.0 && $servingLabel === null) $serving = null;
         $opt = fn($v) => $v === null || $v < 0 || $v > 100 ? null : round($v, 2);
 
         $product = [
             'source' => 'off', 'code' => $code, 'name' => $name, 'brand' => $brand, 'quantity' => $quantity,
             'package_g' => $pq !== null && $pq >= 1 && $pq <= 5000 ? round($pq, 1) : null,
-            'serving_g' => $sq !== null && $sq >= 1 && $sq <= 2000 ? round($sq, 1) : null,
+            'serving_g' => $serving, 'serving_label' => $servingLabel,
             'per_ml' => $quantity !== null && preg_match('/\d\s*(ml|cl|l)\b/i', $quantity) ? 1 : 0,
             'kcal' => round($kcal, 1), 'protein' => round($p, 2), 'fat' => round($f, 2), 'carbs' => round($c, 2),
             'sugars' => $opt($num($r['sugars_100g'] ?? null)), 'fiber' => $opt($num($r['fiber_100g'] ?? null)),

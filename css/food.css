@@ -194,6 +194,14 @@
 .fd-round { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 999px; background: var(--hl-chip); color: var(--hl-ink); cursor: pointer; }
 .fd-round:hover { background: var(--hl-sel-bg); color: var(--hl-sel-ink); }
 .fd-round svg { width: 20px; height: 20px; }
+.fd-unitline { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 30px; margin-top: 6px; font-size: 13px; }
+.fd-unitline b { color: var(--hl-ink); font-weight: 600; }
+.fd-cnt { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 999px; background: var(--hl-chip); color: var(--hl-ink); cursor: pointer; }
+.fd-cnt:hover { background: var(--hl-sel-bg); color: var(--hl-sel-ink); }
+.fd-cnt:disabled { opacity: .4; pointer-events: none; }
+.fd-cnt svg { width: 14px; height: 14px; }
+.fd-chip-add { display: inline-flex; align-items: center; gap: 4px; background: transparent; box-shadow: inset 0 0 0 1px var(--hl-ghost-ring); }
+.fd-chip-add svg { width: 14px; height: 14px; }
 .fd-big { width: 3ch; min-width: 1ch; max-width: 180px; padding: 0; border: 0; outline: 0; background: transparent; text-align: center; color: var(--hl-ink); font: 600 52px/1 'Poppins', system-ui, sans-serif; letter-spacing: -.04em; }
 .fd-ruler { position: relative; height: 64px; border-radius: 18px; background: var(--fd-field); overflow: hidden; touch-action: none; cursor: ew-resize; user-select: none; }
 .fd-ruler::before, .fd-ruler::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none; }

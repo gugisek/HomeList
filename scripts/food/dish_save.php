@@ -78,7 +78,7 @@ foreach ($items as $i => [$pid, $grams]) {
 $ins->close();
 
 // porcje dania (talerz, miseczka…)
-$conn->query("DELETE FROM food_product_units WHERE product_id = $product_id");
+$conn->query("DELETE FROM food_product_units WHERE product_id = $product_id AND owner_id IS NULL");
 $units = array_slice((array)json_decode((string)($_POST['units'] ?? '[]'), true), 0, 5);
 $ins = $conn->prepare('INSERT INTO food_product_units (product_id, label, grams, sort) VALUES (?, ?, ?, ?)');
 foreach ($units as $i => $u) {

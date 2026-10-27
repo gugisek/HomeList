@@ -72,7 +72,7 @@ if ($id) {
 // jedna własna jednostka porcji (np. plaster = 20 g)
 $unit_label = mb_substr(trim((string)($_POST['unit_label'] ?? '')), 0, 60);
 $unit_g = hl_food_float($_POST['unit_g'] ?? '', 0.1, 5000);
-$conn->query("DELETE FROM food_product_units WHERE product_id = $id");
+$conn->query("DELETE FROM food_product_units WHERE product_id = $id AND owner_id IS NULL");
 if ($unit_label !== '' && $unit_g !== null) {
     $stmt = $conn->prepare('INSERT INTO food_product_units (product_id, label, grams, sort) VALUES (?, ?, ?, 0)');
     $stmt->bind_param('isd', $id, $unit_label, $unit_g);

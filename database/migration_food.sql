@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS `food_products` (
 
 -- Jednostki porcji (sztuka, kromka, kubek…) dla produktów podstawowych, własnych i dań.
 -- Produkty z OFF korzystają z serving_g / package_g z food_products.
+-- Od 2.0.1 (migration_food_units.sql) także jednostki zgłoszone przez użytkowników: owner_id + status (pending do akceptacji).
 CREATE TABLE IF NOT EXISTS `food_product_units` (
   `id` int NOT NULL AUTO_INCREMENT,
   `product_id` int NOT NULL,

@@ -686,7 +686,7 @@
         getJSON('scripts/food/product.php?id=' + e.product_id).then(function (res) {
             if (S.sheet !== sh) return;
             // produkt usunięty z bazy – edytujemy samą kopię z dziennika
-            var p = res.status === 'success' ? res.product : { id: e.product_id, name: e.name, source: 'user', per_ml: e.ml, units: [{ label: e.ml ? '100 ml' : '100 g', grams: 100, base: true }], quality: null };
+            var p = res.status === 'success' ? res.product : { id: e.product_id, name: e.name, source: 'user', per_ml: e.ml, units: [{ label: e.ml ? '100 ml' : '100 g', grams: 100, base: true }], quality: null, missing: true };
             openPortion(p, e, res.status === 'success');
         });
     }
@@ -700,7 +700,8 @@
         var d = entry ? { grams: entry.grams, label: entry.unit_label, unit_g: entry.unit_g } : p.default;
         var grams = d.grams;
         var scale = grams <= 40 ? { ppg: 8, step: 1, major: 5, label: 10 } : grams <= 450 ? { ppg: 4, step: 5, major: 10, label: 20 } : { ppg: 1.6, step: 10, major: 50, label: 100 };
-        sh.p = { product: p, entry: entry, source: source, p100: p100, grams: grams, unit: d.label && d.unit_g ? { label: d.label, grams: d.unit_g } : null, scale: scale, quality: detailed ? p.quality : undefined };
+        // orig = obiekt z listy wyników – nowa jednostka trafia też tam, żeby była po powrocie do wyszukiwarki
+        sh.p = { product: p, orig: p, entry: entry, source: source, p100: p100, grams: grams, unit: d.label && d.unit_g ? { label: d.label, grams: d.unit_g } : null, scale: scale, quality: detailed ? p.quality : undefined };
         if (entry) sh.meal = entry.meal;
         setStep('portion', false);
         if (!detailed && !entry) {
@@ -719,12 +720,83 @@
         }
     }
 
+    // wielokrotności (5 × wafel) ustawia licznik pod gramaturą, więc chipy to same jednostki
     function unitsFor(pp) {
         var units = (pp.product.units || []).filter(function (u) { return !u.base; });
         var chips = units.map(function (u) { return { label: u.label + ' · ' + dec(u.grams) + ' ' + (pp.product.per_ml ? 'ml' : 'g'), grams: u.grams, unit: u }; });
-        if (units[0]) chips.push({ label: '2 × ' + units[0].label + ' · ' + dec(units[0].grams * 2) + ' ' + (pp.product.per_ml ? 'ml' : 'g'), grams: units[0].grams * 2, unit: units[0] });
         chips.push({ label: pp.product.per_ml ? '100 ml' : '100 g', grams: 100, unit: null });
         return chips;
+    }
+
+    // jednostka licznika: wybrana albo pierwsza z produktu
+    function portionRef(pp) {
+        return pp.unit || (pp.product.units || []).filter(function (x) { return !x.base; })[0] || null;
+    }
+
+    function setUnits(pp, units) {
+        pp.product.units = units;
+        if (pp.orig) pp.orig.units = units;
+    }
+
+    // ---------- własna jednostka (np. opakowanie, którego nie zna OFF) ----------
+    var UNIT_PRESETS = ['opakowanie', 'sztuka', 'plaster', 'kromka', 'łyżka', 'szklanka'];
+
+    function renderAddUnit() {
+        var pp = S.sheet && S.sheet.p, box = el('fd_addunit');
+        if (!pp || !box) return;
+        if (!pp.add) { box.innerHTML = ''; return; }
+        var u = pp.product.per_ml ? 'ml' : 'g', a = pp.add;
+        var mine = (pp.product.units || []).filter(function (x) { return x.mine; });
+        box.innerHTML = '<div class="fd-box" style="margin-top:12px"><span class="fd-eyebrow">Nowa jednostka</span>'
+            + '<div class="fd-chips" style="margin-top:10px">' + UNIT_PRESETS.map(function (l) {
+                return '<button type="button" class="fd-chip fd-press' + (a.label === l ? ' is-on' : '') + '" data-ulabel="' + esc(l) + '">' + esc(l) + '</button>';
+            }).join('') + '</div>'
+            + '<div style="display:flex;gap:8px;margin-top:10px"><div class="fd-field" style="flex:1"><input id="fd_ul" type="text" maxlength="30" placeholder="np. opakowanie" aria-label="Nazwa jednostki" value="' + esc(a.label) + '"></div>'
+            + '<label class="fd-field" style="width:110px;padding-right:12px"><input id="fd_ug" type="text" inputmode="decimal" placeholder="' + (u === 'ml' ? '500' : '150') + '" aria-label="Waga jednostki" value="' + esc(a.grams) + '"><span class="text-xs fd-mut">' + u + '</span></label></div>'
+            + '<p class="fd-mut" style="font-size:12px;margin-top:8px">Waga całej jednostki, np. opakowania z etykiety. U Ciebie od razu, dla innych po akceptacji administratora.</p>'
+            + mine.map(function (x) {
+                return '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px"><span style="flex:1;min-width:0">' + esc(x.label) + ' · ' + dec(x.grams) + ' ' + u
+                    + ' <span class="fd-mut">– ' + (x.status === 'rejected' ? 'odrzucona, tylko u Ciebie' : 'czeka na akceptację') + '</span></span>'
+                    + '<button type="button" class="fd-cnt fd-press" data-udel="' + x.id + '" aria-label="Usuń jednostkę">' + I.x + '</button></div>';
+            }).join('')
+            + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" class="fd-ghost-btn fd-press" data-ucancel>Anuluj</button>'
+            + '<button type="button" class="fd-ghost-btn fd-press" data-usave>' + I.check + 'Zapisz</button></div></div>';
+        el('fd_ul').addEventListener('input', function () { a.label = this.value; box.querySelectorAll('[data-ulabel]').forEach(function (b) { b.classList.toggle('is-on', b.dataset.ulabel === a.label.trim()); }); });
+        el('fd_ug').addEventListener('input', function () { a.grams = this.value; });
+        box.querySelectorAll('[data-ulabel]').forEach(function (b) {
+            b.addEventListener('click', function () { a.label = b.dataset.ulabel; renderAddUnit(); el('fd_ug').focus(); });
+        });
+        box.querySelector('[data-ucancel]').addEventListener('click', function () { pp.add = null; renderAddUnit(); });
+        box.querySelector('[data-usave]').addEventListener('click', function () { saveUnit(pp, this); });
+        box.querySelectorAll('[data-udel]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var id = +b.dataset.udel;
+                b.disabled = true;
+                post('scripts/food/unit_save.php', { product_id: pp.product.id, delete: id }).then(function (res) {
+                    if (res.status !== 'success') { b.disabled = false; return fail(res); }
+                    setUnits(pp, res.product.units);
+                    if (pp.unit && pp.unit.id === id) pp.unit = null;
+                    renderAddUnit();
+                    updatePortion();
+                });
+            });
+        });
+    }
+
+    function saveUnit(pp, btn) {
+        var label = pp.add.label.trim().toLowerCase(), grams = parseFloat(String(pp.add.grams).replace(',', '.'));
+        btn.disabled = true;
+        post('scripts/food/unit_save.php', { product_id: pp.product.id, label: label, grams: isNaN(grams) ? '' : grams }).then(function (res) {
+            btn.disabled = false;
+            if (res.status !== 'success') return fail(res);
+            setUnits(pp, res.product.units);
+            var g = Math.round(grams * 10) / 10;
+            var nu = res.product.units.filter(function (x) { return !x.base && x.label === label && Math.abs(x.grams - g) < 0.05; })[0];
+            pp.add = null;
+            renderAddUnit();
+            toast(res.message);
+            if (nu) { pp.unit = nu; setGrams(nu.grams); } else updatePortion();
+        });
     }
 
     function renderPortion(box) {
@@ -741,10 +813,11 @@
             + '<div style="text-align:center"><div style="display:flex;align-items:baseline;justify-content:center;gap:4px">'
             + '<input class="fd-big fd-num" id="fd_grams" type="text" inputmode="decimal" aria-label="Ilość w ' + (u === 'ml' ? 'mililitrach' : 'gramach') + '" value="' + dec(pp.grams) + '">'
             + '<span style="font-size:22px;font-weight:500" class="fd-mut">' + u + '</span></div>'
-            + '<div id="fd_unitline" class="fd-mut" style="margin-top:4px;font-size:13px"></div></div>'
+            + '<div id="fd_unitline" class="fd-mut fd-unitline"></div></div>'
             + '<button type="button" class="fd-round fd-press" data-step="1" aria-label="Więcej">' + I.plus + '</button></div>'
             + '<div class="fd-ruler" id="fd_ruler" style="margin-top:14px" aria-hidden="true"><div id="fd_ticks"></div><span class="fd-needle"></span></div>'
             + '<div class="fd-chips" id="fd_units" style="margin-top:12px"></div>'
+            + '<div id="fd_addunit"></div>'
             + '<div class="fd-mini" id="fd_mini" style="margin-top:16px"></div>'
             + '<div class="fd-box" style="margin-top:16px"><span class="fd-eyebrow">Twój dzień po ' + (pp.entry ? 'zmianie' : 'dodaniu') + '</span>'
             + '<div id="fd_preview" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div></div>'
@@ -774,6 +847,16 @@
         });
         input.addEventListener('focus', function () { input.select(); });
         input.addEventListener('blur', function () { input.value = dec(pp.grams); fitGrams(input); });
+        // licznik sztuk: kolejna cała jednostka w górę / w dół (poniżej jednej – pół)
+        el('fd_unitline').addEventListener('click', function (ev) {
+            var b = ev.target.closest('[data-cnt]'), ref = portionRef(pp);
+            if (!b || !ref) return;
+            var n = pp.grams / ref.grams, eps = 0.02;
+            n = +b.dataset.cnt > 0 ? Math.floor(n + eps) + 1 : n > 1 + eps ? Math.ceil(n - eps) - 1 : 0.5;
+            pp.unit = ref;
+            vib();
+            setGrams(n * ref.grams);
+        });
         bindRuler();
         box.querySelector('[data-commit]').addEventListener('click', commitPortion);
         var del = box.querySelector('[data-del]');
@@ -807,9 +890,12 @@
         var input = el('fd_grams');
         if (input && !typing && document.activeElement !== input) input.value = dec(pp.grams);
         if (input) fitGrams(input);
-        var first = (p.units || []).filter(function (x) { return !x.base; })[0];
-        var ref = pp.unit || first;
-        el('fd_unitline').textContent = ref ? qty(pp.grams / ref.grams) + ' × ' + ref.label + ' (' + dec(ref.grams) + ' ' + u + ')' : 'na 100 ' + u + ': ' + fmt(pp.p100.kcal) + ' kcal';
+        var ref = portionRef(pp);
+        el('fd_unitline').innerHTML = ref
+            ? '<button type="button" class="fd-cnt fd-press" data-cnt="-1" aria-label="Odejmij: ' + esc(ref.label) + '">' + I.minus + '</button>'
+                + '<span><b class="fd-num">' + qty(pp.grams / ref.grams) + '</b> × ' + esc(ref.label) + ' (' + dec(ref.grams) + ' ' + u + ')</span>'
+                + '<button type="button" class="fd-cnt fd-press" data-cnt="1" aria-label="Dodaj: ' + esc(ref.label) + '">' + I.plus + '</button>'
+            : 'na 100 ' + u + ': ' + fmt(pp.p100.kcal) + ' kcal';
         // linijka
         var sc = pp.scale, W = el('fd_ruler').clientWidth || 350, C = W / 2, span = C / sc.ppg + sc.step, html = '';
         for (var v = Math.ceil((pp.grams - span) / sc.step) * sc.step; v <= pp.grams + span; v += sc.step) {
@@ -822,7 +908,14 @@
         el('fd_units').innerHTML = unitsFor(pp).map(function (c, i) {
             var on = Math.abs(c.grams - pp.grams) < 0.05 && ((c.unit && pp.unit && c.unit.label === pp.unit.label) || (!c.unit && !pp.unit));
             return '<button type="button" class="fd-chip fd-press' + (on ? ' is-on' : '') + '" data-unit="' + i + '">' + esc(c.label) + '</button>';
-        }).join('');
+        }).join('') + (p.missing ? '' : '<button type="button" class="fd-chip fd-chip-add fd-press" data-addunit aria-label="Dodaj jednostkę, np. opakowanie">' + I.plus + 'Jednostka</button>');
+        var add = el('fd_units').querySelector('[data-addunit]');
+        if (add) add.addEventListener('click', function () {
+            var has = (p.units || []).some(function (x) { return x.label === 'opakowanie'; });
+            pp.add = pp.add ? null : { label: has ? 'sztuka' : 'opakowanie', grams: '' };
+            renderAddUnit();
+            if (pp.add) el('fd_ug').focus();
+        });
         el('fd_units').querySelectorAll('[data-unit]').forEach(function (b) {
             b.addEventListener('click', function () {
                 var c = unitsFor(pp)[+b.dataset.unit];

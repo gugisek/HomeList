@@ -22,7 +22,7 @@ $upsert = $conn->prepare(
          name_search = VALUES(name_search), popularity = VALUES(popularity)"
 );
 $find = $conn->prepare('SELECT id FROM food_products WHERE seed_key = ?');
-$clear = $conn->prepare('DELETE FROM food_product_units WHERE product_id = ?');
+$clear = $conn->prepare('DELETE FROM food_product_units WHERE product_id = ? AND owner_id IS NULL');
 $unit = $conn->prepare('INSERT INTO food_product_units (product_id, label, grams, sort) VALUES (?, ?, ?, ?)');
 
 $count = 0;

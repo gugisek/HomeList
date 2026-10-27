@@ -27,6 +27,24 @@ $need = ['approve' => 'edit', 'reject' => 'edit', 'delete' => 'full'][$action] ?
 if ($need === null) hl_food_json('error', 'Nieznana akcja');
 if (!hl_can('food', $need)) hl_food_json('error', 'Brak uprawnień');
 
+// jednostka porcji zgłoszona przez użytkownika (type = unit); odrzucona zostaje tylko u autora
+if (($_POST['type'] ?? '') === 'unit') {
+    if ($action === 'delete') {
+        $stmt = $conn->prepare('DELETE FROM food_product_units WHERE id = ? AND owner_id IS NOT NULL');
+        $stmt->bind_param('i', $id);
+    } else {
+        $status = $action === 'approve' ? 'approved' : 'rejected';
+        $stmt = $conn->prepare('UPDATE food_product_units SET status = ? WHERE id = ? AND owner_id IS NOT NULL');
+        $stmt->bind_param('si', $status, $id);
+    }
+    $stmt->execute();
+    $deleted = $stmt->affected_rows > 0;
+    $stmt->close();
+    $ok = $action === 'delete' ? $deleted : $conn->query("SELECT 1 FROM food_product_units WHERE id = $id AND owner_id IS NOT NULL")->num_rows > 0;
+    $ok ? hl_food_json('success', ['approve' => 'Zaakceptowano jednostkę', 'reject' => 'Odrzucono jednostkę', 'delete' => 'Usunięto jednostkę'][$action])
+        : hl_food_json('error', 'Nie znaleziono jednostki');
+}
+
 if ($action === 'delete') {
     $stmt = $conn->prepare("DELETE FROM food_products WHERE id = ? AND source = 'user'");
     $stmt->bind_param('i', $id);
