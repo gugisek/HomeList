@@ -55,8 +55,10 @@ if ($code !== null) {
 $search = mb_substr(hl_food_norm($name . ' ' . ($brand ?? '')), 0, 400);
 if ($id) {
     $status = $moderator ? $old['status'] : 'pending';
-    $stmt = $conn->prepare('UPDATE food_products SET name = ?, brand = ?, code = ?, per_ml = ?, kcal = ?, protein = ?, fat = ?, carbs = ?,
-                            sugars = ?, fiber = ?, sat_fat = ?, salt = ?, name_search = ?, status = ? WHERE id = ?');
+    // edycja autora wraca do kolejki – poprzednia decyzja moderatora przestaje obowiązywać (status ustawiany wcześniej w SET)
+    $stmt = $conn->prepare("UPDATE food_products SET name = ?, brand = ?, code = ?, per_ml = ?, kcal = ?, protein = ?, fat = ?, carbs = ?,
+                            sugars = ?, fiber = ?, sat_fat = ?, salt = ?, name_search = ?, status = ?,
+                            reviewed_by = IF(status = 'pending', NULL, reviewed_by), reviewed_at = IF(status = 'pending', NULL, reviewed_at) WHERE id = ?");
     $stmt->bind_param('sssiddddddddssi', $name, $brand, $code, $per_ml, $kcal, $protein, $fat, $carbs, $sugars, $fiber, $sat_fat, $salt, $search, $status, $id);
     $stmt->execute();
     $stmt->close();

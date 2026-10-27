@@ -39,9 +39,12 @@ foreach (hl_food_units($conn, [$p], $user_id)[$product_id] as $u) {
 $mine = (int)$conn->query("SELECT COUNT(*) FROM food_product_units WHERE product_id = $product_id AND owner_id = $user_id AND status <> 'approved'")->fetch_row()[0];
 if ($mine >= 5) hl_food_json('warning', 'Masz już 5 jednostek czekających na akceptację dla tego produktu');
 
+// moderator zatwierdza od razu sam – w historii widać, że dodał i zaakceptował
 $status = hl_can('food', 'edit') ? 'approved' : 'pending';
-$stmt = $conn->prepare('INSERT INTO food_product_units (product_id, label, grams, sort, owner_id, status) VALUES (?, ?, ?, 0, ?, ?)');
-$stmt->bind_param('isdis', $product_id, $label, $grams, $user_id, $status);
+$reviewer = $status === 'approved' ? $user_id : null;
+$stmt = $conn->prepare('INSERT INTO food_product_units (product_id, label, grams, sort, owner_id, status, reviewed_by, reviewed_at)
+                        VALUES (?, ?, ?, 0, ?, ?, ?, IF(? IS NULL, NULL, NOW()))');
+$stmt->bind_param('isdisii', $product_id, $label, $grams, $user_id, $status, $reviewer, $reviewer);
 $stmt->execute();
 $stmt->close();
 $done($status === 'approved' ? 'Dodano jednostkę' : 'Dodano – u Ciebie od razu, dla innych po akceptacji');

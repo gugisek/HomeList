@@ -1,12 +1,14 @@
 <?php
-// Moderacja produktów użytkowników (moduł „Baza produktów”):
-//   GET  – lista oczekujących (read)
-//   POST id, action = approve | reject (edit) | delete (full)
+// Moderacja bazy produktów (moduł „Baza produktów”) – produkty użytkowników i zgłoszone jednostki porcji (type = unit):
+//   GET  – lista oczekujących produktów (read)
+//   POST id, type?, action = approve | reject (edit) | delete (full)
+// Decyzja zapisuje reviewed_by / reviewed_at (historia na stronie) i wpis w archiwum zmian (logs).
 // Usunięcie nie rusza dziennika – wpisy mają własną kopię nazwy i makro.
 $SECURITY_REQUIRED_MODULE = ['food', 'read'];
 include '../security_scripts.php';
 include '../conn_db.php';
 require_once 'food_lib.php';
+require_once '../log_lib.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $res = $conn->query("SELECT p.*, u.name AS owner_name FROM food_products p LEFT JOIN users u ON u.id = p.owner_id
@@ -26,42 +28,38 @@ $action = (string)($_POST['action'] ?? '');
 $need = ['approve' => 'edit', 'reject' => 'edit', 'delete' => 'full'][$action] ?? null;
 if ($need === null) hl_food_json('error', 'Nieznana akcja');
 if (!hl_can('food', $need)) hl_food_json('error', 'Brak uprawnień');
+$me = (int)$_SESSION['login_id'];
+$unit = ($_POST['type'] ?? '') === 'unit';
 
 // jednostka porcji zgłoszona przez użytkownika (type = unit); odrzucona zostaje tylko u autora
-if (($_POST['type'] ?? '') === 'unit') {
-    if ($action === 'delete') {
-        $stmt = $conn->prepare('DELETE FROM food_product_units WHERE id = ? AND owner_id IS NOT NULL');
-        $stmt->bind_param('i', $id);
-    } else {
-        $status = $action === 'approve' ? 'approved' : 'rejected';
-        $stmt = $conn->prepare('UPDATE food_product_units SET status = ? WHERE id = ? AND owner_id IS NOT NULL');
-        $stmt->bind_param('si', $status, $id);
-    }
-    $stmt->execute();
-    $deleted = $stmt->affected_rows > 0;
-    $stmt->close();
-    $ok = $action === 'delete' ? $deleted : $conn->query("SELECT 1 FROM food_product_units WHERE id = $id AND owner_id IS NOT NULL")->num_rows > 0;
-    $ok ? hl_food_json('success', ['approve' => 'Zaakceptowano jednostkę', 'reject' => 'Odrzucono jednostkę', 'delete' => 'Usunięto jednostkę'][$action])
-        : hl_food_json('error', 'Nie znaleziono jednostki');
+if ($unit) {
+    $row = $conn->query("SELECT un.*, p.name FROM food_product_units un JOIN food_products p ON p.id = un.product_id
+                         WHERE un.id = $id AND un.owner_id IS NOT NULL")->fetch_assoc();
+    if (!$row) hl_food_json('error', 'Nie znaleziono jednostki');
+    $what = $row['label'] . ' = ' . (float)$row['grams'] . ' g/ml<br/>Produkt: ' . $row['name'] . ' (#' . $row['product_id'] . ')<br/>Autor: ' . $row['owner_id'];
+} else {
+    $row = $conn->query("SELECT * FROM food_products WHERE id = $id AND source = 'user'")->fetch_assoc();
+    if (!$row) hl_food_json('error', 'Nie znaleziono produktu');
+    $what = $row['name'] . ($row['brand'] ? ' · ' . $row['brand'] : '') . '<br/>' . (float)$row['kcal'] . ' kcal / 100 ' . ($row['per_ml'] ? 'ml' : 'g') . '<br/>Autor: ' . $row['owner_id'];
 }
+$table = $unit ? 'food_product_units' : 'food_products';
 
 if ($action === 'delete') {
-    $stmt = $conn->prepare("DELETE FROM food_products WHERE id = ? AND source = 'user'");
-    $stmt->bind_param('i', $id);
-    $stmt->execute();
-    $ok = $stmt->affected_rows > 0;
-    $stmt->close();
-    if ($ok) {
+    $conn->query("DELETE FROM $table WHERE id = $id");
+    if (!$unit) {
         $conn->query("DELETE FROM food_product_units WHERE product_id = $id");
         $conn->query("DELETE FROM food_product_details WHERE product_id = $id");
     }
+    // usunięty wiersz znika z historii na stronie – zostaje ślad w archiwum zmian
+    hl_log($conn, $id, $unit ? 'food_unit' : 'food_product', $what . '<br/>Status: ' . $row['status'], '', 3, $unit ? 'Usunięto jednostkę porcji' : 'Usunięto produkt z bazy');
 } else {
     $status = $action === 'approve' ? 'approved' : 'rejected';
-    $stmt = $conn->prepare("UPDATE food_products SET status = ? WHERE id = ? AND source = 'user'");
-    $stmt->bind_param('si', $status, $id);
+    $stmt = $conn->prepare("UPDATE $table SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?");
+    $stmt->bind_param('sii', $status, $me, $id);
     $stmt->execute();
-    $ok = $stmt->affected_rows >= 0 && $conn->query("SELECT 1 FROM food_products WHERE id = $id AND source = 'user'")->num_rows > 0;
     $stmt->close();
+    hl_log($conn, $id, $unit ? 'food_unit' : 'food_product', 'Status: ' . $row['status'], $what . '<br/>Status: ' . $status, 1,
+        ($action === 'approve' ? 'Zaakceptowano ' : 'Odrzucono ') . ($unit ? 'jednostkę porcji' : 'produkt'));
 }
-$ok ? hl_food_json('success', ['approve' => 'Zaakceptowano produkt', 'reject' => 'Odrzucono produkt', 'delete' => 'Usunięto produkt'][$action])
-    : hl_food_json('error', 'Nie znaleziono produktu');
+$msg = ['approve' => 'Zaakceptowano', 'reject' => 'Odrzucono', 'delete' => 'Usunięto'][$action] . ($unit ? ' jednostkę' : ' produkt');
+hl_food_json('success', $msg);
