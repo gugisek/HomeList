@@ -38,9 +38,11 @@ if ($unit) {
     if (!$row) hl_food_json('error', 'Nie znaleziono jednostki');
     $what = $row['label'] . ' = ' . (float)$row['grams'] . ' g/ml<br/>Produkt: ' . $row['name'] . ' (#' . $row['product_id'] . ')<br/>Autor: ' . $row['owner_id'];
 } else {
-    $row = $conn->query("SELECT * FROM food_products WHERE id = $id AND source = 'user'")->fetch_assoc();
+    $row = $conn->query("SELECT * FROM food_products WHERE id = $id AND (source = 'user' OR (source = 'dish' AND public = 1))")->fetch_assoc();
     if (!$row) hl_food_json('error', 'Nie znaleziono produktu');
-    $what = $row['name'] . ($row['brand'] ? ' · ' . $row['brand'] : '') . '<br/>' . (float)$row['kcal'] . ' kcal / 100 ' . ($row['per_ml'] ? 'ml' : 'g') . '<br/>Autor: ' . $row['owner_id'];
+    // danie udostępnione przez dom: moderator decyduje tylko o widoczności dla innych – przepis zostaje w domu
+    if ($row['source'] === 'dish' && $action === 'delete') hl_food_json('warning', 'Danie domowe można tylko odrzucić – zostanie wtedy w domu autora');
+    $what = ($row['source'] === 'dish' ? 'Danie: ' : '') . $row['name'] . ($row['brand'] ? ' · ' . $row['brand'] : '') . '<br/>' . (float)$row['kcal'] . ' kcal / 100 ' . ($row['per_ml'] ? 'ml' : 'g') . '<br/>Autor: ' . $row['owner_id'];
 }
 $table = $unit ? 'food_product_units' : 'food_products';
 
@@ -61,5 +63,5 @@ if ($action === 'delete') {
     hl_log($conn, $id, $unit ? 'food_unit' : 'food_product', 'Status: ' . $row['status'], $what . '<br/>Status: ' . $status, 1,
         ($action === 'approve' ? 'Zaakceptowano ' : 'Odrzucono ') . ($unit ? 'jednostkę porcji' : 'produkt'));
 }
-$msg = ['approve' => 'Zaakceptowano', 'reject' => 'Odrzucono', 'delete' => 'Usunięto'][$action] . ($unit ? ' jednostkę' : ' produkt');
+$msg = ['approve' => 'Zaakceptowano', 'reject' => 'Odrzucono', 'delete' => 'Usunięto'][$action] . ($unit ? ' jednostkę' : ($row['source'] === 'dish' ? ' danie' : ' produkt'));
 hl_food_json('success', $msg);

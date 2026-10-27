@@ -56,7 +56,8 @@ $items = $fetch("SELECT p.* FROM food_products p
                  LEFT JOIN (SELECT product_id, COUNT(*) AS cnt FROM food_log WHERE user_id = $user_id AND product_id IS NOT NULL GROUP BY product_id) mine ON mine.product_id = p.id
                  LEFT JOIN (SELECT product_id, COUNT(*) AS cnt FROM food_log WHERE user_id IN ($home) AND user_id <> $user_id AND product_id IS NOT NULL
                             AND created_at > NOW() - INTERVAL 180 DAY GROUP BY product_id) home ON home.product_id = p.id
-                 WHERE $vis AND p.status <> 'rejected' AND " . implode(' AND ', $where) . "
+                 WHERE $vis AND (p.status <> 'rejected' OR p.source = 'dish')
+                   AND NOT EXISTS (SELECT 1 FROM food_dishes ad WHERE ad.product_id = p.id AND ad.archived = 1) AND " . implode(' AND ', $where) . "
                  ORDER BY LEAST(COALESCE(mine.cnt, 0), 20) * 1000 + LEAST(COALESCE(home.cnt, 0), 20) * 200
                         + (p.name_search LIKE '$first%') * 400 + (p.name_search LIKE '% $first%') * 150
                         + (p.source = 'base') * 300 + (p.source = 'dish') * 350 + LOG(p.popularity + 1) * 25 - CHAR_LENGTH(p.name) DESC

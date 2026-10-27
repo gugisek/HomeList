@@ -70,19 +70,27 @@ if ($d) {
 $row['quality'] = $quality;
 
 if ($p['source'] === 'dish') {
-    $stmt = $conn->prepare('SELECT d.id, d.cooked_g, d.owner_id, u.name AS owner_name FROM food_dishes d LEFT JOIN users u ON u.id = d.owner_id WHERE d.product_id = ?');
+    $stmt = $conn->prepare('SELECT d.id, d.cooked_g, d.servings, d.owner_id, u.name AS owner_name FROM food_dishes d LEFT JOIN users u ON u.id = d.owner_id WHERE d.product_id = ?');
     $stmt->bind_param('i', $id);
     $stmt->execute();
     $dish = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     if ($dish) {
-        $items = [];
-        $res = $conn->query('SELECT i.product_id, i.grams, p.name, p.kcal FROM food_dish_items i JOIN food_products p ON p.id = i.product_id
+        $items = $prods = [];
+        $res = $conn->query('SELECT i.grams, i.unit_label, i.unit_g, p.* FROM food_dish_items i JOIN food_products p ON p.id = i.product_id
                              WHERE i.dish_id = ' . (int)$dish['id'] . ' ORDER BY i.sort, i.id');
-        while ($it = $res->fetch_assoc()) {
-            $items[] = ['product_id' => (int)$it['product_id'], 'name' => $it['name'], 'grams' => (float)$it['grams'], 'kcal' => round((float)$it['kcal'] * $it['grams'] / 100)];
+        while ($it = $res->fetch_assoc()) $prods[] = $it;
+        // jednostki składników – edytor dania pozwala przełączać „3 × sztuka” / gramy
+        $units = hl_food_units($conn, $prods, $user_id);
+        foreach ($prods as $it) {
+            $items[] = ['product_id' => (int)$it['id'], 'name' => $it['name'], 'grams' => (float)$it['grams'], 'kcal' => round((float)$it['kcal'] * $it['grams'] / 100),
+                        'unit_label' => $it['unit_label'], 'unit_g' => $it['unit_g'] !== null ? (float)$it['unit_g'] : null, 'per_ml' => (bool)$it['per_ml'],
+                        'p100' => ['kcal' => (float)$it['kcal'], 'protein' => (float)$it['protein'], 'fat' => (float)$it['fat'], 'carbs' => (float)$it['carbs']],
+                        'units' => $units[(int)$it['id']]];
         }
         $row['dish'] = ['id' => (int)$dish['id'], 'cooked_g' => $dish['cooked_g'] !== null ? (float)$dish['cooked_g'] : null,
+                        'servings' => $dish['servings'] !== null ? (int)$dish['servings'] : null,
+                        'public' => (bool)$p['public'], 'status' => $p['status'],
                         'owner' => $dish['owner_name'], 'mine' => (int)$dish['owner_id'] === $user_id, 'items' => $items];
     }
 } elseif ($p['source'] === 'user' && $p['owner_id']) {

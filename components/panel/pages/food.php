@@ -15,8 +15,17 @@ $me = (int)$_SESSION['login_id'];
 
 $items = [];
 $res = $conn->query("SELECT p.*, (SELECT COUNT(*) FROM food_log l WHERE l.product_id = p.id) AS uses
-                     FROM food_products p WHERE p.source = 'user' AND p.status = 'pending' ORDER BY p.id LIMIT 200");
+                     FROM food_products p WHERE (p.source = 'user' OR (p.source = 'dish' AND p.public = 1)) AND p.status = 'pending' ORDER BY p.id LIMIT 200");
 while ($row = $res->fetch_assoc()) $items[] = $row;
+// składniki udostępnianych dań – moderator ocenia przepis, nie etykietę
+$dish_items = [];
+$dish_ids = array_map(fn($p) => (int)$p['id'], array_filter($items, fn($p) => $p['source'] === 'dish'));
+if ($dish_ids) {
+    $res = $conn->query('SELECT d.product_id, d.cooked_g, d.servings, i.grams, i.unit_label, i.unit_g, p.name, p.kcal FROM food_dishes d
+                         JOIN food_dish_items i ON i.dish_id = d.id JOIN food_products p ON p.id = i.product_id
+                         WHERE d.product_id IN (' . implode(',', $dish_ids) . ') ORDER BY i.sort, i.id');
+    while ($row = $res->fetch_assoc()) $dish_items[(int)$row['product_id']][] = $row;
+}
 
 $units = [];
 $res = $conn->query("SELECT un.id, un.label, un.grams, un.created_at, un.owner_id, p.name, p.brand, p.code, p.quantity, p.package_g, p.serving_g, p.per_ml
@@ -26,9 +35,9 @@ while ($row = $res->fetch_assoc()) $units[] = $row;
 
 // historia: produkty użytkowników + zgłoszone jednostki, najnowsze na górze
 $history = [];
-$res = $conn->query("(SELECT 'product' AS kind, p.id, p.name, p.brand, NULL AS label, NULL AS grams, p.per_ml, p.kcal, p.status,
+$res = $conn->query("(SELECT IF(p.source = 'dish', 'dish', 'product') AS kind, p.id, p.name, p.brand, NULL AS label, NULL AS grams, p.per_ml, p.kcal, p.status,
                              p.created_at, p.owner_id, p.reviewed_by, p.reviewed_at
-                      FROM food_products p WHERE p.source = 'user')
+                      FROM food_products p WHERE p.source = 'user' OR (p.source = 'dish' AND p.public = 1))
                      UNION ALL
                      (SELECT 'unit', un.id, p.name, p.brand, un.label, un.grams, p.per_ml, NULL, un.status,
                              un.created_at, un.owner_id, un.reviewed_by, un.reviewed_at
@@ -60,12 +69,12 @@ $tabs = ['products' => ['Produkty', count($items)], 'units' => ['Jednostki', cou
 // przyciski decyzji; w historii widoczne zależnie od statusu (data-show), żeby po kliknięciu nie przeładowywać strony
 $actions = function (string $kind, int $id, bool $inHistory) use ($can_edit, $can_delete, $icon, $check) {
     if (!$can_edit) return '';
-    $t = $kind === 'unit' ? ", 'unit'" : '';
+    $t = $kind === 'product' ? '' : ", '$kind'";
     $show = fn($s) => $inHistory ? ' data-show="' . $s . '"' : '';
     return '<div class="mt-3 flex flex-wrap gap-2">'
         . '<button type="button"' . $show('pending rejected') . ' onclick="foodModerate(' . $id . ", 'approve'$t)\" class=\"hl-btn hl-btn-green hl-btn-sm\">" . $icon($check) . 'Akceptuj</button>'
         . '<button type="button"' . $show('pending approved') . ' onclick="foodModerate(' . $id . ", 'reject'$t)\" class=\"hl-btn hl-btn-ghost hl-btn-sm\">" . ($inHistory ? 'Odrzuć / cofnij' : 'Odrzuć') . '</button>'
-        . ($can_delete ? '<button type="button" onclick="foodModerate(' . $id . ", 'delete'$t)\" class=\"hl-btn hl-btn-danger hl-btn-sm\">Usuń</button>" : '')
+        . ($can_delete && $kind !== 'dish' ? '<button type="button" onclick="foodModerate(' . $id . ", 'delete'$t)\" class=\"hl-btn hl-btn-danger hl-btn-sm\">Usuń</button>" : '')
         . '</div>';
 };
 $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">' . $icon('M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 'size-8') . '</div><h3>' . $title . '</h3><p>' . $text . '</p></div>';
@@ -103,9 +112,27 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                 <div class="min-w-0 flex-1">
                     <p class="text-base font-medium text-gray-900 dark:text-gray-100"><?=hl_e($p['name'])?><?php if ($p['brand']): ?> <span class="text-gray-500 dark:text-gray-400 font-normal">· <?=hl_e($p['brand'])?></span><?php endif; ?></p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <?=$p['source'] === 'dish' ? '<span class="font-semibold text-indigo-500">Danie domowe do udostępnienia</span> · ' : ''?>
                         <?=hl_e($who($p['owner_id']))?> · <?=$when($p['created_at'])?>
                         <?=$p['code'] ? ' · kod ' . hl_e($p['code']) : ''?> · w dziennikach: <?=(int)$p['uses']?> · wartości na 100 <?=$u?>
                     </p>
+                    <?php if (!empty($p['photo'])): ?>
+                    <img src="<?=hl_e(hl_food_photo_url($p))?>" alt="Zdjęcie dania" loading="lazy" class="mt-3 w-full max-w-sm aspect-[16/10] object-cover rounded-2xl ring-1 ring-black/5 dark:ring-white/10">
+                    <?php endif; ?>
+                    <?php if ($p['source'] === 'dish' && !empty($dish_items[(int)$p['id']])): $di = $dish_items[(int)$p['id']]; ?>
+                    <ul class="mt-3 divide-y divide-black/5 dark:divide-white/10 text-sm">
+                        <?php foreach ($di as $it): ?>
+                        <li class="flex justify-between gap-3 py-1.5">
+                            <span class="min-w-0 text-gray-800 dark:text-gray-200"><?=hl_e($it['name'])?>
+                                <span class="text-gray-500 dark:text-gray-400"><?=$it['unit_label'] && $it['unit_g'] > 0 ? $fmt($it['grams'] / $it['unit_g']) . ' × ' . hl_e($it['unit_label']) . ' · ' : ''?><?=$fmt($it['grams'])?> g</span></span>
+                            <span class="flex-none text-gray-500 dark:text-gray-400"><?=round($it['kcal'] * $it['grams'] / 100)?> kcal</span>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        <?=$di[0]['cooked_g'] ? 'Waga gotowego dania: ' . $fmt($di[0]['cooked_g']) . ' g' : 'Waga = suma składników'?><?=$di[0]['servings'] ? ' · garnek na ' . (int)$di[0]['servings'] . ' ' . ((int)$di[0]['servings'] === 1 ? 'porcję' : (in_array((int)$di[0]['servings'] % 10, [2, 3, 4]) && !in_array((int)$di[0]['servings'] % 100, [12, 13, 14]) ? 'porcje' : 'porcji')) : ''?>
+                    </p>
+                    <?php endif; ?>
                     <div class="mt-3 grid grid-cols-4 gap-2 text-center">
                         <?php foreach ([['kcal', 'kcal', 'var(--fd-k)'], ['protein', 'białko', 'var(--fd-p)'], ['fat', 'tłuszcz', 'var(--fd-f)'], ['carbs', 'węgle', 'var(--fd-c)']] as [$k, $label, $c]): ?>
                         <div class="rounded-2xl bg-gray-50 dark:bg-[#3d3d3d]/60 py-2">
@@ -114,10 +141,12 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                         </div>
                         <?php endforeach; ?>
                     </div>
+                    <?php if ($p['source'] !== 'dish'): ?>
                     <p class="mt-2 inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium <?=$match ? 'bg-green-50 text-green-700 dark:bg-green-400/10 dark:text-green-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300'?>">
                         <?=$match ? 'Kalorie zgadzają się z makro (~' . $est . ' kcal)' : 'Sprawdź: z makro wychodzi ~' . $est . ' kcal, a podano ' . $fmt($p['kcal'])?>
                     </p>
-                    <?=$actions('product', (int)$p['id'], false)?>
+                    <?php endif; ?>
+                    <?=$actions($p['source'] === 'dish' ? 'dish' : 'product', (int)$p['id'], false)?>
                 </div>
             </div>
         </div>
@@ -152,7 +181,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     <!-- historia dodań i decyzji -->
     <section data-fpanel="history" class="mt-4"<?=$tab !== 'history' ? ' hidden' : ''?>>
         <div class="flex flex-wrap gap-2">
-            <?php foreach (['all' => 'Wszystko', 'product' => 'Produkty', 'unit' => 'Jednostki', 'pending' => 'Czeka', 'approved' => 'Zaakceptowane', 'rejected' => 'Odrzucone'] as $k => $label): ?>
+            <?php foreach (['all' => 'Wszystko', 'product' => 'Produkty', 'unit' => 'Jednostki', 'dish' => 'Dania', 'pending' => 'Czeka', 'approved' => 'Zaakceptowane', 'rejected' => 'Odrzucone'] as $k => $label): ?>
             <button type="button" data-fhist="<?=$k?>" class="fa-filter rounded-full px-3 py-1.5 text-xs font-medium duration-150"><?=$label?></button>
             <?php endforeach; ?>
         </div>
@@ -167,7 +196,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                     <img class="size-9 flex-none rounded-full object-cover border border-black/10" src="<?=$pic($h['owner_id'])?>" alt="">
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span class="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"><?=$h['kind'] === 'unit' ? 'Jednostka' : 'Produkt'?></span>
+                            <span class="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"><?=['unit' => 'Jednostka', 'dish' => 'Danie', 'product' => 'Produkt'][$h['kind']]?></span>
                             <p class="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0">
                                 <?php if ($h['kind'] === 'unit'): ?><?=hl_e($h['label'])?> = <?=$fmt($h['grams'])?> <?=$u?> <span class="font-normal text-gray-500 dark:text-gray-400">· <?=hl_e($h['name'])?></span>
                                 <?php else: ?><?=hl_e($h['name'])?><?=$h['brand'] ? ' <span class="font-normal text-gray-500 dark:text-gray-400">· ' . hl_e($h['brand']) . '</span>' : ''?> <span class="font-normal text-gray-500 dark:text-gray-400">· <?=$fmt($h['kcal'])?> kcal/100 <?=$u?></span><?php endif; ?>
@@ -242,12 +271,12 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     function pad(n) { return String(n).padStart(2, '0'); }
 
     window.foodModerate = function (id, action, type) {
-        var kind = type === 'unit' ? 'unit' : 'product';
+        var kind = type === 'unit' || type === 'dish' ? type : 'product';
         if (action === 'delete' && !confirm(kind === 'unit' ? 'Usunąć tę jednostkę?' : 'Usunąć ten produkt z bazy?')) return;
         var fd = new FormData();
         fd.append('id', id);
         fd.append('action', action);
-        if (type) fd.append('type', type);
+        if (type === 'unit') fd.append('type', type);
         hlJson('scripts/food/moderate.php', fd).then(function (r) {
             showAlert(r.status || 'error', r.message || 'Nieznany status odpowiedzi');
             if (r.status !== 'success') return;

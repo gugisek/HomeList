@@ -88,14 +88,14 @@ if (!function_exists('hl_food_norm')) {
 
     // warunek SQL: produkty widoczne dla użytkownika (alias tabeli food_products = $a)
     // podstawowe i z OFF – wszyscy; własne – zaakceptowane wszyscy, oczekujące autor i domownicy, odrzucone tylko autor;
-    // dania – autor i domownicy
+    // dania – autor i domownicy, a udostępnione (public) po akceptacji wszyscy
     function hl_food_visible_sql(mysqli $conn, int $userId, string $a = 'p'): string
     {
         $home = implode(',', array_map('intval', hl_food_household($conn, $userId)));
         $me = (int)$userId;
         return "($a.source IN ('base','off')
                  OR ($a.source = 'user' AND ($a.status = 'approved' OR $a.owner_id = $me OR ($a.status = 'pending' AND $a.owner_id IN ($home))))
-                 OR ($a.source = 'dish' AND $a.owner_id IN ($home)))";
+                 OR ($a.source = 'dish' AND ($a.owner_id IN ($home) OR ($a.public = 1 AND $a.status = 'approved'))))";
     }
 
     function hl_food_product(mysqli $conn, int $userId, int $id): ?array
@@ -191,6 +191,14 @@ if (!function_exists('hl_food_norm')) {
         if (!$products) return [];
         $units = hl_food_units($conn, $products, $userId);
         $last = hl_food_last_portions($conn, $userId, array_column($products, 'id'));
+        // autor cudzego dania – samo imię (etykieta „Danie domowe · Anna” / „Danie społeczności · Anna”)
+        $home = hl_food_household($conn, $userId);
+        $authors = [];
+        $ids = array_unique(array_map(fn($p) => (int)$p['owner_id'], array_filter($products, fn($p) => $p['source'] === 'dish' && (int)$p['owner_id'] !== $userId)));
+        if ($ids) {
+            $res = $conn->query('SELECT id, name FROM users WHERE id IN (' . implode(',', $ids) . ')');
+            while ($a = $res->fetch_assoc()) $authors[(int)$a['id']] = $a['name'];
+        }
         $rows = [];
         foreach ($products as $p) {
             $id = (int)$p['id'];
@@ -198,14 +206,56 @@ if (!function_exists('hl_food_norm')) {
             $default = isset($last[$id])
                 ? ['grams' => $last[$id]['grams'], 'label' => $last[$id]['unit_label'], 'unit_g' => $last[$id]['unit_g'], 'last' => true]
                 : ['grams' => $u[0]['grams'], 'label' => empty($u[0]['base']) ? $u[0]['label'] : null, 'unit_g' => empty($u[0]['base']) ? $u[0]['grams'] : null, 'last' => false];
-            $rows[] = [
+            $row = [
                 'id' => $id, 'name' => $p['name'], 'brand' => $p['brand'], 'source' => $p['source'], 'status' => $p['status'],
                 'quantity' => $p['quantity'], 'per_ml' => (bool)$p['per_ml'], 'code' => $p['code'],
                 'kcal' => (float)$p['kcal'], 'protein' => (float)$p['protein'], 'fat' => (float)$p['fat'], 'carbs' => (float)$p['carbs'],
                 'units' => $u, 'default' => $default, 'mine' => (int)$p['owner_id'] === $userId,
+                'photo' => hl_food_photo_url($p),
             ];
+            if ($p['source'] === 'dish') {
+                $row['home'] = in_array((int)$p['owner_id'], $home, true);
+                $row['author'] = $row['mine'] ? null : ($authors[(int)$p['owner_id']] ?? null);
+            }
+            $rows[] = $row;
         }
         return $rows;
+    }
+
+    // ---------- zdjęcia dań ----------
+    // pliki w uploads/food/ (cały uploads/ ma Require all denied) – wydaje je scripts/food/photo.php po sprawdzeniu widoczności
+
+    function hl_food_photo_dir(): string
+    {
+        $dir = __DIR__ . '/../../uploads/food/';
+        if (!is_dir($dir)) mkdir($dir, 0775, true);
+        return $dir;
+    }
+
+    // adres z wersją (zmiana zdjęcia = nowy adres, więc cache przeglądarki nie pokaże starego)
+    function hl_food_photo_url(array $p): ?string
+    {
+        return !empty($p['photo']) ? 'scripts/food/photo.php?id=' . (int)$p['id'] . '&v=' . substr(md5($p['photo']), 0, 8) : null;
+    }
+
+    // typ z zawartości pliku; zdjęcie zmniejsza przeglądarka (serwer nie ma GD) – tu tylko limit i walidacja
+    function hl_food_save_photo(array $upload, int $userId): array
+    {
+        if (($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($upload['tmp_name'])) {
+            return ['ok' => false, 'error' => 'Nie udało się przesłać zdjęcia'];
+        }
+        if ($upload['size'] > 6000000) return ['ok' => false, 'error' => 'Zdjęcie jest za duże (maks. 6 MB)'];
+        $info = @getimagesize($upload['tmp_name']);
+        $types = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'];
+        if (!$info || !isset($types[$info[2]])) return ['ok' => false, 'error' => 'Zdjęcie musi być w formacie JPG, PNG lub WEBP'];
+        $file = 'dish-' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $types[$info[2]];
+        if (!move_uploaded_file($upload['tmp_name'], hl_food_photo_dir() . $file)) return ['ok' => false, 'error' => 'Nie udało się zapisać zdjęcia'];
+        return ['ok' => true, 'file' => $file];
+    }
+
+    function hl_food_delete_photo(?string $file): void
+    {
+        if ($file && is_file(hl_food_photo_dir() . basename($file))) @unlink(hl_food_photo_dir() . basename($file));
     }
 
     // ---------- Open Food Facts ----------

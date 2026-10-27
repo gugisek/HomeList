@@ -53,7 +53,7 @@ $rail_admin = [
     'settings' => ['Ustawienia aplikacji', 'M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75'],
 ];
 $rail_admin = array_filter($rail_admin, fn($k) => hl_can($k, 'read'), ARRAY_FILTER_USE_KEY);
-$rail_food_new = isset($rail_admin['food']) ? (int)$conn->query("SELECT (SELECT COUNT(*) FROM food_products WHERE source = 'user' AND status = 'pending')
+$rail_food_new = isset($rail_admin['food']) ? (int)$conn->query("SELECT (SELECT COUNT(*) FROM food_products WHERE (source = 'user' OR (source = 'dish' AND public = 1)) AND status = 'pending')
                                                                  + (SELECT COUNT(*) FROM food_product_units WHERE status = 'pending')")->fetch_row()[0] : 0;
 $rail_reports_new = isset($rail_admin['reports']) ? (int)$conn->query('SELECT COUNT(*) AS c FROM bug_reports WHERE seen_at IS NULL')->fetch_assoc()['c'] : 0;
 

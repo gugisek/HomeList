@@ -37,7 +37,8 @@ $acc_row = 'flex items-center justify-between gap-3 rounded-2xl bg-gray-50 dark:
     <div class="mt-6 flex flex-col sm:flex-row-reverse gap-2">
         <button class="<?=$acc_btn?>">Zapisz</button>
         <?php if ($acc_food['enabled']): ?>
-        <button type="button" onclick="foodOpenGoal()" class="<?=$acc_btn_muted?>"><?=$acc_food_goal ? 'Cel: ' . number_format($acc_food_goal['kcal'], 0, ',', ' ') . ' kcal – zmień' : 'Ustaw dzienny cel'?></button>
+        <button type="button" onclick="foodOpenSheet('dishes')" class="<?=$acc_btn_muted?>">Twoje dania</button>
+        <button type="button" onclick="foodOpenSheet('goal')" class="<?=$acc_btn_muted?>"><?=$acc_food_goal ? 'Cel: ' . number_format($acc_food_goal['kcal'], 0, ',', ' ') . ' kcal – zmień' : 'Ustaw dzienny cel'?></button>
         <?php endif; ?>
     </div>
 </form>
@@ -58,9 +59,9 @@ function foodSettingsSave(e) {
         accReload();
     });
 }
-function foodOpenGoal() {
-    // kalkulator celu żyje w zakładce Jedzenie
-    sessionStorage.setItem('hl_food_open', 'goal');
+function foodOpenSheet(step) {
+    // kalkulator celu i lista dań żyją w arkuszu zakładki Jedzenie
+    sessionStorage.setItem('hl_food_open', step);
     if (typeof hlNav === 'function') hlNav('list=food');
 }
 </script>

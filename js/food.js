@@ -31,7 +31,8 @@
         bolt: svg('m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z', 1.8),
         scan: svg('M3.75 7.5V5.25a1.5 1.5 0 0 1 1.5-1.5H7.5M16.5 3.75h2.25a1.5 1.5 0 0 1 1.5 1.5V7.5M20.25 16.5v2.25a1.5 1.5 0 0 1-1.5 1.5H16.5M7.5 20.25H5.25a1.5 1.5 0 0 1-1.5-1.5V16.5M8 8.5v7M11 8.5v7M13.5 8.5v7M16 8.5v7', 1.8),
         pot: svg('M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-6ZM2.5 10h19M9 6.5c0-1 .8-1.5.8-2.5M12.5 6.5c0-1 .8-1.5.8-2.5', 1.8),
-        target: svg('M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 1.8)
+        target: svg('M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 1.8),
+        camera: svg('M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316ZM16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z', 1.8)
     };
 
     var S = { data: null, date: null, sheet: null, fresh: null, dirty: false, navSeq: 0 };
@@ -92,7 +93,7 @@
         scrollStrip();
         var pending = null;
         try { pending = sessionStorage.getItem('hl_food_open'); sessionStorage.removeItem('hl_food_open'); } catch (e) {}
-        if (pending === 'goal') setTimeout(function () { openSheet({ step: 'goal' }); }, 300);
+        if (pending === 'goal' || pending === 'dishes') setTimeout(function () { openSheet({ step: pending }); }, 300);
     };
 
     // synchronizacja (hlSyncApply) i powrót po zapisie: dane bieżącego dnia bez spinnera
@@ -503,6 +504,7 @@
         else if (step === 'scan') renderScan(box);
         else if (step === 'own') renderOwn(box);
         else if (step === 'dish') renderDish(box);
+        else if (step === 'dishes') renderDishes(box);
         else if (step === 'loading') box.innerHTML = '<div style="padding:24px 20px">' + '<div class="fd-skel"></div>'.repeat(4) + '</div>';
         // wybrany posiłek widoczny także, gdy chipy się nie mieszczą
         var on = box.querySelector('.fd-chips .is-on');
@@ -578,14 +580,25 @@
         });
     }
 
+    // źródło produktu; danie: Twoje / domownika / spoza domu (samo imię autora)
+    function tagHTML(p) {
+        var t, cls = p.source;
+        if (p.source === 'dish') {
+            t = p.mine ? 'Danie domowe' : (p.home ? 'Danie domowe' : 'Danie społeczności') + (p.author ? ' · ' + p.author : '');
+            if (!p.mine && !p.home) cls += ' community';
+        } else t = p.status === 'pending' ? 'Czeka na akceptację' : TAGS[p.source] || '';
+        return '<span class="fd-tag ' + cls + '">' + esc(t) + '</span>';
+    }
+
     function rowHTML(p, gi, ii) {
         var sub = [p.brand, p.quantity].filter(Boolean).join(' · ');
         var d = p.default, du = d.label ? qty(d.grams / d.unit_g) + ' × ' + d.label : dec(d.grams) + ' ' + (p.per_ml ? 'ml' : 'g');
         return '<div style="display:flex;align-items:center;gap:4px">'
             + '<button type="button" class="fd-row" style="flex:1;min-width:0" data-open="' + gi + ':' + ii + '">'
+            + (p.photo ? '<img class="fd-thumb" src="' + esc(p.photo) + '" alt="" loading="lazy">' : '')
             + '<div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(p.name) + '</div>'
             + '<div class="text-xs fd-mut" style="display:flex;align-items:center;gap:6px;margin-top:2px;white-space:nowrap;overflow:hidden">'
-            + '<span class="fd-tag ' + p.source + '">' + (p.status === 'pending' ? 'Czeka na akceptację' : TAGS[p.source]) + '</span>' + esc(sub) + '</div></div>'
+            + tagHTML(p) + esc(sub) + '</div></div>'
             + '<div style="text-align:right;flex:none"><div class="fd-num" style="font-size:14px;font-weight:600">' + fmt(p.kcal) + '</div><div class="fd-mut" style="font-size:11px">kcal / 100 ' + (p.per_ml ? 'ml' : 'g') + '</div></div></button>'
             + '<button type="button" class="fd-plus fd-press" data-quick="' + gi + ':' + ii + '" title="Dodaj od razu: ' + esc(du) + '" aria-label="Dodaj od razu: ' + esc(p.name + ', ' + du) + '">' + I.plus + '</button></div>';
     }
@@ -631,7 +644,10 @@
             + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Skanuj kod kreskowy</div><div class="text-xs fd-mut">Najszybciej dla produktów w opakowaniu</div></div></button>';
         html += '<button type="button" class="fd-row fd-press" data-dish style="margin-top:6px">'
             + '<span class="fd-row-ico" style="background:rgba(99,102,241,.14);color:#4f46e5">' + I.pot + '</span>'
-            + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Nowe danie domowe</div><div class="text-xs fd-mut">Z kilku składników – zjedzą je też domownicy</div></div></button>';
+            + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Nowe danie domowe</div><div class="text-xs fd-mut">Z kilku składników – zjedzą je też domownicy</div></div></button>'
+            + '<button type="button" class="fd-row fd-press" data-mydishes style="margin-top:6px">'
+            + '<span class="fd-row-ico" style="background:var(--hl-chip);color:var(--hl-ink)">' + I.pot + '</span>'
+            + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Twoje dania</div><div class="text-xs fd-mut">Wszystkie przepisy – zdjęcia, edycja, udostępnianie</div></div></button>';
         html += '<button type="button" class="fd-row fd-press" data-quickkcal style="margin-top:6px">'
             + '<span class="fd-row-ico" style="background:rgba(74,222,128,.14);color:#16a34a">' + I.bolt + '</span>'
             + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Dodaj same kalorie</div><div class="text-xs fd-mut">Gdy znasz tylko wartość, np. z menu restauracji</div></div></button>';
@@ -667,7 +683,8 @@
         var own = box.querySelector('[data-own]');
         if (own) own.addEventListener('click', function () { S.sheet.own = { name: q.charAt(0).toUpperCase() + q.slice(1) }; setStep('own'); });
         box.querySelector('[data-scan]').addEventListener('click', function () { setStep('scan'); });
-        box.querySelector('[data-dish]').addEventListener('click', function () { S.sheet.dish = { name: '', items: [], unit_label: 'talerz', unit_g: 350 }; setStep('dish'); });
+        box.querySelector('[data-dish]').addEventListener('click', function () { S.sheet.dish = newDish(); setStep('dish'); });
+        box.querySelector('[data-mydishes]').addEventListener('click', function () { setStep('dishes'); });
         box.querySelector('[data-quickkcal]').addEventListener('click', function () {
             S.sheet.quick = { name: q ? q.charAt(0).toUpperCase() + q.slice(1) : '' };
             setStep('quick');
@@ -799,6 +816,15 @@
         });
     }
 
+    // zdjęcie dania na górze arkusza; podpis = kaloryczność jednej porcji
+    function heroPhotoHTML(p) {
+        if (!p.photo) return '';
+        var unit = (p.units || []).filter(function (x) { return !x.base; })[0];
+        return '<figure class="fd-hero-photo"><img src="' + esc(p.photo) + '" alt="' + esc(p.name) + '">'
+            + (unit ? '<figcaption><b class="fd-num">' + fmt(p.kcal * unit.grams / 100) + ' kcal</b> · 1 ' + esc(unit.label) + ' (' + fmt(unit.grams) + ' ' + (p.per_ml ? 'ml' : 'g') + ')</figcaption>' : '')
+            + '</figure>';
+    }
+
     function renderPortion(box) {
         var sh = S.sheet, pp = sh.p, p = pp.product, u = p.per_ml ? 'ml' : 'g';
         var sub = [p.brand, p.quantity].filter(Boolean).join(' · ');
@@ -806,7 +832,8 @@
             + '<div style="display:flex;align-items:center;gap:4px;margin-left:-8px">'
             + '<button type="button" class="fd-icon-btn fd-press" data-back aria-label="' + (pp.entry ? 'Zamknij' : 'Wróć') + '">' + (pp.entry ? I.x : I.back) + '</button>'
             + '<div style="flex:1;min-width:0"><h2 class="hl-popup-title" style="padding:0;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(p.name) + '</h2>'
-            + '<div class="text-xs fd-mut" style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span class="fd-tag ' + p.source + '">' + (p.status === 'pending' ? 'Czeka na akceptację' : TAGS[p.source] || '') + '</span>' + esc(sub) + '</div></div></div>'
+            + '<div class="text-xs fd-mut" style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden">' + tagHTML(p) + esc(sub) + '</div></div></div>'
+            + heroPhotoHTML(p)
             + '<div style="margin-top:12px">' + mealChips() + '</div>'
             + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px">'
             + '<button type="button" class="fd-round fd-press" data-step="-1" aria-label="Mniej">' + I.minus + '</button>'
@@ -1028,7 +1055,7 @@
         if (p.dish) {
             body += '<span class="fd-eyebrow" style="margin-top:16px">Składniki dania' + (p.dish.owner ? ' · ' + esc(p.dish.owner) : '') + '</span>'
                 + '<table class="fd-table" style="margin-top:4px"><tbody>' + p.dish.items.map(function (it) {
-                    return '<tr><td>' + esc(it.name) + ' <span class="fd-mut">' + dec(it.grams) + ' g</span></td><td class="fd-num">' + fmt(it.kcal) + ' kcal</td></tr>';
+                    return '<tr><td>' + esc(it.name) + ' <span class="fd-mut">' + (it.unit_label && it.unit_g ? qty(it.grams / it.unit_g) + ' × ' + esc(it.unit_label) + ' · ' : '') + dec(it.grams) + ' ' + (it.per_ml ? 'ml' : 'g') + '</span></td><td class="fd-num">' + fmt(it.kcal) + ' kcal</td></tr>';
                 }).join('') + '</tbody></table>'
                 + (p.dish.cooked_g ? '<p class="fd-mut" style="margin:6px 0 0;font-size:12px">Waga po ugotowaniu: ' + fmt(p.dish.cooked_g) + ' g</p>' : '');
         }
@@ -1151,7 +1178,7 @@
     }
 
     function renderScan(box) {
-        box.innerHTML = headHTML('Skanuj kod kreskowy', true)
+        box.innerHTML = headHTML(S.sheet.scanFor === 'dish' ? 'Skanuj składnik' : 'Skanuj kod kreskowy', true)
             + '<div class="fd-scroll" style="padding:8px 20px 12px">'
             + '<div class="fd-viewfinder"><video id="fd_video" playsinline muted autoplay></video>'
             + '<span class="fd-corner tl"></span><span class="fd-corner tr"></span><span class="fd-corner bl"></span><span class="fd-corner br"></span>'
@@ -1160,7 +1187,7 @@
             + '<label class="hl-label" for="fd_code" style="margin-top:16px">Albo wpisz kod spod paska</label>'
             + '<div style="display:flex;gap:8px"><div class="fd-field" style="flex:1"><input id="fd_code" type="text" inputmode="numeric" placeholder="np. 5901234123457" autocomplete="off"></div>'
             + '<button type="button" class="hl-btn hl-btn-primary" data-code style="height:46px">Szukaj</button></div></div>';
-        bindHead(box, function () { setStep('search', true); });
+        bindHead(box, function () { var dish = S.sheet.scanFor === 'dish'; S.sheet.scanFor = null; setStep(dish ? 'dish' : 'search', true); });
         var codeInput = el('fd_code');
         var manual = function () { var c = codeInput.value.replace(/\D/g, ''); if (c.length >= 6) lookupCode(c); else codeInput.focus(); };
         box.querySelector('[data-code]').addEventListener('click', manual);
@@ -1200,11 +1227,15 @@
         setStep('loading');
         getJSON('scripts/food/barcode.php?code=' + code).then(function (res) {
             if (S.sheet !== sh) return;
-            if (res.status === 'success' && res.found) return openPortion(res.product, null, false, 'barcode');
+            if (res.status === 'success' && res.found) {
+                // skan składnika dania – wracamy do edytora z dodanym produktem
+                if (sh.scanFor === 'dish' && sh.dish) { sh.scanFor = null; dishAdd(sh.dish, res.product); toast('Dodano: ' + res.product.name); return setStep('dish', true); }
+                return openPortion(res.product, null, false, 'barcode');
+            }
             if (res.status !== 'success' && res.status !== 'error') { fail(res); return setStep('scan', true); }
-            sh.own = { code: code, name: res.name || '', notFound: true, offError: res.status === 'error' };
+            sh.own = { code: code, name: res.name || '', notFound: true, offError: res.status === 'error', forDish: sh.scanFor === 'dish' };
             setStep('own');
-        }).catch(function () { sh.own = { code: code, notFound: true, offError: true }; setStep('own'); });
+        }).catch(function () { sh.own = { code: code, notFound: true, offError: true, forDish: sh.scanFor === 'dish' }; setStep('own'); });
     }
 
     // ---------- własny produkt ----------
@@ -1236,8 +1267,8 @@
             + '<div style="display:flex;gap:8px"><div class="fd-field" style="flex:1"><input data-o="unit_label" type="text" placeholder="np. plaster, sztuka" aria-label="Nazwa porcji" value="' + esc(o.unit_label || '') + '"></div>'
             + '<label class="fd-field" style="width:110px;padding-right:12px"><input data-o="unit_g" type="text" inputmode="decimal" placeholder="20" aria-label="Waga porcji" value="' + esc(o.unit_g || '') + '"><span class="text-xs fd-mut">' + u + '</span></label></div>'
             + '<p class="fd-pill" style="margin:16px 0 0;border-radius:14px;padding:10px 12px;display:flex;line-height:1.5">Od razu widzisz go Ty i domownicy. Dla pozostałych pojawi się po akceptacji administratora.</p>'
-            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-commit>Zapisz i wybierz porcję</button></div>';
-        bindHead(box, function () { setStep(o.notFound ? 'scan' : 'search', true); });
+            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-commit>' + (o.forDish ? 'Zapisz i dodaj do dania' : 'Zapisz i wybierz porcję') + '</button></div>';
+        bindHead(box, function () { setStep(o.notFound ? 'scan' : o.forDish ? 'dish' : 'search', true); });
         var check = function () {
             var v = function (k) { return parseFloat(String(o[k] || '').replace(',', '.')); };
             var filled = ['kcal', 'protein', 'fat', 'carbs'].every(function (k) { return !isNaN(v(k)); });
@@ -1261,56 +1292,217 @@
             data.per_ml = o.per_ml ? 1 : 0;
             post('scripts/food/product_save.php', data).then(function (res) {
                 if (!S.sheet || S.sheet !== sh) return;
+                var done = function (p) {
+                    sh.own = null;
+                    // składnik dania – zamiast porcji wracamy do edytora
+                    if (o.forDish && sh.dish) { sh.scanFor = null; dishAdd(sh.dish, p); return setStep('dish', true); }
+                    openPortion(p, null, false, o.notFound ? 'barcode' : undefined);
+                };
                 // ten kod już jest w bazie – zamiast duplikatu od razu ten produkt
-                if (res.product && res.status === 'warning') { toast(res.message); return openPortion(res.product, null, false, o.notFound ? 'barcode' : undefined); }
+                if (res.product && res.status === 'warning') { toast(res.message); return done(res.product); }
                 if (res.status !== 'success') { btn.disabled = false; return fail(res); }
-                sh.own = null;
-                openPortion(res.product, null, false, o.notFound ? 'barcode' : undefined);
+                done(res.product);
             });
         });
     }
 
     // ---------- danie domowe ----------
+    // składniki w jednostkach („3 × sztuka” jajka) albo gramach, skaner i własny produkt bez wychodzenia z edytora,
+    // podział garnka na porcje (porcja = waga / liczba porcji), widoczność: dom albo wszyscy (po akceptacji)
+    var DISH_UNITS = ['porcja', 'talerz', 'miska', 'kawałek', 'słoik'];
+
+    function plural(n, one, few, many) {
+        var t = n % 10, h = n % 100;
+        return n === 1 ? one : t >= 2 && t <= 4 && (h < 12 || h > 14) ? few : many;
+    }
+
+    function newDish(name) {
+        // domyślnie dla wszystkich – dom widzi od razu, reszta po akceptacji
+        return { name: name || '', items: [], public: true, status: null, servings: 4, unit_label: 'porcja', cooked_g: '', photo: null };
+    }
+
+    // składnik z wyszukiwarki / skanera; ten sam produkt drugi raz = o jedną jednostkę (albo domyślną porcję) więcej
+    function dishAdd(d, p) {
+        var units = (p.units || []).filter(function (u) { return !u.base; });
+        var same = d.items.filter(function (it) { return it.id === p.id; })[0];
+        if (same) {
+            same.grams += same.unit ? same.unit.grams : units[0] ? units[0].grams : 100;
+            same.fresh = true;
+            return same;
+        }
+        var it = { id: p.id, name: p.name, per_ml: !!p.per_ml, units: units, unit: units[0] || null, grams: units[0] ? units[0].grams : 100,
+                   p100: { kcal: p.kcal, protein: p.protein, fat: p.fat, carbs: p.carbs }, fresh: true };
+        d.items.push(it);
+        return it;
+    }
+
+    function dishWeight(d) {
+        var raw = d.items.reduce(function (a, it) { return a + it.grams; }, 0), cooked = parseFloat(String(d.cooked_g || '').replace(',', '.'));
+        return { raw: raw, cooked: cooked > 0 ? cooked : 0, weight: cooked > 0 ? cooked : raw };
+    }
+
     function bindEditDish() {
         var b = el('fd_step').querySelector('[data-editdish]');
         if (!b || b.dataset.bound) return;
         b.dataset.bound = '1';
-        b.addEventListener('click', function () {
-            var p = S.sheet.p.product, d = p.dish, unit = (p.units || []).filter(function (u) { return !u.base; })[0];
-            S.sheet.dish = {
-                id: d.id, name: p.name, cooked_g: d.cooked_g || '', unit_label: unit ? unit.label : '', unit_g: unit ? unit.grams : '',
-                items: d.items.map(function (it) { return { id: it.product_id, name: it.name, grams: it.grams, kcal100: it.grams ? it.kcal / it.grams * 100 : 0 }; })
+        b.addEventListener('click', function () { editDish(S.sheet.p.product); });
+    }
+
+    // edytor z danych product.php (p.dish); from = 'dishes' – po zapisie i wstecz wracamy do listy „Twoje dania”
+    function editDish(p, from) {
+        var d = p.dish, unit = (p.units || []).filter(function (u) { return !u.base; })[0];
+        var dish = Object.assign(newDish(p.name), { id: d.id, public: !!d.public, status: d.status, cooked_g: d.cooked_g || '', unit_label: unit ? unit.label : 'porcja',
+                                                    photo: p.photo || null, from: from || null });
+        dish.items = d.items.map(function (it) {
+            var units = (it.units || []).filter(function (u) { return !u.base; });
+            var unit = it.unit_label ? units.filter(function (u) { return u.label === it.unit_label && Math.abs(u.grams - it.unit_g) < 0.05; })[0] : null;
+            // jednostka, której już nie ma przy produkcie (np. usunięta), zostaje do wyboru w tym daniu
+            if (it.unit_label && !unit) units.push(unit = { label: it.unit_label, grams: it.unit_g });
+            return { id: it.product_id, name: it.name, per_ml: it.per_ml, units: units, unit: unit, grams: it.grams, p100: it.p100 };
+        });
+        var w = dishWeight(dish).weight;
+        dish.servings = d.servings || (unit && w ? Math.max(1, Math.min(20, Math.round(w / unit.grams))) : 1);
+        S.sheet.dish = dish;
+        setStep('dish');
+    }
+
+    // zdjęcie zmniejszamy w przeglądarce (telefon robi kilka MB, serwer nie ma GD) – JPEG, dłuższy bok 1600 px
+    function shrinkPhoto(file) {
+        return new Promise(function (ok, no) {
+            var img = new Image(), url = URL.createObjectURL(file);
+            img.onload = function () {
+                var s = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+                c.width = Math.round(img.naturalWidth * s);
+                c.height = Math.round(img.naturalHeight * s);
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                URL.revokeObjectURL(url);
+                c.toBlob(function (b) { if (b) ok(b); else no(); }, 'image/jpeg', 0.85);
             };
-            setStep('dish');
+            img.onerror = function () { URL.revokeObjectURL(url); no(); };
+            img.src = url;
+        });
+    }
+
+    function renderDishPhoto() {
+        var d = S.sheet && S.sheet.dish, box = el('fd_dphoto');
+        if (!d || !box) return;
+        var src = d.photoPreview || (!d.photoRemove && d.photo);
+        box.innerHTML = src
+            ? '<figure class="fd-hero-photo" style="margin:0"><img src="' + esc(src) + '" alt="Zdjęcie dania"><div class="fd-photo-act">'
+                + '<button type="button" class="fd-press" data-phpick>' + I.camera + 'Zmień</button>'
+                + '<button type="button" class="fd-press" data-phdel aria-label="Usuń zdjęcie">' + I.trash + '</button></div></figure>'
+            : '<button type="button" class="fd-photo-add fd-press" data-phpick>' + I.camera + '<span><b>Dodaj zdjęcie dania</b>'
+                + '<small>Zobaczą je wszyscy, którzy widzą to danie</small></span></button>';
+        box.querySelectorAll('[data-phpick]').forEach(function (b) { b.addEventListener('click', function () { el('fd_dfile').click(); }); });
+        var del = box.querySelector('[data-phdel]');
+        if (del) del.addEventListener('click', function () {
+            if (d.photoPreview) URL.revokeObjectURL(d.photoPreview);
+            d.photoBlob = d.photoPreview = null;
+            d.photoRemove = !!d.photo;
+            renderDishPhoto();
+        });
+    }
+
+    // Twoje dania: wszystkie przepisy autora – edycja, udostępnianie, szybkie dodanie do posiłku
+    function renderDishes(box) {
+        var sh = S.sheet;
+        box.innerHTML = headHTML('Twoje dania', true)
+            + '<div class="fd-scroll" id="fd_mydishes" style="padding:8px 14px 24px">' + '<div class="fd-skel"></div>'.repeat(3) + '</div>';
+        bindHead(box, function () { setStep('search', true); });
+        getJSON('scripts/food/dishes.php').then(function (r) {
+            if (!S.sheet || S.sheet !== sh || sh.step !== 'dishes') return;
+            var items = r.items || [], list = el('fd_mydishes');
+            var state = function (d) {
+                return !d.public ? ['Tylko dom', ''] : d.status === 'pending' ? ['Czeka na akceptację', 'is-wait'] : d.status === 'rejected' ? ['Nieudostępnione', 'is-no'] : ['Dla wszystkich', 'is-ok'];
+            };
+            list.innerHTML = '<button type="button" class="fd-row fd-press" data-dnew>'
+                + '<span class="fd-row-ico" style="background:rgba(99,102,241,.14);color:#4f46e5">' + I.plus + '</span>'
+                + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Nowe danie</div><div class="text-xs fd-mut">Składniki, zdjęcie, podział na porcje</div></div></button>'
+                + (items.length ? items.map(function (p, i) {
+                    var c = state(p.dish), unit = (p.units || []).filter(function (x) { return !x.base; })[0];
+                    return '<div class="fd-dcard"><button type="button" class="fd-row fd-press" style="flex:1;min-width:0" data-dedit="' + i + '">'
+                        + (p.photo ? '<img class="fd-thumb is-lg" src="' + esc(p.photo) + '" alt="" loading="lazy">' : '<span class="fd-thumb is-lg is-empty">' + I.pot + '</span>')
+                        + '<div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(p.name) + '</div>'
+                        + '<div class="text-xs fd-mut" style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:3px"><span class="fd-state ' + c[1] + '">' + c[0] + '</span>'
+                        + (unit ? '1 ' + esc(unit.label) + ' · ' + fmt(p.kcal * unit.grams / 100) + ' kcal' : fmt(p.kcal) + ' kcal / 100 g')
+                        + (p.dish.uses ? ' · w dzienniku ' + p.dish.uses + '×' : '') + '</div></div></button>'
+                        + '<button type="button" class="fd-plus fd-press" data-dadd="' + i + '" aria-label="Dodaj do posiłku: ' + esc(p.name) + '">' + I.plus + '</button></div>';
+                }).join('') : '<div class="hl-empty" style="padding:28px 0"><div class="hl-empty-ico">' + I.pot + '</div><h3>Nie masz jeszcze dań</h3><p>Zupa, sałatka, ciasto – zapisz przepis raz i dodawaj go jednym kliknięciem.</p></div>')
+                + '<p class="fd-mut" style="margin:14px 8px 0;font-size:12px;line-height:1.5">Zmiany w przepisie działają od teraz. Wpisy w dzienniku mają własną kopię wartości, więc Twoja historia się nie zmieni.</p>';
+            list.querySelector('[data-dnew]').addEventListener('click', function () { sh.dish = Object.assign(newDish(), { from: 'dishes' }); setStep('dish'); });
+            list.querySelectorAll('[data-dadd]').forEach(function (b) { b.addEventListener('click', function () { openPortion(items[+b.dataset.dadd], null); }); });
+            list.querySelectorAll('[data-dedit]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    setStep('loading');
+                    getJSON('scripts/food/product.php?id=' + items[+b.dataset.dedit].id).then(function (res) {
+                        if (S.sheet !== sh) return;
+                        if (res.status !== 'success' || !res.product.dish) { fail(res); return setStep('dishes', true); }
+                        editDish(res.product, 'dishes');
+                    });
+                });
+            });
         });
     }
 
     function renderDish(box) {
         var sh = S.sheet, d = sh.dish;
+        var opt = function (pub, title, sub) {
+            return '<button type="button" role="radio" aria-checked="' + (d.public === pub) + '" class="fd-opt fd-press' + (d.public === pub ? ' is-on' : '') + '" data-dpub="' + (pub ? 1 : 0) + '">'
+                + '<b>' + title + '</b><span>' + sub + '</span></button>';
+        };
         box.innerHTML = headHTML(d.id ? 'Edytuj danie' : 'Nowe danie domowe', true)
             + '<div class="fd-scroll" id="fd_dish_scroll" style="padding:8px 20px 12px">'
+            + '<div id="fd_dphoto" style="margin-bottom:16px"></div><input type="file" id="fd_dfile" accept="image/*" hidden>'
             + '<label class="hl-label" for="fd_dname">Nazwa</label>'
             + '<div class="fd-field"><input id="fd_dname" type="text" placeholder="np. Zupa pomidorowa" value="' + esc(d.name) + '"></div>'
-            + '<span class="fd-eyebrow" style="margin:18px 0 6px">Składniki (na cały garnek)</span>'
+            + '<span class="fd-eyebrow" style="margin:20px 0 6px">Składniki – cały garnek</span>'
             + '<div id="fd_ditems"></div>'
-            + '<div style="position:relative;margin-top:8px"><label class="fd-field">' + I.search + '<input id="fd_dq" type="search" placeholder="Dodaj składnik: ryż, marchew…" autocomplete="off"></label>'
+            + '<div style="position:relative;display:flex;gap:8px;margin-top:8px"><label class="fd-field" style="flex:1">' + I.search
+            + '<input id="fd_dq" type="search" placeholder="Dodaj składnik: jajko, ryż…" autocomplete="off"></label>'
+            + '<button type="button" class="fd-round fd-press" data-dscan style="width:46px;height:46px;border-radius:16px" aria-label="Skanuj kod składnika">' + I.scan + '</button>'
             + '<div id="fd_dres" class="fd-dres"></div></div>'
-            + '<label class="hl-label" for="fd_dcooked" style="margin-top:18px">Waga gotowego dania (opcjonalnie)</label>'
-            + '<label class="fd-field" style="padding-right:12px"><input id="fd_dcooked" type="text" inputmode="decimal" placeholder="suma składników" value="' + esc(d.cooked_g || '') + '"><span class="text-xs fd-mut">g</span></label>'
-            + '<p class="hl-hint">Zważ gotowe danie bez garnka – woda odparowuje albo dochodzi, więc 100 g zupy to nie 100 g składników.</p>'
-            + '<span class="hl-label" style="margin-top:14px">Porcja</span>'
-            + '<div style="display:flex;gap:8px"><div class="fd-field" style="flex:1"><input id="fd_dul" type="text" placeholder="talerz" value="' + esc(d.unit_label || '') + '" aria-label="Nazwa porcji"></div>'
-            + '<label class="fd-field" style="width:110px;padding-right:12px"><input id="fd_dug" type="text" inputmode="decimal" placeholder="350" value="' + esc(d.unit_g || '') + '" aria-label="Waga porcji"><span class="text-xs fd-mut">g</span></label></div>'
-            + '<div id="fd_dsum" class="fd-box" style="margin-top:14px"></div>'
-            + '<p class="fd-pill" style="margin:14px 0 0;border-radius:14px;padding:10px 12px;display:flex;line-height:1.5">Danie zobaczą i dodadzą do swojego dziennika domownicy (osoby ze wspólnych list).</p>'
+            + '<span class="fd-eyebrow" style="margin:22px 0 8px">Podział na porcje</span>'
+            + '<div id="fd_dsplit" class="fd-box"></div>'
+            + '<details class="fd-more" style="margin-top:12px"' + (d.cooked_g ? ' open' : '') + '><summary class="fd-eyebrow">Zważyłem gotowe danie</summary>'
+            + '<label class="fd-field" style="padding-right:12px;margin-top:10px"><input id="fd_dcooked" type="text" inputmode="decimal" placeholder="waga bez garnka" value="' + esc(d.cooked_g || '') + '"><span class="text-xs fd-mut">g</span></label>'
+            + '<p class="hl-hint">Woda odparowuje albo dochodzi, więc waga gotowego dania jest dokładniejsza niż suma składników. Porcje przeliczą się same.</p></details>'
+            + '<span class="fd-eyebrow" style="margin:22px 0 8px">Kto zobaczy danie</span>'
+            + '<div class="fd-opts" role="radiogroup" aria-label="Widoczność dania">' + opt(false, 'Tylko dom', 'Ty i domownicy – osoby ze wspólnych list')
+            + opt(true, 'Dla wszystkich', 'Dom od razu, pozostali po akceptacji administratora') + '</div>'
+            + '<p id="fd_dstatus" class="hl-hint"></p>'
             + '</div><div class="fd-foot">' + (d.id ? '<button type="button" class="fd-danger fd-press" data-ddel aria-label="Usuń danie">' + I.trash + '</button>' : '')
             + '<button type="button" class="fd-cta fd-press" data-commit>' + (d.id ? 'Zapisz danie' : 'Zapisz i dodaj porcję') + '</button></div>';
-        bindHead(box, function () { if (d.id) setStep('portion', true); else setStep('search', true); });
+        bindHead(box, function () {
+            if (d.from === 'dishes') { sh.dish = null; return setStep('dishes', true); }
+            sh.dish = d.id ? null : sh.dish;
+            setStep(d.id ? 'portion' : 'search', true);
+        });
+        el('fd_dfile').addEventListener('change', function () {
+            var file = this.files && this.files[0];
+            this.value = '';
+            if (!file) return;
+            shrinkPhoto(file).then(function (blob) {
+                if (d.photoPreview) URL.revokeObjectURL(d.photoPreview);
+                d.photoBlob = blob;
+                d.photoPreview = URL.createObjectURL(blob);
+                d.photoRemove = false;
+                renderDishPhoto();
+            }).catch(function () { fail({ status: 'warning', message: 'Nie udało się wczytać zdjęcia – spróbuj innego pliku' }); });
+        });
+        renderDishPhoto();
         el('fd_dname').addEventListener('input', function () { d.name = this.value; dishSum(); });
         el('fd_dcooked').addEventListener('input', function () { d.cooked_g = this.value; dishSum(); });
-        el('fd_dul').addEventListener('input', function () { d.unit_label = this.value; });
-        el('fd_dug').addEventListener('input', function () { d.unit_g = this.value; dishSum(); });
+        box.querySelectorAll('[data-dpub]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                d.public = b.dataset.dpub === '1';
+                box.querySelectorAll('[data-dpub]').forEach(function (x) { var on = x === b; x.classList.toggle('is-on', on); x.setAttribute('aria-checked', on); });
+                dishStatus();
+            });
+        });
+        box.querySelector('[data-dscan]').addEventListener('click', function () { sh.scanFor = 'dish'; setStep('scan'); });
+
         var q = el('fd_dq'), res = el('fd_dres');
+        var addOwn = function (name) { sh.own = { name: name, forDish: true }; setStep('own'); };
         q.addEventListener('input', function () {
             clearTimeout(S.dTimer);
             var term = q.value.trim();
@@ -1319,35 +1511,45 @@
                 getJSON('scripts/food/search.php?q=' + encodeURIComponent(term)).then(function (r) {
                     if (q.value.trim() !== term) return;
                     var items = (r.groups || []).reduce(function (a, g) { return a.concat(g.items); }, []).filter(function (p) { return p.source !== 'dish'; }).slice(0, 8);
-                    res.innerHTML = items.length ? items.map(function (p, i) {
+                    res.innerHTML = items.map(function (p, i) {
+                        var u = (p.units || []).filter(function (x) { return !x.base; })[0];
                         return '<button type="button" class="fd-row" data-pick="' + i + '"><div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(p.name) + '</div>'
-                            + '<div class="text-xs fd-mut">' + esc([p.brand, fmt(p.kcal) + ' kcal / 100 g'].filter(Boolean).join(' · ')) + '</div></div>' + I.plus.replace('<svg', '<svg width="18" height="18"') + '</button>';
-                    }).join('') : '<p class="fd-mut" style="margin:10px;font-size:13px">Brak w bazie – dodaj go najpierw jako własny produkt.</p>';
+                            + '<div class="text-xs fd-mut">' + esc([p.brand, fmt(p.kcal) + ' kcal / 100 ' + (p.per_ml ? 'ml' : 'g'), u ? '1 ' + u.label + ' = ' + dec(u.grams) + ' ' + (p.per_ml ? 'ml' : 'g') : ''].filter(Boolean).join(' · ')) + '</div></div>'
+                            + I.plus.replace('<svg', '<svg width="18" height="18"') + '</button>';
+                    }).join('') + '<button type="button" class="fd-row" data-own><div style="flex:1;min-width:0"><div class="fd-entry-name">' + (items.length ? 'Nie ma tego?' : 'Brak w bazie')
+                        + '</div><div class="text-xs fd-mut">Dodaj „' + esc(term) + '” jako własny produkt</div></div>' + I.plus.replace('<svg', '<svg width="18" height="18"') + '</button>';
                     res.querySelectorAll('[data-pick]').forEach(function (b) {
                         b.addEventListener('click', function () {
-                            var p = items[+b.dataset.pick];
-                            d.items.push({ id: p.id, name: p.name, grams: p.default && !p.default.last ? p.default.grams : 100, kcal100: p.kcal, fresh: true });
+                            dishAdd(d, items[+b.dataset.pick]);
                             q.value = '';
                             res.innerHTML = '';
                             dishItems();
                             q.focus();
                         });
                     });
+                    res.querySelector('[data-own]').addEventListener('click', function () { addOwn(term); });
                 });
             }, 220);
         });
+
         box.querySelector('[data-commit]').addEventListener('click', function (ev) {
             var btn = ev.currentTarget;
             btn.disabled = true;
             post('scripts/food/dish_save.php', {
-                id: d.id || '', name: d.name.trim(), cooked_g: String(d.cooked_g || '').replace(',', '.'),
-                items: JSON.stringify(d.items.map(function (it) { return { product_id: it.id, grams: it.grams }; })),
-                units: JSON.stringify(d.unit_label && d.unit_g ? [{ label: d.unit_label, grams: String(d.unit_g).replace(',', '.') }] : [])
+                id: d.id || '', name: d.name.trim(), cooked_g: String(d.cooked_g || '').replace(',', '.'), public: d.public ? 1 : 0,
+                servings: d.servings, unit_label: d.unit_label,
+                photo: d.photoBlob || null, photo_remove: d.photoRemove ? 1 : null,
+                items: JSON.stringify(d.items.map(function (it) {
+                    return { product_id: it.id, grams: it.grams, unit_label: it.unit ? it.unit.label : '', unit_g: it.unit ? it.unit.grams : '' };
+                }))
             }).then(function (r) {
                 if (!S.sheet || S.sheet !== sh) return;
                 if (r.status !== 'success') { btn.disabled = false; return fail(r); }
+                if (d.photoPreview) URL.revokeObjectURL(d.photoPreview);
                 sh.dish = null;
+                if (d.from === 'dishes') { toast(r.message); return setStep('dishes', true); }
                 if (sh.p && sh.p.entry) { toast(r.message); return closeSheet(); }
+                if (r.message !== 'Zapisano danie') toast(r.message);
                 openPortion(r.product, null, false);
             });
         });
@@ -1359,27 +1561,84 @@
                 toast(r.message);
                 sh.dish = null;
                 sh.p = null;
-                setStep('search', true);
+                setStep(d.from === 'dishes' ? 'dishes' : 'search', true);
             });
         });
         dishItems();
+        dishStatus();
+    }
+
+    function dishStatus() {
+        var d = S.sheet && S.sheet.dish, p = el('fd_dstatus');
+        if (!d || !p) return;
+        p.textContent = !d.public ? ''
+            : d.status === 'pending' ? 'Czeka na akceptację administratora – na razie widzi je Twój dom.'
+            : d.status === 'rejected' ? 'Administrator nie udostępnił tego dania – widzi je tylko Twój dom. Zapisz ponownie, żeby wysłać do akceptacji.'
+            : d.status === 'approved' && d.id ? 'Udostępnione wszystkim. Zmiany w przepisie wrócą do akceptacji.'
+            : '';
+    }
+
+    function ingKcal(it) { return it.p100.kcal * it.grams / 100; }
+
+    function ingAmount(it) {
+        var u = it.per_ml ? 'ml' : 'g';
+        return (it.unit ? dec(it.grams) + ' ' + u + ' · ' : '') + fmt(ingKcal(it)) + ' kcal';
     }
 
     function dishItems() {
         var d = S.sheet.dish, box = el('fd_ditems');
         box.innerHTML = d.items.length ? d.items.map(function (it, i) {
-            return '<div class="fd-ditem' + (it.fresh ? ' is-fresh' : '') + '"><div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(it.name) + '</div>'
-                + '<div class="text-xs fd-mut fd-num" data-ikcal="' + i + '">' + fmt(it.kcal100 * it.grams / 100) + ' kcal</div></div>'
-                + '<label class="fd-field" style="width:96px;min-height:40px;padding:0 10px"><input type="text" inputmode="decimal" data-ig="' + i + '" value="' + dec(it.grams) + '" aria-label="Gramy: ' + esc(it.name) + '"><span class="text-xs fd-mut">g</span></label>'
-                + '<button type="button" class="fd-icon-btn fd-press fd-mut" data-irm="' + i + '" aria-label="Usuń składnik">' + I.x.replace('<svg', '<svg width="18" height="18"') + '</button></div>';
-        }).join('') : '<p class="fd-mut" style="margin:4px;font-size:13px">Wyszukaj składniki poniżej i podaj, ile ich poszło do garnka.</p>';
+            var u = it.per_ml ? 'ml' : 'g';
+            var sel = it.units.length
+                ? '<select class="fd-sel" data-iu="' + i + '" aria-label="Jednostka: ' + esc(it.name) + '">' + it.units.map(function (x, k) {
+                    return '<option value="' + k + '"' + (it.unit === x ? ' selected' : '') + '>' + esc(x.label) + ' · ' + dec(x.grams) + ' ' + u + '</option>';
+                }).join('') + '<option value="-1"' + (it.unit ? '' : ' selected') + '>' + (it.per_ml ? 'mililitry' : 'gramy') + '</option></select>'
+                : '';
+            return '<div class="fd-ing' + (it.fresh ? ' is-fresh' : '') + '">'
+                + '<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(it.name) + '</div>'
+                + '<div class="text-xs fd-mut fd-num" data-ikcal="' + i + '">' + ingAmount(it) + '</div></div>'
+                + '<button type="button" class="fd-icon-btn fd-press fd-mut" data-irm="' + i + '" aria-label="Usuń składnik">' + I.x.replace('<svg', '<svg width="18" height="18"') + '</button></div>'
+                + '<div class="fd-ing-ctl">' + sel
+                + '<div class="fd-stepper"><button type="button" class="fd-cnt fd-press" data-is="-1" data-i="' + i + '" aria-label="Mniej">' + I.minus + '</button>'
+                + '<input type="text" inputmode="decimal" data-iq="' + i + '" value="' + (it.unit ? qty(it.grams / it.unit.grams) : dec(it.grams)) + '" aria-label="Ilość: ' + esc(it.name) + '">'
+                + '<span class="fd-mut">' + (it.unit ? '×' : u) + '</span>'
+                + '<button type="button" class="fd-cnt fd-press" data-is="1" data-i="' + i + '" aria-label="Więcej">' + I.plus + '</button></div></div></div>';
+        }).join('') : '<p class="fd-mut" style="margin:4px;font-size:13px">Wyszukaj albo zeskanuj składniki. Jajka, kromki czy opakowania wpiszesz w sztukach.</p>';
         d.items.forEach(function (it) { delete it.fresh; });
-        box.querySelectorAll('[data-ig]').forEach(function (i) {
-            i.addEventListener('input', function () {
-                var it = d.items[+i.dataset.ig], v = parseFloat(i.value.replace(',', '.'));
-                it.grams = isNaN(v) ? 0 : v;
-                box.querySelector('[data-ikcal="' + i.dataset.ig + '"]').textContent = fmt(it.kcal100 * it.grams / 100) + ' kcal';
+
+        box.querySelectorAll('[data-iq]').forEach(function (inp) {
+            inp.addEventListener('focus', function () { inp.select(); });
+            inp.addEventListener('input', function () {
+                var it = d.items[+inp.dataset.iq], v = parseFloat(inp.value.replace(',', '.'));
+                if (isNaN(v) || v < 0) return;
+                it.grams = it.unit ? Math.round(v * it.unit.grams * 10) / 10 : v;
+                box.querySelector('[data-ikcal="' + inp.dataset.iq + '"]').textContent = ingAmount(it);
                 dishSum();
+            });
+            inp.addEventListener('blur', function () { var it = d.items[+inp.dataset.iq]; if (it) inp.value = it.unit ? qty(it.grams / it.unit.grams) : dec(it.grams); });
+        });
+        box.querySelectorAll('[data-is]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var it = d.items[+b.dataset.i], up = +b.dataset.is > 0, eps = 0.02;
+                if (it.unit) {
+                    var n = it.grams / it.unit.grams;
+                    n = up ? Math.floor(n + eps) + 1 : n > 1 + eps ? Math.ceil(n - eps) - 1 : 0.5;
+                    it.grams = Math.round(n * it.unit.grams * 10) / 10;
+                } else {
+                    var s = it.grams >= 100 ? 10 : it.grams >= 20 ? 5 : 1;
+                    it.grams = up ? Math.floor(it.grams / s) * s + s : Math.max(s, Math.ceil(it.grams / s) * s - s);
+                }
+                vib();
+                dishItems();
+            });
+        });
+        box.querySelectorAll('[data-iu]').forEach(function (s) {
+            s.addEventListener('change', function () {
+                var it = d.items[+s.dataset.iu], k = +s.value;
+                // przełączenie na sztuki zaokrągla do całych (co najmniej jednej), na gramy – zostawia wagę
+                it.unit = k < 0 ? null : it.units[k];
+                if (it.unit) it.grams = Math.max(1, Math.round(it.grams / it.unit.grams)) * it.unit.grams;
+                dishItems();
             });
         });
         box.querySelectorAll('[data-irm]').forEach(function (b) { b.addEventListener('click', function () { d.items.splice(+b.dataset.irm, 1); dishItems(); }); });
@@ -1387,18 +1646,32 @@
     }
 
     function dishSum() {
-        var d = S.sheet && S.sheet.dish, box = el('fd_dsum');
+        var d = S.sheet && S.sheet.dish, box = el('fd_dsplit');
         if (!d || !box) return;
-        var raw = 0, kcal = 0;
-        d.items.forEach(function (it) { raw += it.grams; kcal += it.kcal100 * it.grams / 100; });
-        var cooked = parseFloat(String(d.cooked_g || '').replace(',', '.')), weight = cooked > 0 ? cooked : raw;
-        var per = weight ? kcal / weight * 100 : 0, ug = parseFloat(String(d.unit_g || '').replace(',', '.'));
-        box.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center">'
-            + '<div><b class="fd-num" style="font-size:18px">' + fmt(kcal) + '</b><div class="fd-mut" style="font-size:11px">kcal w garnku</div></div>'
-            + '<div><b class="fd-num" style="font-size:18px">' + fmt(per) + '</b><div class="fd-mut" style="font-size:11px">kcal / 100 g</div></div>'
-            + '<div><b class="fd-num" style="font-size:18px">' + (ug > 0 ? fmt(per * ug / 100) : '–') + '</b><div class="fd-mut" style="font-size:11px">kcal / ' + esc(d.unit_label || 'porcja') + '</div></div></div>'
-            + (cooked > 0 && raw ? '<p class="fd-mut" style="margin:8px 0 0;text-align:center;font-size:12px">Składniki ' + fmt(raw) + ' g → gotowe ' + fmt(cooked) + ' g</p>' : '');
-        box.parentElement.parentElement.querySelector('[data-commit]').disabled = !(d.name.trim() && d.items.length);
+        var w = dishWeight(d), tot = { kcal: 0, protein: 0, fat: 0, carbs: 0 };
+        d.items.forEach(function (it) { Object.keys(tot).forEach(function (k) { tot[k] += (it.p100[k] || 0) * it.grams / 100; }); });
+        var n = d.servings, portion = n ? w.weight / n : 0, f = w.weight ? portion / w.weight : 0;
+        box.innerHTML = '<div style="display:flex;align-items:center;gap:12px">'
+            + '<span style="flex:1;font-size:14px;font-weight:500">Na ile porcji?</span>'
+            + '<div class="fd-stepper"><button type="button" class="fd-cnt fd-press" data-sv="-1" aria-label="Mniej porcji"' + (n <= 1 ? ' disabled' : '') + '>' + I.minus + '</button>'
+            + '<b class="fd-num" style="min-width:2ch;text-align:center;font-size:18px">' + n + '</b>'
+            + '<button type="button" class="fd-cnt fd-press" data-sv="1" aria-label="Więcej porcji"' + (n >= 20 ? ' disabled' : '') + '>' + I.plus + '</button></div></div>'
+            + '<div class="fd-chips" style="margin:10px 0 0;padding:0" role="radiogroup" aria-label="Nazwa porcji">' + DISH_UNITS.map(function (l) {
+                return '<button type="button" role="radio" aria-checked="' + (d.unit_label === l) + '" class="fd-chip fd-press' + (d.unit_label === l ? ' is-on' : '') + '" data-sl="' + l + '">' + l + '</button>';
+            }).join('') + '</div>'
+            + (w.weight ? '<p style="margin:12px 0 8px;font-size:13px"><b>1 ' + esc(d.unit_label) + '</b> ≈ ' + fmt(portion) + ' g'
+                + ' <span class="fd-mut">· garnek ' + fmt(w.weight) + ' g' + (w.cooked && w.raw ? ' (składniki ' + fmt(w.raw) + ' g)' : '') + ' = ' + n + ' ' + plural(n, 'porcja', 'porcje', 'porcji') + '</span></p>'
+                + '<div class="fd-mini"><div><b class="fd-num">' + fmt(tot.kcal * f) + '</b><span>kcal</span></div>'
+                + '<div><b class="fd-num" style="color:var(--fd-p)">' + dec(tot.protein * f) + '</b><span>białko g</span></div>'
+                + '<div><b class="fd-num" style="color:var(--fd-f)">' + dec(tot.fat * f) + '</b><span>tłuszcz g</span></div>'
+                + '<div><b class="fd-num" style="color:var(--fd-c)">' + dec(tot.carbs * f) + '</b><span>węgle g</span></div></div>'
+                + '<p class="fd-mut" style="margin:8px 0 0;font-size:12px;text-align:center">Cały garnek ' + fmt(tot.kcal) + ' kcal · ' + fmt(w.weight ? tot.kcal / w.weight * 100 : 0) + ' kcal / 100 g</p>'
+              : '<p class="fd-mut" style="margin:12px 0 0;font-size:13px">Dodaj składniki – policzymy, ile ma jedna porcja.</p>');
+        box.querySelectorAll('[data-sv]').forEach(function (b) {
+            b.addEventListener('click', function () { d.servings = Math.max(1, Math.min(20, d.servings + +b.dataset.sv)); vib(); dishSum(); });
+        });
+        box.querySelectorAll('[data-sl]').forEach(function (b) { b.addEventListener('click', function () { d.unit_label = b.dataset.sl; dishSum(); }); });
+        el('fd_step').querySelector('[data-commit]').disabled = !(d.name.trim() && d.items.length);
     }
 
     // ---------- cel ----------
