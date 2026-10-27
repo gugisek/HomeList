@@ -32,6 +32,7 @@
         scan: svg('M3.75 7.5V5.25a1.5 1.5 0 0 1 1.5-1.5H7.5M16.5 3.75h2.25a1.5 1.5 0 0 1 1.5 1.5V7.5M20.25 16.5v2.25a1.5 1.5 0 0 1-1.5 1.5H16.5M7.5 20.25H5.25a1.5 1.5 0 0 1-1.5-1.5V16.5M8 8.5v7M11 8.5v7M13.5 8.5v7M16 8.5v7', 1.8),
         pot: svg('M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-6ZM2.5 10h19M9 6.5c0-1 .8-1.5.8-2.5M12.5 6.5c0-1 .8-1.5.8-2.5', 1.8),
         target: svg('M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 1.8),
+        list: svg('M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z', 1.8),
         camera: svg('M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316ZM16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z', 1.8)
     };
 
@@ -284,14 +285,14 @@
             ring = '';
             center = '<span class="fd-ring-big fd-num">' + fmt(eaten) + '</span><span class="fd-ring-sub">kcal zjedzone</span>';
         }
-        // cała karta otwiera podsumowanie; przycisk celu ma własną akcję (closest() łapie go pierwszy)
-        box.innerHTML = '<div class="fd-hero-wrap" data-act="stats" role="button" tabindex="0" aria-label="Podsumowanie i statystyki"><div class="fd-hero">'
+        // cała karta otwiera statystyki; przycisk celu ma własną akcję (closest() łapie go pierwszy)
+        box.innerHTML = '<div class="fd-hero-wrap" data-act="stats" role="button" tabindex="0" aria-label="Statystyki z 7 / 30 / 90 dni"><div class="fd-hero">'
             + '<div class="fd-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" style="stroke:var(--fd-track)"/>' + ring + '</svg>'
             + '<div class="fd-ring-center">' + center + '</div></div>'
             + '<div class="fd-bars">' + barsHTML(pv.base, pv.ghost, goal, MACROS, false)
             + (goal ? '<p class="text-xs fd-mut" style="margin:2px 0 0">Zjedzone <b class="fd-num" style="color:var(--hl-ink);font-weight:600">' + fmt(eaten) + '</b> z ' + fmt(goal.kcal) + ' kcal</p>' : '')
             + '</div></div>'
-            + '<div class="fd-hero-foot"><span class="fd-hero-more">Podsumowanie' + I.chev.replace('<svg', '<svg width="14" height="14" style="transform:rotate(-90deg)"') + '</span>'
+            + '<div class="fd-hero-foot"><span class="fd-hero-more">Statystyki' + I.chev.replace('<svg', '<svg width="14" height="14" style="transform:rotate(-90deg)"') + '</span>'
             + '<button type="button" class="fd-goal-btn fd-press" data-act="goal">' + I.target.replace('<svg', '<svg width="15" height="15"')
             + (goal ? 'Cel ' + fmt(goal.kcal) + ' kcal' : 'Ustaw dzienny cel') + '</button></div></div>';
     }
@@ -314,7 +315,7 @@
             var items = m.entries.map(function (e) {
                 return '<div class="fd-entry' + (S.fresh === e.id ? ' is-fresh' : '') + '" role="button" tabindex="0" data-entry="' + e.id + '">'
                     + '<div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(e.name) + '</div><div class="text-xs fd-mut">' + esc(amountText(e)) + '</div></div>'
-                    + '<span class="fd-num" style="font-size:14px;font-weight:600">' + fmt(e.kcal) + '</span></div>';
+                    + '<span class="fd-num" style="font-size:14px;font-weight:600;white-space:nowrap">' + fmt(e.kcal) + '<span class="fd-mut" style="font-size:11px;font-weight:400"> kcal</span></span></div>';
             }).join('');
             var copy = !m.entries.length && prev && prevOk
                 ? '<div style="padding:2px 6px 6px 12px"><button type="button" class="fd-ghost-btn fd-press" data-copy="' + m.meal + '">' + I.repeat
@@ -327,7 +328,10 @@
                 + '<span class="fd-num" style="font-size:15px;font-weight:600;white-space:nowrap">' + fmt(m.kcal) + ' <span class="fd-mut" style="font-size:12px;font-weight:400">kcal</span></span>'
                 + '<button type="button" class="fd-plus fd-press" data-add="' + m.meal + '" aria-label="Dodaj ' + MEAL_TO[m.meal] + '">' + I.plus + '</button></div>'
                 + (items ? '<div style="display:flex;flex-direction:column;margin-top:2px">' + items + '</div>' : '') + copy + '</section>';
-        }).join('');
+        }).join('')
+            + '<button type="button" class="fd-day-btn fd-press" data-act="day">' + I.list + '<span style="flex:1;text-align:left">Podsumowanie dnia</span>'
+            + '<span class="fd-mut fd-num" style="font-size:13px;font-weight:400">' + fmt(S.data.day.total.kcal) + ' kcal</span>'
+            + I.chev.replace('<svg', '<svg width="14" height="14" style="transform:rotate(-90deg);flex:none;color:var(--fd-mut)"') + '</button>';
         if (S.fresh) setTimeout(function () { S.fresh = null; }, 1700);
     }
 
@@ -350,6 +354,7 @@
             if (t.dataset.copy) return copyYesterday(+t.dataset.copy, t);
             if (t.dataset.act === 'goal') return openSheet({ step: 'goal' });
             if (t.dataset.act === 'stats') return openSheet({ step: 'stats' });
+            if (t.dataset.act === 'day') return openSheet({ step: 'day' });
             if (t.dataset.entry) return openEntry(+t.dataset.entry);
         });
         root.addEventListener('keydown', function (ev) {
@@ -494,6 +499,7 @@
         stopCamera();
         var box = el('fd_step');
         box.className = 'fd-step' + (back ? ' is-back' : '');
+        el('fd_sheet').classList.toggle('is-wide', S.sheet.step === 'day'); // tabela produktów potrzebuje miejsca na PC
         void box.offsetWidth; // restart animacji wejścia
         var step = S.sheet.step;
         if (step === 'search') renderSearch(box);
@@ -501,6 +507,7 @@
         else if (step === 'quick') renderQuick(box);
         else if (step === 'goal') renderGoal(box);
         else if (step === 'stats') renderStats(box);
+        else if (step === 'day') renderDay(box);
         else if (step === 'scan') renderScan(box);
         else if (step === 'own') renderOwn(box);
         else if (step === 'dish') renderDish(box);
@@ -1769,7 +1776,101 @@
         });
     }
 
-    // ---------- podsumowanie (karta dnia → statystyki z 7 / 30 / 90 dni, scripts/food/stats.php) ----------
+    // ---------- podsumowanie dnia (przycisk pod posiłkami): liczby dnia + tabela wszystkich wpisów z makro ----------
+    function renderDay(box) {
+        var sh = S.sheet, day = S.data.day, t = day.total, goal = day.goal, d = s2d(day.date);
+        var meals = day.meals.filter(function (m) { return m.entries.length; });
+        var all = [];
+        meals.forEach(function (m) { all = all.concat(m.entries); });
+        var sec = function (title, html) { return '<span class="fd-eyebrow" style="margin:22px 0 10px">' + title + '</span>' + html; };
+        var html = '<p class="fd-mut" style="margin:0;font-size:13px">' + DAY_LONG[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + '</p>';
+
+        if (!all.length) {
+            html += '<div class="hl-empty" style="margin-top:28px"><div class="hl-empty-ico">' + I.list.replace('<svg', '<svg width="32" height="32"') + '</div>'
+                + '<h3>Ten dzień jest jeszcze pusty</h3><p>Dodaj coś do posiłków, a tutaj zobaczysz bilans dnia i tabelę z makro.</p></div>';
+        } else {
+            var kpi = function (label, big, sub, bar, color) {
+                return '<div class="fd-kpi"><span class="fd-kpi-label">' + label + '</span><b class="fd-num">' + big + '</b>'
+                    + (bar !== undefined ? '<span class="fd-kpi-bar"><span style="width:' + Math.min(bar, 100).toFixed(1) + '%' + (color ? ';background:' + color : '') + '"></span></span>' : '')
+                    + '<span class="fd-kpi-sub">' + sub + '</span></div>';
+            };
+            var left = goal ? goal.kcal - t.kcal : 0, pct = goal ? Math.round(t.kcal / goal.kcal * 100) : 0;
+            var mealWord = function (n) { return n === 1 ? 'posiłku' : 'posiłkach'; };
+            html += '<div class="fd-kpis">'
+                + kpi('Zjedzone', fmt(t.kcal) + '<small> kcal</small>', goal ? pct + '% celu ' + fmt(goal.kcal) + ' kcal' : 'bez ustawionego celu', goal ? pct : undefined, goal && pct > 110 ? '#f59e0b' : null)
+                + (goal
+                    ? kpi(left >= 0 ? 'Zostało' : 'Ponad cel', fmt(Math.abs(left)) + '<small> kcal</small>', left >= 0 ? (S.date === F.today() ? 'do końca dnia' : 'poniżej celu') : 'o ' + (pct - 100) + '% więcej niż cel')
+                    : kpi('Średnio na posiłek', fmt(t.kcal / meals.length) + '<small> kcal</small>', 'w ' + meals.length + ' ' + mealWord(meals.length)))
+                + kpi('Produkty', String(all.length), 'w ' + meals.length + ' ' + mealWord(meals.length))
+                + kpi('Białko', dec(t.protein) + '<small> g</small>', goal && goal.protein ? Math.round(t.protein / goal.protein * 100) + '% celu ' + fmt(goal.protein) + ' g' : fmt(t.protein * 4) + ' kcal z białka',
+                    goal && goal.protein ? t.protein / goal.protein * 100 : undefined, 'var(--fd-p)')
+                + '</div>';
+
+            html += sec('Makroskładniki', '<div class="fd-bars">' + barsHTML(t, null, goal, MACROS, false) + '</div>');
+
+            // skąd kalorie: energia z makro (4 / 9 / 4 kcal na gram), obok proporcje z celu
+            var en = { protein: t.protein * 4, fat: t.fat * 9, carbs: t.carbs * 4 }, enSum = en.protein + en.fat + en.carbs;
+            if (enSum) {
+                var gEn = goal && goal.protein ? { protein: goal.protein * 4, fat: goal.fat * 9, carbs: goal.carbs * 4 } : null;
+                var gSum = gEn ? gEn.protein + gEn.fat + gEn.carbs : 0;
+                html += sec('Skąd kalorie', '<div class="fd-stack">' + MACROS.map(function (m) { return '<span style="flex-grow:' + en[m[0]].toFixed(0) + ';background:' + m[2] + '"></span>'; }).join('') + '</div>'
+                    + '<div class="fd-list" style="margin-top:8px">' + MACROS.map(function (m) {
+                        return '<div class="fd-li"><i class="fd-dot" style="background:' + m[2] + '"></i><span style="flex:1">' + m[1] + '</span>'
+                            + '<b class="fd-num">' + Math.round(en[m[0]] / enSum * 100) + '%</b>'
+                            + (gSum ? '<span class="fd-mut fd-num" style="width:64px;text-align:right;font-size:12px">cel ' + Math.round(gEn[m[0]] / gSum * 100) + '%</span>' : '') + '</div>';
+                    }).join('') + '</div>');
+            }
+
+            if (meals.length > 1) {
+                html += sec('Posiłki', '<div class="fd-list">' + meals.map(function (m) {
+                    var share = t.kcal ? m.kcal / t.kcal * 100 : 0;
+                    return '<div class="fd-li" style="flex-wrap:wrap"><span style="flex:1">' + MEALS[m.meal] + '</span><b class="fd-num">' + fmt(m.kcal) + ' kcal</b>'
+                        + '<span class="fd-mut fd-num" style="width:38px;text-align:right;font-size:12px">' + Math.round(share) + '%</span>'
+                        + '<span class="fd-bar" style="flex-basis:100%;height:6px;margin-top:6px"><span style="left:0;width:' + share.toFixed(1) + '%;background:var(--fd-k)"></span></span></div>';
+                }).join('') + '</div>');
+            }
+
+            // wyróżnione produkty – tylko gdy jest z czego wybierać
+            if (all.length > 1) {
+                var top = function (k) { return all.reduce(function (a, e) { return e[k] > a[k] ? e : a; }); };
+                var notes = [['Najwięcej kalorii', 'kcal', ' kcal'], ['Najwięcej białka', 'protein', ' g'], ['Najwięcej tłuszczu', 'fat', ' g'], ['Najwięcej węglowodanów', 'carbs', ' g']]
+                    .map(function (n) { return n.concat([top(n[1])]); })
+                    .filter(function (n) { return n[3][n[1]] > 0; });
+                html += sec('Wyróżnione', '<div class="fd-list">' + notes.map(function (n) {
+                    var e = n[3], share = t[n[1]] ? Math.round(e[n[1]] / t[n[1]] * 100) : 0;
+                    return '<div class="fd-li"><span class="fd-mut" style="width:40%;flex:none;font-size:12px">' + n[0] + '</span>'
+                        + '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(e.name) + '</span>'
+                        + '<span class="fd-num" style="white-space:nowrap;font-size:12px"><b>' + (n[1] === 'kcal' ? fmt(e.kcal) : dec(e[n[1]])) + n[2] + '</b><span class="fd-mut"> · ' + share + '%</span></span></div>';
+                }).join('') + '</div>');
+            }
+
+            var cells = function (o) {
+                return ['kcal', 'protein', 'fat', 'carbs'].map(function (k) { return '<td>' + (k === 'kcal' ? fmt(o[k]) : dec(o[k])) + '</td>'; }).join('');
+            };
+            var rows = meals.map(function (m) {
+                return '<tr class="fd-tb-meal"><th scope="rowgroup">' + MEALS[m.meal] + '</th>' + cells(m) + '</tr>'
+                    + m.entries.map(function (e) {
+                        var amt = amountText(e);
+                        return '<tr><th scope="row"><span class="fd-tb-name">' + esc(e.name) + '</span>' + (amt ? '<span class="fd-tb-amt">' + esc(amt) + '</span>' : '') + '</th>' + cells(e) + '</tr>';
+                    }).join('');
+            }).join('');
+            html += sec('Wszystko, co zjedzone', '<div class="fd-tb-wrap"><table class="fd-tb"><thead><tr><th scope="col">Produkt</th><th scope="col">kcal</th>'
+                + MACROS.map(function (m) { return '<th scope="col" title="' + m[1] + ' (g)"><i style="background:' + m[2] + '"></i>' + m[1].charAt(0) + '</th>'; }).join('') + '</tr></thead>'
+                + '<tbody>' + rows + '</tbody><tfoot><tr><th scope="row">Razem</th>' + cells(t) + '</tr>'
+                + (goal ? '<tr class="fd-tb-goal"><th scope="row">Cel</th>' + cells({ kcal: goal.kcal, protein: goal.protein || 0, fat: goal.fat || 0, carbs: goal.carbs || 0 }) + '</tr>' : '')
+                + '</tfoot></table></div>'
+                + '<p class="fd-mut" style="margin:8px 2px 0;font-size:11px">B – białko, T – tłuszcz, W – węglowodany, w gramach.</p>');
+        }
+
+        box.innerHTML = headHTML('Podsumowanie dnia', false)
+            + '<div class="fd-scroll" style="padding:4px 20px 16px">' + html + '</div>'
+            + '<div class="fd-foot"><button type="button" class="fd-cta fd-press" data-stats>Statystyki z 7 / 30 / 90 dni'
+            + I.chev.replace('<svg', '<svg width="16" height="16" style="transform:rotate(-90deg)"') + '</button></div>';
+        bindHead(box);
+        box.querySelector('[data-stats]').addEventListener('click', function () { sh.parent = 'day'; setStep('stats'); });
+    }
+
+    // ---------- statystyki (karta dnia → statystyki z 7 / 30 / 90 dni, scripts/food/stats.php) ----------
     var RANGES = [[7, '7 dni'], [30, '30 dni'], [90, '90 dni']];
     var WEEK = ['pn', 'wt', 'śr', 'cz', 'pt', 'sb', 'nd'];
     S.range = 30;
@@ -1786,10 +1887,10 @@
                 if (res.status !== 'success') return fail(res);
                 sh.stats = res;
                 renderStats(box);
-            }).catch(function () { fail({ status: 'error', message: 'Nie udało się wczytać podsumowania' }); });
+            }).catch(function () { fail({ status: 'error', message: 'Nie udało się wczytać statystyk' }); });
         }
         var goal = S.data.day.goal;
-        box.innerHTML = headHTML('Podsumowanie', false)
+        box.innerHTML = headHTML('Statystyki', sh.parent === 'day')
             + '<div class="fd-scroll" style="padding:4px 20px 16px">'
             + '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:18px;background:var(--fd-field)">'
             + RANGES.map(function (r) {
@@ -1801,7 +1902,7 @@
             + '</div>'
             + '<div class="fd-foot"><button type="button" class="fd-cta fd-press" data-goal>' + I.target.replace('<svg', '<svg width="18" height="18"')
             + (goal ? 'Zmień cel · ' + fmt(goal.kcal) + ' kcal' : 'Ustaw dzienny cel') + '</button></div>';
-        bindHead(box);
+        bindHead(box, function () { sh.parent = null; setStep('day', true); });
         box.querySelectorAll('[data-range]').forEach(function (b) {
             b.addEventListener('click', function () { S.range = +b.dataset.range; renderStats(box); });
         });
