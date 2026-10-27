@@ -89,7 +89,191 @@ fixRoundedCorners();
 </script>
 
 <script>
-    
+    // Synchronizacja na żywo (lista wspólna, plan dnia, drugie urządzenie). Widok niesie token stanu
+    // (<meta id="hl_sync">, scripts/sync/sync_lib.php), a hlSync co kilka sekund pyta lekki
+    // scripts/sync/state.php, czy token się zmienił – dopiero wtedy widok jest aktualizowany w miejscu.
+    // Pyta tylko przy widocznej karcie: często na listach wspólnych, rzadko na prywatnych i przy bezczynności,
+    // od razu po powrocie aplikacji z tła. Skrypt może się wykonać ponownie (openPanelSite), więc stan
+    // trzymamy w window.hlSync, timer jest jeden, a nasłuchy na window/document podpinamy raz.
+    window.hlSync = window.hlSync || { scope: null, token: null, nav: null, shared: false, timer: 0, applyTimer: 0, due: 0, ctrl: null, seq: 0, fails: 0, writes: 0, lastWrite: 0, lastCheck: 0, lastInput: Date.now(), lastRemote: 0 };
+
+    function hlSyncReset() {
+        var s = window.hlSync;
+        s.scope = s.token = null;
+        s.seq++;
+        if (s.ctrl) s.ctrl.abort();
+        s.ctrl = null;
+        clearTimeout(s.timer);
+        clearTimeout(s.applyTimer);
+    }
+
+    // token z właśnie wyrenderowanego widoku (bez znacznika = zakładka bez synchronizacji, np. ustawienia)
+    function hlSyncAdopt(doc) {
+        var s = window.hlSync;
+        var tag = doc && doc.getElementById('hl_sync');
+        if (!tag) return hlSyncReset();
+        if (tag.dataset.scope !== s.scope) hlSyncReset();
+        s.seq++; // odpowiedź sprzed renderu niesie starszy stan – nie może wywołać ponownego odświeżenia
+        s.scope = tag.dataset.scope;
+        s.token = tag.dataset.token;
+        s.shared = tag.dataset.shared === '1';
+        if (!s.nav) s.nav = tag.dataset.nav;
+        hlSyncSchedule();
+    }
+
+    function hlSyncActive() {
+        return !!(window.hlSync.scope && document.visibilityState === 'visible' && navigator.onLine !== false && document.getElementById('dashboard_body'));
+    }
+
+    function hlSyncDelay() {
+        var s = window.hlSync;
+        var now = Date.now();
+        if (s.fails) return Math.min(60000, 4000 * Math.pow(2, s.fails));
+        var idle = now - s.lastInput;
+        var delay = s.shared ? 5000 : 30000;
+        if (s.shared && now - s.lastRemote < 90000) delay = 3000; // ktoś właśnie coś zmienia – śledzimy ściślej
+        if (idle > 600000) delay = Math.max(delay, 60000);
+        else if (idle > 120000) delay = Math.max(delay, s.shared ? 15000 : 45000);
+        return delay;
+    }
+
+    function hlSyncSchedule(delay) {
+        var s = window.hlSync;
+        clearTimeout(s.timer);
+        s.timer = 0;
+        if (!hlSyncActive()) return;
+        if (delay === undefined) delay = hlSyncDelay();
+        s.due = Date.now() + delay;
+        s.timer = setTimeout(hlSyncCheck, delay);
+    }
+
+    // sprawdzenie „wkrótce”, chyba że i tak jest zaplanowane wcześniej
+    function hlSyncSoon(delay) {
+        var s = window.hlSync;
+        if (s.ctrl || (s.timer && s.due - Date.now() <= delay)) return;
+        hlSyncSchedule(delay);
+    }
+
+    function hlSyncCheck() {
+        var s = window.hlSync;
+        clearTimeout(s.timer);
+        s.timer = 0;
+        if (!hlSyncActive() || s.ctrl) return;
+        var seq = s.seq;
+        var scope = s.scope;
+        var ctrl = s.ctrl = new AbortController();
+        s.lastCheck = Date.now();
+        fetch('scripts/sync/state.php?scope=' + encodeURIComponent(scope), { signal: ctrl.signal, cache: 'no-store' })
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    // sesja wygasła – wrapper fetch (csrf_js.php) przeniesie do logowania
+                    s.scope = null;
+                    return null;
+                }
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (!data || seq !== s.seq || scope !== s.scope) return;
+                s.fails = 0;
+                s.shared = !!data.s;
+                if (data.n && s.nav && data.n !== s.nav) {
+                    s.nav = data.n;
+                    refreshLists();
+                }
+                if (data.t !== s.token) {
+                    s.lastRemote = Date.now();
+                    hlSyncApply();
+                }
+            })
+            .catch(error => {
+                if (error.name !== 'AbortError') s.fails++;
+            })
+            .finally(() => {
+                if (s.ctrl !== ctrl) return;
+                s.ctrl = null;
+                hlSyncSchedule();
+            });
+    }
+
+    // w trakcie własnej akcji, przeciągania albo przełączania dnia nie podmieniamy widoku pod palcami
+    function hlSyncBusy() {
+        var s = window.hlSync;
+        return s.writes > 0 || Date.now() - s.lastWrite < 700 || window.feedDragging || window.feedNavBusy
+            || !!document.querySelector('.sortable-chosen, .sortable-drag');
+    }
+
+    // pełna podmiana zakładki skasowałaby otwarty popup albo wpisywany tekst
+    function hlSyncCanReplace() {
+        var active = document.activeElement;
+        var typing = active && active.matches('input, textarea, select, [contenteditable]') && active.closest('#dashboard_body');
+        return !typing && !document.querySelector('section[id^="popup"][id$="Bg"]:not(.h-0)');
+    }
+
+    function hlSyncApply() {
+        var s = window.hlSync;
+        clearTimeout(s.applyTimer);
+        if (!s.scope) return;
+        if (hlSyncBusy()) {
+            s.applyTimer = setTimeout(hlSyncApply, 800);
+            return;
+        }
+        var site = tabSiteFor(localStorage.getItem("current_todo") || 'list=today');
+        if (site === 'todo') hlMorphTab();
+        else if (site === 'today') hlMorphFeed();
+    }
+
+    // powrót z tła / z innej karty / po odzyskaniu sieci – sprawdzamy od razu
+    function hlSyncWake() {
+        var s = window.hlSync;
+        s.lastInput = Date.now();
+        if (!hlSyncActive()) return hlSyncSchedule();
+        hlSyncSoon(Date.now() - s.lastCheck > 1500 ? 0 : 1500);
+    }
+
+    if (!window.hlSyncBound) {
+        window.hlSyncBound = true;
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') hlSyncWake();
+            else clearTimeout(window.hlSync.timer);
+        });
+        window.addEventListener('focus', () => hlSyncWake());
+        window.addEventListener('online', () => hlSyncWake());
+        window.addEventListener('pageshow', e => { if (e.persisted) hlSyncWake(); });
+        document.addEventListener('resume', () => hlSyncWake());
+        // użytkownik wrócił do aplikacji po bezczynności – nie czekamy na długi interwał
+        var onInput = () => {
+            var s = window.hlSync;
+            var wasIdle = Date.now() - s.lastInput > 120000;
+            s.lastInput = Date.now();
+            if (wasIdle && s.timer) hlSyncSoon(hlSyncDelay());
+        };
+        document.addEventListener('pointerdown', onInput, { capture: true, passive: true });
+        document.addEventListener('keydown', onInput, { capture: true, passive: true });
+
+        // własne zapisy (POST): w trakcie nie podmieniamy widoku, a po nich dajemy znać innym kartom tej przeglądarki
+        try {
+            window.hlSyncChannel = new BroadcastChannel('hl-sync');
+            window.hlSyncChannel.onmessage = () => hlSyncSoon(400);
+        } catch (e) {}
+        var baseFetch = window.fetch;
+        window.fetch = function (input, init) {
+            var method = ((init && init.method) || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+            if (method === 'GET' || method === 'HEAD') return baseFetch.apply(this, arguments);
+            var s = window.hlSync;
+            s.writes++;
+            var settle = () => {
+                s.writes = Math.max(0, s.writes - 1);
+                s.lastWrite = Date.now();
+                try { window.hlSyncChannel && window.hlSyncChannel.postMessage(1); } catch (e) {}
+            };
+            return baseFetch.apply(this, arguments).then(response => { settle(); return response; }, error => { settle(); throw error; });
+        };
+    }
+</script>
+
+<script>
+
     function openFirstList() {
     // Po wejściu do aplikacji startujemy od planu dnia, przy przeładowaniu panelu w tej samej sesji wracamy do ostatniej zakładki
     var started = null;
@@ -128,6 +312,7 @@ fixRoundedCorners();
 
     var tab_list = new URLSearchParams(link).get('list');
     document.getElementById("list_hold").value = tab_list;
+    hlSyncReset();
     var body = document.getElementById("dashboard_body");
     body.innerHTML = "<div data-aos='fade-up' data-aos-delay='100' class='w-full duartion-150 flex items-center mt-[20vh] justify-center z-[999]'><div class='z-[30] bg-black/90 p-4 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
     const url = "components/panel/dashboard/" + site + ".php?" + link;
@@ -149,17 +334,9 @@ fixRoundedCorners();
                 scriptElement.classList.add("popup-script"); // Dodaj klasę, by łatwiej usuwać
                 document.body.appendChild(scriptElement);
             });
+            if (localStorage.getItem("current_todo") === link) hlSyncAdopt(parsedDocument);
         });
-    var removeButtons = document.querySelectorAll(".lists_main_nav");
-    for (var i = 0; i < removeButtons.length; i++) {
-      removeButtons[i].classList.remove("bg-white/15");
-        removeButtons[i].classList.remove("text-green-400");
-    }
-    var activeButtons = document.querySelectorAll(".lists_main_nav.list_" + tab_list);
-    for(var i = 0; i < activeButtons.length; i++) {
-      activeButtons[i].classList.add("bg-white/15");
-        activeButtons[i].classList.add("text-green-400");
-    }
+    hlNavHighlight(tab_list);
 
     localStorage.setItem("current_todo", link);
     if (typeof hlRailSync === "function") hlRailSync();
@@ -180,6 +357,20 @@ fixRoundedCorners();
         }, 10);
     }
 }
+
+    // podświetlenie aktywnej listy w dolnym pasku i menu „więcej”
+    function hlNavHighlight(tab_list) {
+    var removeButtons = document.querySelectorAll(".lists_main_nav");
+    for (var i = 0; i < removeButtons.length; i++) {
+      removeButtons[i].classList.remove("bg-white/15");
+        removeButtons[i].classList.remove("text-green-400");
+    }
+    var activeButtons = document.querySelectorAll(".lists_main_nav.list_" + tab_list);
+    for(var i = 0; i < activeButtons.length; i++) {
+      activeButtons[i].classList.add("bg-white/15");
+        activeButtons[i].classList.add("text-green-400");
+    }
+    }
 
     function openDetailTabReload() {
     var current_todo = localStorage.getItem("current_todo");
@@ -222,6 +413,7 @@ fixRoundedCorners();
                     document.body.appendChild(scriptElement);
                 });
                 html.scrollTop = scroll;
+                if (localStorage.getItem("current_todo") === link) hlSyncAdopt(parsedDocument);
             });
     }
 
@@ -244,6 +436,7 @@ fixRoundedCorners();
                 var oldHead = document.getElementById('sticky_nav_body');
                 var newHead = parsedDocument.getElementById('sticky_nav_body');
                 if (oldHead && newHead && oldHead.innerHTML !== newHead.innerHTML) oldHead.innerHTML = newHead.innerHTML;
+                hlSyncAdopt(parsedDocument);
                 return hlMorphList(oldList, newList);
             })
             .catch(error => {
@@ -252,9 +445,48 @@ fixRoundedCorners();
             });
     }
 
+    // plan dnia w miejscu (zmiana z innego urządzenia / od innej osoby): przy tym samym układzie sekcji
+    // podmieniamy tylko karty w każdej sekcji – instancje Sortable, otwarty popup i scroll paska dni zostają.
+    // Inny układ (np. doszła sekcja Zaległe) = ciche przeładowanie, ale tylko gdy nic nie jest otwarte.
+    function hlMorphFeed() {
+        var link = localStorage.getItem("current_todo") || 'list=today';
+        var feed = document.getElementById('feed');
+        if (!feed) return hlSyncCanReplace() ? reloadTabSilently() : null;
+        var seq = window.hlMorphSeq = (window.hlMorphSeq || 0) + 1;
+        return fetch("components/panel/dashboard/" + tabSiteFor(link) + ".php?" + link)
+            .then(response => response.text())
+            .then(data => {
+                if (seq !== window.hlMorphSeq || localStorage.getItem("current_todo") !== link || !document.body.contains(feed) || hlSyncBusy()) return;
+                var parsedDocument = new DOMParser().parseFromString(data, "text/html");
+                var next = parsedDocument.getElementById('feed');
+                var layout = el => el.dataset.date + '|' + [...el.querySelectorAll('[data-feed-section]')].map(sec => sec.dataset.feedSection).join();
+                if (!next || layout(feed) !== layout(next)) {
+                    // bez adopcji tokenu – przy zablokowanej podmianie kolejne sprawdzenie spróbuje znowu
+                    return hlSyncCanReplace() ? reloadTabSilently() : null;
+                }
+                [['sticky_nav_body', false], ['day-strip', true]].forEach(([id, keepScroll]) => {
+                    var oldEl = document.getElementById(id);
+                    var newEl = parsedDocument.getElementById(id);
+                    if (!oldEl || !newEl || oldEl.innerHTML === newEl.innerHTML) return;
+                    var left = oldEl.scrollLeft;
+                    oldEl.innerHTML = newEl.innerHTML;
+                    if (keepScroll) oldEl.scrollLeft = left;
+                });
+                var morphs = [];
+                feed.querySelectorAll('[data-feed-section]').forEach(section => {
+                    var oldUl = section.querySelector('.feed-list');
+                    var newUl = next.querySelector('[data-feed-section="' + section.dataset.feedSection + '"] .feed-list');
+                    if (oldUl && newUl && oldUl.innerHTML !== newUl.innerHTML) morphs.push(hlMorphList(oldUl, newUl, true));
+                });
+                hlSyncAdopt(parsedDocument);
+                return Promise.all(morphs).then(() => feedUpdateProgress());
+            })
+            .catch(error => console.error('Błąd odświeżania planu dnia:', error));
+    }
+
     // podmiana elementów z data-key: usunięte się zwijają, nowe wjeżdżają z poświatą,
-    // zmienione błyskają, a przesunięte płyną na nowe miejsce (FLIP)
-    function hlMorphList(oldUl, newUl) {
+    // zmienione błyskają, a przesunięte płyną na nowe miejsce (FLIP); animateFirst = animuj też pierwszy element w pustej liście
+    function hlMorphList(oldUl, newUl, animateFirst) {
         var keyed = ul => {
             var map = {};
             ul.querySelectorAll('[data-key]').forEach(el => { map[el.dataset.key] = el; });
@@ -280,7 +512,7 @@ fixRoundedCorners();
                 rects[key] = oldItems[key].getBoundingClientRect();
                 before[key] = hlMorphSig(oldItems[key]);
             });
-            var hadItems = Object.keys(oldItems).length > 0;
+            var hadItems = animateFirst || Object.keys(oldItems).length > 0;
 
             oldUl.innerHTML = newUl.innerHTML;
             if (calm) return;
@@ -544,6 +776,7 @@ function moveElement() {
             applyTodoNavOrder('todo-nav');
             applyTodoNavOrder('more_nav_body');
             fixRoundedCorners();
+            hlNavHighlight(document.getElementById("list_hold").value);
         });
     if (typeof hlRailRefresh === "function") hlRailRefresh();
     }
@@ -594,76 +827,6 @@ function moveElement() {
                             list = document.getElementById("list_hold").value;
                           }
                           popupAddListsOpenClose();
-                          openDetailTab('todo', 'list='+list);
-                          refreshLists();
-                        }
-                        break;
-                    case 'error':
-                        showAlert('error', data.message);
-                        break;
-                    case 'warning':
-                        showAlert('warning', data.message);
-                        break;
-                    default:
-                        showAlert('error', 'Nieznany status odpowiedzi');
-                }
-            }
-            i = i+1;
-        });
-    })
-    .catch(error => {
-        showAlert('error', 'Wystąpił problem połączenia z serwerem');
-        console.error('Błąd:', error);
-    })
-
-    .finally(() => {
-        delivery_loading.innerHTML = ""; // Ukrycie kółka ładowania po zakończeniu żądania
-    });
-}
-function codeList() {
-    // Pobranie danych z pól formularza
-    var name = document.getElementById('add_list_code').value;
-
-    const postData = new FormData();
-    postData.append('code', name);
-
-    // Pokazanie kółka ładowania
-    var delivery_loading = document.getElementById('code_list_loading');
-    delivery_loading.innerHTML = "<div class='w-full duartion-150 flex items-center justify-center z-[999]'><div class='z-[30] fixed bg-black/90 p-4 mt-40 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
-
-    // Wysyłanie żądania POST do skryptu PHP
-    fetch('scripts/dashboard/list_code.php', {
-        method: 'POST',
-        body: postData
-    })
-
-    .then(response => response.text())
-    .then(text => {
-        // Rozbijanie tekstu na fragmenty JSON-owe
-        const rawJsonParts = text.trim().split(/(?<=\})\s*(?=\{)/); // Dzielenie na podstawie zakończenia jednego JSON-a i początku następnego
-
-        const jsonObjects = rawJsonParts.map(jsonString => {
-            try {
-                return JSON.parse(jsonString);  // Parsowanie każdego fragmentu jako JSON
-            } catch (e) {
-                console.error('Błąd parsowania JSON:', e, 'Fragment:', jsonString);
-                return null;
-            }
-        }).filter(obj => obj !== null);
-
-        var i = 1;
-
-        jsonObjects.forEach(data => {
-            if (data.status) {  // Jeśli dane posiadają status
-                switch (data.status) {
-                    case 'success':
-                        showAlert('success', data.message);
-                        if(i==1){
-                          var list = data.id;
-                          if(list == null || list == ""){
-                            list = document.getElementById("list_hold").value;
-                          }
-                          popupCodeListsOpenClose();
                           openDetailTab('todo', 'list='+list);
                           refreshLists();
                         }
@@ -919,81 +1082,49 @@ function copyElement() {
 }
 
 
-function copyClip(input) {
-    var copyText = document.getElementById(input);
-    copyText.select();
-    copyText.setSelectionRange(0, 99999); // Dla mobilnych urządzeń
-    navigator.clipboard.writeText(copyText.value);
-    showAlert('success', 'Skopiowano kod do schowka!');
+// ===== wspólne helpery: lists_info.php (QR do udostępniania) i lists_code.php (skaner) =====
+// jednorazowe wczytanie skryptu z CDN (kolejne wywołania czekają na to samo)
+function hlLoadScript(src) {
+    window.hlScripts = window.hlScripts || {};
+    if (!window.hlScripts[src]) {
+        window.hlScripts[src] = new Promise(function (resolve, reject) {
+            var s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = function () { delete window.hlScripts[src]; reject(new Error('load ' + src)); };
+            document.head.appendChild(s);
+        });
+    }
+    return window.hlScripts[src];
 }
 
-
-function updateListName() {
-    // Pobranie danych z pól formularza
-    var id = document.getElementById('edit_list_id').value;
-    var name = document.getElementById('edit_list_name').value;
-    const postData = new FormData();
-    postData.append('id', id);
-    postData.append('name', name);
-
-    // Pokazanie kółka ładowania
-    var delivery_loading = document.getElementById('info_list_loading');
-    delivery_loading.innerHTML = "<div class='w-full duartion-150 flex items-center justify-center z-[999]'><div class='z-[30] fixed bg-black/90 p-4 mt-40 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
-
-    // Wysyłanie żądania POST do skryptu PHP
-    fetch('scripts/dashboard/list_edit.php', {
-        method: 'POST',
-        body: postData
-    })
-
-    .then(response => response.text())
-    .then(text => {
-        // Rozbijanie tekstu na fragmenty JSON-owe
-        const rawJsonParts = text.trim().split(/(?<=\})\s*(?=\{)/); // Dzielenie na podstawie zakończenia jednego JSON-a i początku następnego
-
-        const jsonObjects = rawJsonParts.map(jsonString => {
-            try {
-                return JSON.parse(jsonString);  // Parsowanie każdego fragmentu jako JSON
-            } catch (e) {
-                console.error('Błąd parsowania JSON:', e, 'Fragment:', jsonString);
-                return null;
-            }
-        }).filter(obj => obj !== null);
-
-        var i = 1;
-
-        jsonObjects.forEach(data => {
-            if (data.status) {  // Jeśli dane posiadają status
-                switch (data.status) {
-                    case 'success':
-                        showAlert('success', data.message);
-                        if(i==1){
-                          
-                          popupInfoListsOpenClose();
-                          openPanelSite(`dashboard`); hlRailRefresh();
-                        }
-                        break;
-                    case 'error':
-                        showAlert('error', data.message);
-                        break;
-                    case 'warning':
-                        showAlert('warning', data.message);
-                        break;
-                    default:
-                        showAlert('error', 'Nieznany status odpowiedzi');
-                }
-            }
-            i = i+1;
-        });
-    })
-    .catch(error => {
-        showAlert('error', 'Wystąpił problem połączenia z serwerem');
-        console.error('Błąd:', error);
-    })
-
-    .finally(() => {
-         delivery_loading.innerHTML = ""; // Ukrycie kółka ładowania po zakończeniu żądania
+// kod QR jako <svg> (moduły w currentColor) – biblioteka qrcode-generator
+function hlQrSvg(text) {
+    return hlLoadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js').then(function () {
+        var qr = qrcode(0, 'M');
+        qr.addData(text);
+        qr.make();
+        var n = qr.getModuleCount(), d = '';
+        for (var r = 0; r < n; r++) {
+            for (var c = 0; c < n; c++) if (qr.isDark(r, c)) d += 'M' + c + ' ' + r + 'h1v1h-1z';
+        }
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + n + ' ' + n + '" shape-rendering="crispEdges" role="img" aria-label="Kod QR"><path fill="currentColor" d="' + d + '"/></svg>';
     });
+}
+
+// schowek z obejściem dla http (navigator.clipboard działa tylko w bezpiecznym kontekście)
+function hlCopy(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(area);
+    area.select();
+    area.setSelectionRange(0, 99999);
+    try { document.execCommand('copy'); } catch (e) {}
+    area.remove();
+    return Promise.resolve();
 }
 
 
@@ -1105,6 +1236,11 @@ $delete_path = 'scripts/dashboard/list_delete.php';
 $delete_v2 = 'true';
 $path = 'components/panel/dashboard/lists_info.php';
 $close="true";
-include "../../popup_l2.php";
+include "../../popup.php";
 ?>
+<style>
+/* szczegóły listy otwierane też nad „Edytuj listy” – warstwa wyżej niż zwykłe popupy */
+#popupInfoListsBg { z-index: 75 !important; }
+#popupInfoLists { z-index: 80 !important; }
+</style>
 

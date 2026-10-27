@@ -11,6 +11,7 @@
 include __DIR__.'/../conn_db.php';
 include __DIR__.'/../planner/planner_lib.php';
 include __DIR__.'/push_lib.php';
+include __DIR__.'/../access.php';
 
 $cron_key = substr(hash('sha256', 'hl-cron'.(hl_vapid()['pem'] ?? '')), 0, 32);
 if (PHP_SAPI === 'cli') {
@@ -143,9 +144,78 @@ while ($u = mysqli_fetch_assoc($users)) {
     $sent_total += hl_push_notify($conn, $uid, $title, $body, $tag, 'panel.php');
 }
 
+// 5. nowe zadania na listach wspólnych. Seria dodawania = jeden push: czekamy, aż lista ucichnie na HL_LIST_QUIET min,
+//    ale nie dłużej niż HL_LIST_MAX_WAIT min od pierwszego zadania. Autor nie dostaje powiadomień o własnych zadaniach.
+const HL_LIST_QUIET = 5;
+const HL_LIST_MAX_WAIT = 30;
+$quiet_ts = date('Y-m-d H:i:s', time() - HL_LIST_QUIET * 60);
+$wait_ts = date('Y-m-d H:i:s', time() - HL_LIST_MAX_WAIT * 60);
+$since_ts = date('Y-m-d H:i:s', time() - 86400); // starsze (np. po przestoju crona) już nie są „nowe”
+$stmt = $conn->prepare(
+    'SELECT list_elements.list_id, lists.full_name, MAX(COALESCE(list_push_state.last_element_id, 0)) AS last_id,
+            MIN(list_elements.create_date) AS first_at, MAX(list_elements.create_date) AS last_at, MAX(list_elements.id) AS max_id
+     FROM list_elements
+     JOIN lists ON lists.id = list_elements.list_id AND lists.owner_id <> 0
+     LEFT JOIN list_push_state ON list_push_state.list_id = lists.id
+     WHERE list_elements.id > COALESCE(list_push_state.last_element_id, 0) AND list_elements.create_date > ?
+     GROUP BY list_elements.list_id, lists.full_name
+     HAVING last_at <= ? OR first_at <= ?'
+);
+$stmt->bind_param('sss', $since_ts, $quiet_ts, $wait_ts);
+$stmt->execute();
+$pending = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+foreach ($pending as $p) {
+    $lid = (int)$p['list_id'];
+    $members = hl_list_members($conn, $lid);
+    if (count($members) > 1) {
+        $stmt = $conn->prepare(
+            'SELECT list_elements.title, list_elements.creator_id, list_elements.status_id, users.name
+             FROM list_elements LEFT JOIN users ON users.id = list_elements.creator_id
+             WHERE list_elements.list_id = ? AND list_elements.id > ? AND list_elements.id <= ? AND list_elements.create_date > ?
+             ORDER BY list_elements.id'
+        );
+        $last_id = (int)$p['last_id'];
+        $max_id = (int)$p['max_id'];
+        $stmt->bind_param('iiis', $lid, $last_id, $max_id, $since_ts);
+        $stmt->execute();
+        // zadanie od razu odhaczone / zarchiwizowane nie jest już nowością
+        $added = array_filter($stmt->get_result()->fetch_all(MYSQLI_ASSOC), fn($e) => !in_array((int)$e['status_id'], [2, 4], true));
+        $stmt->close();
+
+        foreach ($members as $m) {
+            $uid = (int)$m['id'];
+            $items = array_values(array_filter($added, fn($e) => (int)$e['creator_id'] !== $uid));
+            if (!$items) continue;
+            $s = hl_push_settings($conn, $uid);
+            if (!$s['enabled'] || !$s['notify_lists'] || hl_push_list_muted($conn, $uid, $lid)) continue;
+
+            $n = count($items);
+            $authors = array_unique(array_map(fn($e) => $e['name'] ?? 'Ktoś', $items));
+            $title = $p['full_name'].' · '.($n === 1 ? 'nowe zadanie' : $n.' '.hl_plural($n, 'nowe zadanie', 'nowe zadania', 'nowych zadań'));
+            $body = implode(', ', $authors).': '.hl_titles($items);
+            if ($dry) {
+                echo "[user $uid] $title\n$body\n\n";
+                continue;
+            }
+            $sent_total += hl_push_notify($conn, $uid, $title, $body, 'list_'.$lid, 'panel.php?list='.$lid);
+        }
+    }
+    $stmt = $conn->prepare('INSERT INTO list_push_state (list_id, last_element_id, notified_at) VALUES (?, ?, NOW())
+                            ON DUPLICATE KEY UPDATE last_element_id = GREATEST(last_element_id, VALUES(last_element_id)), notified_at = NOW()');
+    $max_id = (int)$p['max_id'];
+    $stmt->bind_param('ii', $lid, $max_id);
+    $stmt->execute();
+    $stmt->close();
+}
+
 if ($dry) {
     mysqli_rollback($conn);
     exit();
 }
 echo date('Y-m-d H:i')." wysłano: $sent_total\n";
 mysqli_query($conn, "DELETE FROM push_log WHERE ref_date < CURDATE() - INTERVAL 7 DAY");
+try {
+    mysqli_query($conn, "DELETE FROM push_history WHERE sent_at < NOW() - INTERVAL 90 DAY");
+} catch (mysqli_sql_exception $ex) {}

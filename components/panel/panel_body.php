@@ -190,7 +190,24 @@ if (panelSiteUrl && /^[a-z_]+$/.test(panelSiteUrl)) {
     panelSiteGet = "";
     history.replaceState(null, "", window.location.pathname);
 }
-openPanelSite(panelSite || 'dashboard', panelSiteGet || "");
+// panel.php?list=ID (powiadomienie o nowych zadaniach) – od razu ta lista
+var panelListUrl = new URLSearchParams(window.location.search).get("list");
+if (panelListUrl && /^\d+$/.test(panelListUrl)) {
+    panelSite = "dashboard";
+    panelSiteGet = "";
+    localStorage.setItem("current_todo", "list=" + panelListUrl);
+    try { sessionStorage.setItem("hl_started", "1"); } catch (e) {}
+    history.replaceState(null, "", window.location.pathname);
+}
+// panel.php?join=KOD (kod QR zeskanowany aparatem) – potwierdzenie dołączenia; przed zalogowaniem kod czeka w cookie hl_join
+var panelJoin = new URLSearchParams(window.location.search).get("join") || (document.cookie.match(/(?:^|; )hl_join=([A-Za-z0-9]{6})/) || [])[1];
+if (panelJoin && /^[A-Za-z0-9]{6}$/.test(panelJoin)) {
+    document.cookie = "hl_join=; Max-Age=0; path=/";
+    history.replaceState(null, "", window.location.pathname);
+    openPanelSite("dashboard", "", function () { openPopupCodeLists(panelJoin.toUpperCase()); });
+} else {
+    openPanelSite(panelSite || 'dashboard', panelSiteGet || "");
+}
 </script>
 <?php include 'components/panel/search.php'; ?>
 <script>
@@ -208,16 +225,28 @@ openPanelSite(panelSite || 'dashboard', panelSiteGet || "");
 </script>
 <script>
     function imgPrevProduct(type) {
-        const file = document.getElementById(`${type}`).files[0];
+        const input = document.getElementById(`${type}`);
+        const img = document.getElementById(`popup_img_inpt_${type}`);
+        const file = input.files[0];
+        // pierwotne zdjęcie – wraca po anulowaniu wyboru albo odrzuceniu pliku
+        if (!img.dataset.originalSrc) img.dataset.originalSrc = img.getAttribute('src') || '';
+        if (!file) {
+            img.src = img.dataset.originalSrc;
+            return;
+        }
+        // limity z atrybutów inputa (hl_avatar_input_attrs) – serwer i tak sprawdza to samo
+        const reject = (msg) => {
+            showAlert('error', msg + (input.dataset.rules ? ` (${input.dataset.rules})` : ''));
+            input.value = '';
+            img.src = img.dataset.originalSrc;
+        };
+        const accept = (input.getAttribute('accept') || '').split(',').map(s => s.trim()).filter(s => s && s !== 'image/*');
+        if (accept.length && !accept.includes(file.type)) return reject('Nieobsługiwany format pliku');
+        if (input.dataset.maxBytes && file.size > Number(input.dataset.maxBytes)) return reject('Plik jest za duży');
         const reader = new FileReader();
         reader.onloadend = function() {
-            //ustawienie dla wszystkich img o id popup_img_inpt src
-            document.getElementById(`popup_img_inpt_${type}`).src = reader.result;
+            img.src = reader.result;
         }
-        if (file) {
-            reader.readAsDataURL(file);
-        } else {
-            document.getElementById(`popup_img_inpt_${type}`).src = "";
-        }
+        reader.readAsDataURL(file);
     }
 </script>

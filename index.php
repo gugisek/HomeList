@@ -13,7 +13,7 @@ include 'components/landing/ui.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>HomeList – plan dnia, rutyny i wspólne listy dla domu</title>
-    <meta name="description" content="HomeList to listy zadań dla domu i dla siebie: plan dnia w porach, rutyny z seriami, wspólne listy z domownikami i przypomnienia bez spamu.">
+    <meta name="description" content="HomeList to listy zadań dla domu i dla siebie: plan dnia w porach, rutyny z seriami, wspólne listy z domownikami, przypomnienia bez spamu i dane w chmurze – na telefonie, komputerze i tablecie z panelem domowym.">
     <meta name="theme-color" content="#f5f5f3" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#262626" media="(prefers-color-scheme: dark)">
     <meta name="color-scheme" content="light dark">
@@ -27,13 +27,14 @@ include 'components/landing/ui.php';
 </head>
 <body class="lp">
     <div class="lp-sky" aria-hidden="true">
-        <span data-sky-layer="green"></span><span data-sky-layer="amber"></span><span data-sky-layer="orange"></span><span data-sky-layer="indigo"></span><span data-sky-layer="gray"></span>
+        <span data-sky-layer="green"></span><span data-sky-layer="amber"></span><span data-sky-layer="orange"></span><span data-sky-layer="indigo"></span><span data-sky-layer="sky"></span><span data-sky-layer="gray"></span>
     </div>
     <main>
         <?php include 'components/landing/hero.php'; ?>
         <?php include 'components/landing/morning.php'; ?>
         <?php include 'components/landing/together.php'; ?>
         <?php include 'components/landing/evening.php'; ?>
+        <?php include 'components/landing/everywhere.php'; ?>
         <?php include 'components/landing/anytime.php'; ?>
     </main>
     <?php include 'components/landing/finale.php'; ?>

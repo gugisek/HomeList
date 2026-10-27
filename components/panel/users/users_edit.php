@@ -2,6 +2,7 @@
 <?php
 include "../../../scripts/conn_db.php";
 require_once __DIR__.'/../../../scripts/users/user_admin_lib.php';
+require_once __DIR__.'/../../../scripts/users/avatar_lib.php';
 $id = (int)($_GET['id'] ?? 0);
 $stmt = $conn->prepare('SELECT users.*, (SELECT is_enabled FROM user_two_factor_settings WHERE user_id = users.id) AS tfa FROM users WHERE id = ?');
 $stmt->bind_param('i', $id);
@@ -20,7 +21,7 @@ $input = 'hl-input';
 $label = 'hl-label';
 $dis = $can_edit ? '' : 'disabled';
 ?>
-<form action="scripts/users/edit.php" method="POST" enctype="multipart/form-data">
+<form action="scripts/users/edit.php" method="POST" enctype="multipart/form-data" class="sm:w-[540px] max-w-full">
     <input type="hidden" name="id" value="<?=$id?>">
     <div class="-mt-4">
         <h1 class="hl-popup-title">Edytuj użytkownika</h1>
@@ -28,11 +29,24 @@ $dis = $can_edit ? '' : 'disabled';
             <?=$can_edit ? 'Edytujesz profil użytkownika: ' . $e($u['name'] . ' ' . $u['sur_name']) . '.' : 'Podgląd – nie masz uprawnień do edycji tego konta.'?>
         </p>
     </div>
+    <div id="usr_tabs" data-id="<?=$id?>" class="mt-4 -mx-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div class="inline-flex rounded-full bg-gray-100 dark:bg-white/5 p-1 text-xs sm:text-sm font-medium whitespace-nowrap">
+            <?php foreach (['profile' => 'Profil', 'activity' => 'Aktywność', 'security' => 'Bezpieczeństwo', 'notifications' => 'Powiadomienia'] as $k => $t): ?>
+            <button type="button" id="usr_tab_<?=$k?>" onclick="usrTab('<?=$k?>')" class="usr-tab px-3 sm:px-4 py-1.5 rounded-full active:scale-95 duration-150 <?=$k === 'profile' ? 'bg-white dark:bg-[#3d3d3d] shadow text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'?>"><?=$t?></button>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php foreach (['activity', 'security', 'notifications'] as $k): ?>
+    <div id="usr_panel_<?=$k?>" class="usr-panel hidden mt-4"></div>
+    <?php endforeach; ?>
+
+    <div id="usr_panel_profile" class="usr-panel">
     <div class="mt-4 flex flex-col items-center justify-center">
         <label for="photo_img" class="h-24 w-24 flex-shrink-0 hover:scale-105 hover:shadow-xl duration-150 active:scale-95 cursor-pointer rounded-full">
             <img id="popup_img_inpt_photo_img" class="h-24 w-24 aspect-square rounded-full object-cover border border-black/10" src="img/users_images/<?=$e($img)?>" alt="">
         </label>
-        <input onchange="imgPrevProduct('photo_img')" type="file" accept="image/*" name="photo_img" id="photo_img" class="hidden" <?=$dis?>>
+        <input onchange="imgPrevProduct('photo_img')" type="file" <?=hl_avatar_input_attrs()?> name="photo_img" id="photo_img" class="hidden" <?=$dis?>>
+        <?php if ($can_edit): ?><p class="mt-2 text-xs text-gray-400 dark:text-gray-500"><?=$e(hl_avatar_rules())?></p><?php endif; ?>
     </div>
 
     <div class="mt-4 flex md:flex-row flex-col gap-2">
@@ -125,4 +139,30 @@ $dis = $can_edit ? '' : 'disabled';
         <button type="button" onclick="popupUsersDelete()" class="hl-btn hl-btn-danger sm:flex-1">Usuń konto</button>
         <?php endif; ?>
     </div>
+    </div>
 </form>
+
+<script>
+function usrTab(tab) {
+    document.querySelectorAll('.usr-tab').forEach(function (b) {
+        var on = b.id === 'usr_tab_' + tab;
+        b.classList.toggle('bg-white', on); b.classList.toggle('dark:bg-[#3d3d3d]', on); b.classList.toggle('shadow', on);
+        b.classList.toggle('text-gray-900', on); b.classList.toggle('dark:text-gray-100', on);
+        b.classList.toggle('text-gray-500', !on); b.classList.toggle('dark:text-gray-400', !on);
+    });
+    document.querySelectorAll('.usr-panel').forEach(function (p) { p.classList.toggle('hidden', p.id !== 'usr_panel_' + tab); });
+    var panel = document.getElementById('usr_panel_' + tab);
+    var scroller = panel.closest('.overflow-y-auto');
+    if (scroller) scroller.scrollTop = 0;
+    if (tab === 'profile' || panel.dataset.loaded) return;
+    panel.dataset.loaded = '1';
+    panel.innerHTML = '<div class="animate-pulse space-y-2"><div class="grid grid-cols-3 gap-2"><div class="h-16 rounded-2xl bg-gray-200 dark:bg-white/10"></div><div class="h-16 rounded-2xl bg-gray-200 dark:bg-white/10"></div><div class="h-16 rounded-2xl bg-gray-200 dark:bg-white/10"></div></div><div class="h-32 rounded-2xl bg-gray-200 dark:bg-white/10"></div><div class="h-48 rounded-2xl bg-gray-200 dark:bg-white/10"></div></div>';
+    fetch('components/panel/users/users_info.php?id=' + document.getElementById('usr_tabs').dataset.id + '&tab=' + tab)
+        .then(function (r) { if (!r.ok) throw r; return r.text(); })
+        .then(function (html) { panel.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML; })
+        .catch(function () {
+            delete panel.dataset.loaded;
+            panel.innerHTML = '<p class="py-6 text-center text-sm text-gray-400">Nie udało się wczytać danych.</p>';
+        });
+}
+</script>

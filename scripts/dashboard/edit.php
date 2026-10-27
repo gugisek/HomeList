@@ -26,6 +26,7 @@ if (!$row_old) {
 
 $cols = ['title' => $name, 'description' => $description, 'deadline_date' => $deadline, 'link_url' => $link_url];
 $routine_changed = false;
+$mute_changed = false;
 
 // rutyna: pola powtarzania (porównanie z poprzednimi wartościami, żeby wykryć zmiany)
 if ($row_old['list_type'] === 'routine') {
@@ -40,10 +41,25 @@ if ($row_old['list_type'] === 'routine') {
     }
     $cols = array_merge($cols, $routine_cols);
     $cols['deadline_date'] = $row_old['deadline_date'];
+
+    // przypomnienia push (per użytkownik) – zapis od razu, niezależnie od reszty pól
+    if (isset($_POST['push_mute'])) {
+        $mute_old = (bool)mysqli_num_rows(mysqli_query($conn, "SELECT 1 FROM push_mute WHERE user_id='$user_id' AND element_id='$element_id'"));
+        $mute_new = !empty($_POST['push_mute']);
+        if ($mute_old !== $mute_new) {
+            $mute_changed = true;
+            mysqli_query($conn, $mute_new
+                ? "INSERT IGNORE INTO push_mute (user_id, element_id) VALUES ('$user_id', '$element_id')"
+                : "DELETE FROM push_mute WHERE user_id='$user_id' AND element_id='$element_id'");
+        }
+    }
 }
 
 if ($row_old['title'] === $name && (string)$row_old['description'] === $description && (string)$row_old['deadline_date'] === (string)$cols['deadline_date']
     && (string)$row_old['link_url'] === (string)$link_url && !$routine_changed) {
+    if ($mute_changed) {
+        hl_json_exit('success', $mute_new ? 'Nie będziemy przypominać o tej rutynie' : 'Przypomnienia o tej rutynie włączone');
+    }
     hl_json_exit('warning', 'Wprowadzono te same dane');
 }
 

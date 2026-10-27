@@ -347,6 +347,31 @@
         }, { threshold: .35 }).observe(lock);
     }
 
+    /* ---------- Wszędzie: odhaczenie na jednym ekranie trafia na drugi ---------- */
+    const syncFeeds = $$('[data-sync]');
+    const devices = $('[data-devices]');
+    syncFeeds.forEach(feed => feed.addEventListener('click', (e) => {
+        // stan klikniętej karty przełączył już handler [data-feed] – tu tylko kopia na pozostałe ekrany
+        const li = e.target.closest('.lp-item[data-key]');
+        if (!li) return;
+        setTimeout(() => {
+            const done = li.classList.contains('is-done');
+            syncFeeds.filter(f => f !== feed).forEach(f => {
+                const twin = $('.lp-item[data-key="' + li.dataset.key + '"]', f);
+                if (!twin || twin.classList.contains('is-done') === done) return;
+                toggleItem(twin);
+                twin.classList.remove('is-synced');
+                void twin.offsetWidth;
+                twin.classList.add('is-synced');
+            });
+            if (devices) {
+                devices.classList.remove('is-syncing');
+                void devices.offsetWidth;
+                devices.classList.add('is-syncing');
+            }
+        }, reduced ? 0 : 450);
+    }));
+
     /* ---------- Kiedykolwiek: suwak jasny / ciemny ---------- */
     const cmp = $('[data-compare]');
     if (cmp) {

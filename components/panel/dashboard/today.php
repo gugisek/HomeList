@@ -10,6 +10,8 @@ $user_id = (int)$_SESSION['login_id'];
 $today = date('Y-m-d');
 $date = hl_valid_date($_GET['date'] ?? '') ? $_GET['date'] : $today;
 
+include_once __DIR__.'/../../../scripts/sync/sync_lib.php';
+$sync_tag = hl_sync_tag($conn, $user_id, 'today');
 $feed = hl_feed($conn, $user_id, $date, $today);
 $parts = hl_parts();
 $strip_from = hl_add_days($date, -7);
@@ -23,6 +25,7 @@ $all_done = $feed['total'] > 0 && $feed['done'] === $feed['total'];
 $is_empty = $feed['total'] === 0 && !$feed['overdue'] && !$feed['late'];
 $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-[#1c1c1e] hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-95 duration-150 cursor-pointer';
 ?>
+<?=$sync_tag?>
 <section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/70 dark:to-[#3d3d3d]/0">
     <div class="flex items-center justify-between gap-3">
         <div class="min-w-0">

@@ -1,4 +1,5 @@
-<?php if (!isset($acc)) exit; // część account.php ?>
+<?php if (!isset($acc)) exit; // część account.php
+require_once __DIR__ . '/../../../scripts/users/avatar_lib.php'; ?>
 <p class="<?=$acc_title?>">Dane osobowe</p>
 <p class="<?=$acc_subtitle?>">Informacje widoczne dla domowników na wspólnych listach.</p>
 
@@ -10,10 +11,11 @@
                 <?=$acc_icon('m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125', 'size-3.5')?>
             </span>
         </label>
-        <input onchange="imgPrevProduct('photo_img')" type="file" accept="image/*" name="photo_img" id="photo_img" class="hidden">
+        <input onchange="imgPrevProduct('photo_img')" type="file" <?=hl_avatar_input_attrs()?> name="photo_img" id="photo_img" class="hidden">
         <div class="min-w-0">
             <p class="font-medium text-lg text-black dark:text-gray-200 font-[poppins] truncate"><?=$acc_e(trim($acc['name'] . ' ' . $acc['sur_name']))?></p>
             <p class="text-xs text-gray-500 dark:text-gray-400">Kliknij zdjęcie, aby je zmienić.</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500"><?=$acc_e(hl_avatar_rules())?></p>
         </div>
     </div>
     <div class="mt-5 grid sm:grid-cols-2 gap-3">

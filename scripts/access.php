@@ -90,6 +90,27 @@ if (!function_exists('hl_list_access')) {
         return '<img src="img/users_images/'.htmlspecialchars($file, ENT_QUOTES).'" alt="" loading="lazy" class="'.$class.' flex-none rounded-full object-cover border border-black/10 dark:border-white/10">';
     }
 
+    // monogram i stały kolor listy – jak w bocznej nawigacji (nav_rail.php)
+    function hl_list_mono(string $name): string
+    {
+        $up = fn($s) => function_exists('mb_strtoupper') ? mb_strtoupper($s, 'UTF-8') : strtoupper($s);
+        $low = fn($s) => function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+        $words = preg_split('/\s+/u', trim($name), -1, PREG_SPLIT_NO_EMPTY);
+        if (!$words) return '?';
+        $first = preg_split('//u', $words[0], -1, PREG_SPLIT_NO_EMPTY);
+        if (count($words) > 1) {
+            $second = preg_split('//u', $words[1], -1, PREG_SPLIT_NO_EMPTY);
+            return $up($first[0].$second[0]);
+        }
+        return $up($first[0]).$low($first[1] ?? '');
+    }
+
+    function hl_list_tone(int $listId): string
+    {
+        $tones = ['#4ade80', '#fbbf24', '#38bdf8', '#fb7185', '#818cf8', '#fb923c', '#2dd4bf', '#c084fc'];
+        return $tones[$listId % count($tones)];
+    }
+
     function hl_json_exit(string $status, string $message, array $extra = []): void
     {
         echo json_encode(array_merge(['status' => $status, 'message' => $message], $extra));

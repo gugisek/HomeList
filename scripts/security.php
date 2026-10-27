@@ -36,7 +36,7 @@ if (!function_exists('security_deny')) {
         global $conn;
         $scriptPath = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
         $isFragment = strpos($scriptPath, '/components/') !== false;
-        $status = $reason === 'forbidden' || $reason === 'csrf' ? 403 : 401;
+        $status = $reason === 'too_large' ? 413 : ($reason === 'forbidden' || $reason === 'csrf' ? 403 : 401);
 
         if ($destroySession) {
             if (!empty($_SESSION['logged'])) {
@@ -74,6 +74,10 @@ if (!function_exists('security_deny')) {
             exit();
         }
 
+        // link z kodu QR (panel.php?join=KOD) – kod czeka w cookie, panel_body.php dokończy dołączanie po zalogowaniu
+        if ($destroySession && preg_match('/^[A-Za-z0-9]{6}$/', (string)($_GET['join'] ?? '')) && !headers_sent()) {
+            setcookie('hl_join', strtoupper($_GET['join']), ['expires' => time() + 1800, 'path' => '/', 'samesite' => 'Lax']);
+        }
         // klasyczny formularz albo strona – wracamy z komunikatem
         if (!$destroySession) {
             $_SESSION['alert'] = $message;
@@ -90,6 +94,25 @@ if (!function_exists('security_deny')) {
         $scriptDir = str_replace('\\', '/', dirname((string)realpath($_SERVER['SCRIPT_FILENAME'] ?? '')));
         $rel = trim(substr($scriptDir, strlen($appRoot)), '/');
         return $rel === '' ? '' : str_repeat('../', substr_count($rel, '/') + 1);
+    }
+
+    // Wartość z php.ini ("40M", "2G", "512K") w bajtach; 0/brak = bez limitu
+    function hl_ini_bytes(string $key): int
+    {
+        $v = trim((string)ini_get($key));
+        if ($v === '' || (int)$v <= 0) return PHP_INT_MAX;
+        $n = (int)$v;
+        switch (strtolower(substr($v, -1))) {
+            case 'g': $n *= 1024;
+            case 'm': $n *= 1024;
+            case 'k': $n *= 1024;
+        }
+        return $n;
+    }
+
+    function hl_format_mb(int $bytes): string
+    {
+        return rtrim(rtrim(number_format($bytes / 1048576, 1, ',', ''), '0'), ',') . ' MB';
     }
 
     // Wymagany poziom uprawnień do modułu w trakcie skryptu (np. dopiero po odczytaniu akcji)
@@ -123,6 +146,13 @@ if (!defined('HL_SECURITY_PASSED')) {
     }
     hl_apply_user_session($securityUser);
     unset($securityUser);
+
+    // żądanie większe niż post_max_size – PHP odrzuca całe $_POST/$_FILES (razem z tokenem CSRF),
+    // więc bez tego użytkownik dostałby mylący komunikat o tokenie zamiast o rozmiarze pliku
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && empty($_POST) && empty($_FILES)
+        && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > hl_ini_bytes('post_max_size')) {
+        security_deny('too_large', 'Przesłany plik jest za duży (maks. ' . hl_format_mb(hl_ini_bytes('post_max_size')) . ').', false);
+    }
 
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && empty($SECURITY_SKIP_CSRF) && !csrf_verify()) {
         // aktualny token w odpowiedzi – wrapper fetch (csrf_js.php) podmienia nim stary i ponawia żądanie raz

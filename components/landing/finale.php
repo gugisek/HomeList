@@ -24,6 +24,7 @@
         <a href="#rano" data-nav="rano"><?=lp_icon('sunrise', 'lp-i-sm', '1.8')?><em>Pory dnia</em></a>
         <a href="#razem" data-nav="razem"><?=lp_icon('users', 'lp-i-sm', '1.8')?><em>Razem</em></a>
         <a href="#wieczor" data-nav="wieczor"><?=lp_icon('fire', 'lp-i-sm', '1.8')?><em>Rutyny</em></a>
+        <a href="#wszedzie" data-nav="wszedzie"><?=lp_icon('cloud', 'lp-i-sm', '1.8')?><em>Wszędzie</em></a>
         <a href="#reszta" data-nav="reszta"><?=lp_icon('inbox', 'lp-i-sm', '1.8')?><em>Reszta</em></a>
     </div>
     <a href="login.php" class="lp-glass lp-dock-more" title="Zaloguj się"><?=lp_icon('login', 'lp-i', '1.6')?></a>

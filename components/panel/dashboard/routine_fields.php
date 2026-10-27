@@ -12,6 +12,8 @@ $rf_start = !empty($rf['recurrence_start']) && $rf['recurrence_start'] !== '0000
 $rf_part = isset($rf['day_part']) ? (int)$rf['day_part'] : 1;
 $rf_time = !empty($rf['plan_time']) ? substr($rf['plan_time'], 0, 5) : '';
 $rf_shared = (int)($rf['shared_done'] ?? 0);
+// przypomnienia push – wyciszenie jest per użytkownik (push_mute), nie per rutyna
+$rf_mute = !empty($rf['id']) && mysqli_num_rows(mysqli_query($conn, "SELECT 1 FROM push_mute WHERE user_id='".(int)$_SESSION['login_id']."' AND element_id='".(int)$rf['id']."'")) ? 1 : 0;
 $rf_label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-4';
 $rf_input = 'rounded-xl border-none bg-gray-100/80 dark:bg-[#3d3d3d] focus:bg-white dark:focus:bg-[#3d3d3d] focus:ring-2 focus:ring-green-400 focus:outline-none transition-all px-3 py-2 text-sm font-medium text-gray-800 dark:text-gray-300';
 $types = ['daily' => 'Codziennie', 'weekly' => 'Dni tyg.', 'interval' => 'Co X dni', 'monthly' => 'Dni mies.'];
@@ -20,6 +22,7 @@ $week_names = [1 => 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
 <input type="hidden" id="<?=$P?>_element_recurrence_type" value="<?=$rf_type?>">
 <input type="hidden" id="<?=$P?>_element_day_part" value="<?=$rf_part?>">
 <input type="hidden" id="<?=$P?>_element_shared_done" value="<?=$rf_shared?>">
+<input type="hidden" id="<?=$P?>_element_push_mute" value="<?=$rf_mute?>">
 
 <label class="<?=$rf_label?>">Powtarzanie</label>
 <div class="grid grid-cols-4 gap-1.5">
@@ -73,6 +76,20 @@ $week_names = [1 => 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
     </button>
 </div>
 
+<label class="<?=$rf_label?>">Przypomnienia</label>
+<div class="grid grid-cols-2 gap-2">
+    <button type="button" onclick="rfMute(this, '<?=$P?>', 0)" class="<?=hl_chip_class($rf_mute === 0)?> text-left rounded-2xl p-3 active:scale-95 duration-150">
+        <?=hl_icon('bell', 'size-5')?>
+        <span class="mt-1.5 block text-sm font-semibold">Przypominaj</span>
+        <span class="block text-xs opacity-60">Powiadomienie, gdy rutyna czeka</span>
+    </button>
+    <button type="button" onclick="rfMute(this, '<?=$P?>', 1)" class="<?=hl_chip_class($rf_mute === 1)?> text-left rounded-2xl p-3 active:scale-95 duration-150">
+        <?=hl_icon('bell-off', 'size-5')?>
+        <span class="mt-1.5 block text-sm font-semibold">Bez przypomnień</span>
+        <span class="block text-xs opacity-60">Dotyczy tylko Ciebie</span>
+    </button>
+</div>
+
 <script>
 function rfType(el, p, type) {
     hlChipSelect(el);
@@ -91,6 +108,10 @@ function rfPart(el, p, part) {
 function rfShared(el, p, value) {
     hlChipSelect(el);
     document.getElementById(p + '_element_shared_done').value = value;
+}
+function rfMute(el, p, value) {
+    hlChipSelect(el);
+    document.getElementById(p + '_element_push_mute').value = value;
 }
 // dopisuje pola rutyny do FormData, zwraca komunikat błędu albo null
 function rfCollect(p, fd) {
@@ -112,6 +133,7 @@ function rfCollect(p, fd) {
     fd.append('day_part', val('day_part'));
     fd.append('plan_time', val('plan_time'));
     fd.append('shared_done', val('shared_done'));
+    fd.append('push_mute', val('push_mute'));
     return null;
 }
 </script>

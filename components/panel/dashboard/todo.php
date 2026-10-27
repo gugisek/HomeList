@@ -22,11 +22,18 @@ if ($list == "archive"){
   $list_type = $row['list_type'];
   $list_shared = hl_list_is_shared($conn, $list_id);
 }
+include_once '../../../scripts/sync/sync_lib.php';
+echo hl_sync_tag($conn, (int)$_SESSION['login_id'], $list == "archive" ? 'archive' : 'list:'.$list_id);
 ?>
 <section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/70 dark:to-[#3d3d3d]/0">
     <div class="flex items-center justify-between">
+        <?php if ($list == "archive"): ?>
         <div class="flex items-center gap-3 min-w-0 text-gray-400">
             <span class="font-medium text-2xl text-black dark:text-white font-[poppins] truncate"><?=$list_full_name?></span>
+        <?php else: ?>
+        <div onclick="openPopupInfoLists('<?=$list_id?>')" role="button" title="Szczegóły i udostępnianie listy" class="group flex items-center gap-3 min-w-0 -ml-2 pl-2 pr-3 py-1 rounded-2xl text-gray-400 cursor-pointer hover:bg-black/[0.04] dark:hover:bg-white/5 active:scale-[0.98] duration-150">
+            <span class="font-medium text-2xl text-black dark:text-white font-[poppins] truncate"><?=$list_full_name?></span>
+        <?php endif; ?>
             <?php if (!empty($list_shared)):
                 $members = hl_list_members($conn, $list_id);
                 $shown = array_slice($members, 0, 4);
@@ -46,6 +53,9 @@ if ($list == "archive"){
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
                 Rutyny
             </span>
+            <?php endif; ?>
+            <?php if ($list != "archive"): ?>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="size-4 flex-none -ml-1 text-gray-300 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-300 group-hover:translate-y-0.5 duration-150"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
             <?php endif; ?>
         </div>
         <div onclick="openPopupElementAdd('<?=$list_id?>')" title="Dodaj zadanie" class="<?php if($list == "archive"){echo 'hidden ';}?>hl-icon-btn">

@@ -107,8 +107,10 @@ function hl_push_notify($conn, $user_id, $title, $body, $tag, $url = 'panel.php'
     $g = mysqli_real_escape_string($conn, hl_substr($tag, 60));
     $l = mysqli_real_escape_string($conn, $url);
     $ok = 0;
+    $devices = 0;
     $result = mysqli_query($conn, "SELECT id, endpoint FROM push_subscriptions WHERE user_id='$user_id'");
     while ($sub = mysqli_fetch_assoc($result)) {
+        $devices++;
         $sid = (int)$sub['id'];
         // to samo zdarzenie (tag) zastępuje nieodebrane wcześniej
         mysqli_query($conn, "DELETE FROM push_queue WHERE subscription_id='$sid' AND (tag='$g' OR created_at < NOW() - INTERVAL 1 DAY)");
@@ -122,13 +124,19 @@ function hl_push_notify($conn, $user_id, $title, $body, $tag, $url = 'panel.php'
             mysqli_query($conn, "DELETE FROM push_subscriptions WHERE id='$sid'");
         }
     }
+    // historia dla administratora (bez treści); bez migracji migration_push_history.sql po prostu się nie zapisuje
+    if ($devices) {
+        try {
+            mysqli_query($conn, "INSERT INTO push_history (user_id, tag, devices, delivered) VALUES ('$user_id', '$g', '".min($devices, 127)."', '".min($ok, 127)."')");
+        } catch (mysqli_sql_exception $ex) {}
+    }
     return $ok;
 }
 
 function hl_push_defaults() {
     return [
         'enabled' => 1, 'morning_start' => '07:00', 'afternoon_start' => '12:00', 'evening_start' => '17:00', 'day_end' => '21:30',
-        'notify_parts' => 1, 'notify_missed' => 1, 'notify_deadlines' => 1, 'notify_timed' => 1, 'notify_routines' => 1, 'notify_reports' => 1,
+        'notify_parts' => 1, 'notify_missed' => 1, 'notify_deadlines' => 1, 'notify_timed' => 1, 'notify_routines' => 1, 'notify_lists' => 1, 'notify_reports' => 1,
     ];
 }
 
@@ -154,4 +162,18 @@ function hl_push_claim($conn, $user_id, $event_key, $date) {
     $k = mysqli_real_escape_string($conn, $event_key);
     mysqli_query($conn, "INSERT IGNORE INTO push_log (user_id, event_key, ref_date) VALUES ('$user_id', '$k', '$date')");
     return mysqli_affected_rows($conn) === 1;
+}
+
+// czy użytkownik wyłączył powiadomienia o nowych zadaniach na tej liście wspólnej
+function hl_push_list_muted($conn, $user_id, $list_id) {
+    $user_id = (int)$user_id;
+    $list_id = (int)$list_id;
+    return (bool)mysqli_num_rows(mysqli_query($conn, "SELECT 1 FROM push_list_mute WHERE user_id='$user_id' AND list_id='$list_id'"));
+}
+
+// polska odmiana: 1 zadanie, 2–4 zadania, 5+ zadań (12–14 też „zadań”)
+function hl_plural($n, $one, $few, $many) {
+    $n = abs((int)$n);
+    if ($n === 1) return $one;
+    return ($n % 10 >= 2 && $n % 10 <= 4 && ($n % 100 < 12 || $n % 100 > 14)) ? $few : $many;
 }

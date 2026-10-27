@@ -46,6 +46,9 @@ $values = array_values($cols);
 $stmt->bind_param(str_repeat('s', count($values)), ...$values);
 if ($stmt->execute()) {
     $id = $stmt->insert_id;
+    if ($access['list']['list_type'] === 'routine' && !empty($_POST['push_mute'])) {
+        mysqli_query($conn, "INSERT IGNORE INTO push_mute (user_id, element_id) VALUES ('$user_id', '".(int)$id."')");
+    }
 
     //log
     $before = '';
