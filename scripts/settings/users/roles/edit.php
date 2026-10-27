@@ -30,8 +30,8 @@ if (!$changed) {
     hl_admin_back('Nie wprowadzono nowych danych', 'warning');
 }
 
-$stmt = $conn->prepare('UPDATE user_roles SET role = ?, description = ?, dashboard = ?, users = ?, logs = ?, settings = ?, faq = ?, reports = ? WHERE id = ?');
-$stmt->bind_param('ssiiiiiii', $role['role'], $role['description'], $role['dashboard'], $role['users'], $role['logs'], $role['settings'], $role['faq'], $role['reports'], $id);
+$stmt = $conn->prepare('UPDATE user_roles SET role = ?, description = ?, dashboard = ?, users = ?, logs = ?, settings = ?, faq = ?, reports = ?, food = ? WHERE id = ?');
+$stmt->bind_param('ssiiiiiiii', $role['role'], $role['description'], $role['dashboard'], $role['users'], $role['logs'], $role['settings'], $role['faq'], $role['reports'], $role['food'], $id);
 if (!$stmt->execute()) {
     hl_admin_back('Błąd aktualizacji danych', 'error');
 }

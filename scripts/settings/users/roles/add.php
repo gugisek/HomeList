@@ -16,8 +16,8 @@ if (hl_role_name_taken($conn, $role['role'])) {
     hl_admin_back('Rola z taką nazwą już istnieje', 'error');
 }
 
-$stmt = $conn->prepare('INSERT INTO user_roles (role, description, dashboard, users, logs, settings, faq, reports) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-$stmt->bind_param('ssiiiiii', $role['role'], $role['description'], $role['dashboard'], $role['users'], $role['logs'], $role['settings'], $role['faq'], $role['reports']);
+$stmt = $conn->prepare('INSERT INTO user_roles (role, description, dashboard, users, logs, settings, faq, reports, food) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+$stmt->bind_param('ssiiiiiii', $role['role'], $role['description'], $role['dashboard'], $role['users'], $role['logs'], $role['settings'], $role['faq'], $role['reports'], $role['food']);
 if (!$stmt->execute()) {
     hl_admin_back('Błąd aktualizacji danych', 'error');
 }

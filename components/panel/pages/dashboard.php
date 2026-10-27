@@ -24,11 +24,13 @@ include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start()
             const el = container.querySelector(`.list_${id}`);
             if (el) container.appendChild(el);
         });
-        //dla elementów powyżej 3 ukryj je
-        const items = container.querySelectorAll(".lists_main_nav");
+        // na pasku mieszczą się 3 listy (2, gdy jest też ikona Jedzenia) – reszta w menu „więcej”
+        const navBox = document.getElementById("todo-nav");
+        const max = navBox && navBox.dataset.max ? +navBox.dataset.max : 3;
+        const items = container.querySelectorAll(".lists_main_nav:not(.list_food)");
         if (body == "more_nav_body") {
             items.forEach((item, index) => {
-            if (index < 3) {
+            if (index < max) {
                 item.classList.add("hidden");
             } else {
                 item.classList.remove("hidden");
@@ -36,7 +38,7 @@ include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start()
         });
         }else{
         items.forEach((item, index) => {
-            if (index > 2) {
+            if (index >= max) {
                 item.classList.add("hidden");
             } else {
                 item.classList.remove("hidden");
@@ -50,8 +52,11 @@ include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start()
         items.forEach(item => {
             item.classList.remove("border_important");
         });
-        if (items.length > 2) {
-            items[2].classList.add("border_important");
+        // ostatnia lista mieszcząca się na pasku (3, a przy ikonie Jedzenia 2)
+        const navBox = document.getElementById("todo-nav");
+        const max = navBox && navBox.dataset.max ? +navBox.dataset.max : 3;
+        if (items.length >= max) {
+            items[max - 1].classList.add("border_important");
         }
     }
 </script>
@@ -221,6 +226,7 @@ fixRoundedCorners();
         var site = tabSiteFor(localStorage.getItem("current_todo") || 'list=today');
         if (site === 'todo') hlMorphTab();
         else if (site === 'today') hlMorphFeed();
+        else if (site === 'food' && window.hlFood) window.hlFood.refresh();
     }
 
     // powrót z tła / z innej karty / po odzyskaniu sieci – sprawdzamy od razu
@@ -293,6 +299,7 @@ fixRoundedCorners();
         var list = new URLSearchParams(link).get('list');
         if (list === 'today') return 'today';
         if (list === 'settings') return 'settings_app';
+        if (list === 'food') return 'food';
         return 'todo';
     }
 
@@ -311,14 +318,23 @@ fixRoundedCorners();
         }
 
     var tab_list = new URLSearchParams(link).get('list');
+    var from_site = tabSiteFor(localStorage.getItem("current_todo") || '');
+    var seq = window.hlTabSeq = (window.hlTabSeq || 0) + 1;
     document.getElementById("list_hold").value = tab_list;
     hlSyncReset();
+    if (restore_scroll !== 'restore_scroll' && site !== from_site && hlTabSwapPair(site, from_site)) {
+        hlNavHighlight(tab_list);
+        localStorage.setItem("current_todo", link);
+        if (typeof hlRailSync === "function") hlRailSync();
+        return hlTabSwap(site, link, seq);
+    }
     var body = document.getElementById("dashboard_body");
     body.innerHTML = "<div data-aos='fade-up' data-aos-delay='100' class='w-full duartion-150 flex items-center mt-[20vh] justify-center z-[999]'><div class='z-[30] bg-black/90 p-4 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
     const url = "components/panel/dashboard/" + site + ".php?" + link;
     fetch(url)
         .then(response => response.text())
         .then(data => {
+            if (seq !== window.hlTabSeq) return; // w międzyczasie otwarto inną zakładkę
             const parser = new DOMParser();
             const parsedDocument = parser.parseFromString(data, "text/html");
             body.innerHTML = parsedDocument.body.innerHTML;
@@ -370,6 +386,78 @@ fixRoundedCorners();
       activeButtons[i].classList.add("bg-white/15");
         activeButtons[i].classList.add("text-green-400");
     }
+    }
+
+    // zakładki z tym samym nagłówkiem i paskiem dni – między nimi przechodzimy płynnie (hlTabSwap) zamiast przez spinner
+    function hlTabSwapPair(a, b) {
+        var days = ['today', 'food'];
+        return days.indexOf(a) >= 0 && days.indexOf(b) >= 0 && !!document.querySelector('#dashboard_body [data-vt]');
+    }
+
+    // przejście bez przeładowania: stary widok zostaje, nowy ładuje się w tle i podmienia przez View Transitions.
+    // Elementy z data-vt (tytuł, podtytuł, akcje, pasek dni) mają w obu widokach to samo miejsce, więc przenikają się w miejscu –
+    // na pasku zmieniają się tylko wskaźniki pod dniami; reszta treści łagodnie wjeżdża (style .hl-vt w app.css).
+    function hlTabSwap(site, link, seq) {
+        var body = document.getElementById("dashboard_body");
+        var root = document.documentElement;
+        var text = (scope, key) => (scope.querySelector('[data-vt="' + key + '"]') || {}).textContent;
+        var before = { title: text(body, 'title'), sub: text(body, 'sub') };
+        var wait = setTimeout(() => body.classList.add('hl-tab-wait'), 250);
+        var done = () => { clearTimeout(wait); body.classList.remove('hl-tab-wait'); };
+        return fetch("components/panel/dashboard/" + site + ".php?" + link)
+            .then(response => response.text())
+            .then(data => {
+                if (seq !== window.hlTabSeq) return;
+                var parsedDocument = new DOMParser().parseFromString(data, "text/html");
+                parsedDocument.querySelectorAll("[data-aos]").forEach(el => el.removeAttribute("data-aos"));
+                var update = () => {
+                    done();
+                    // dzień-kotwica: wybrany dzień starego paska; nowy pasek ustawi go w tym samym miejscu (today.php / food.js)
+                    var strip = body.querySelector('[data-vt="strip"]');
+                    var sel = strip && strip.querySelector('[data-selected], .is-sel');
+                    window.feedStripAnchor = sel ? { date: sel.dataset.date, x: sel.getBoundingClientRect().left - strip.getBoundingClientRect().left } : null;
+                    body.innerHTML = parsedDocument.body.innerHTML;
+                    root.scrollTo({ top: 0, behavior: 'instant' });
+                    window.hlTabReady = null;
+                    document.querySelectorAll(".popup-script").forEach(script => script.remove());
+                    parsedDocument.querySelectorAll("script").forEach(script => {
+                        var scriptElement = document.createElement("script");
+                        scriptElement.textContent = script.textContent;
+                        scriptElement.classList.add("popup-script");
+                        document.body.appendChild(scriptElement);
+                    });
+                    if (localStorage.getItem("current_todo") === link) hlSyncAdopt(parsedDocument);
+                    var ready = Promise.resolve(window.hlTabReady).catch(() => {});
+                    return Promise.race([ready, new Promise(resolve => setTimeout(resolve, 1500))]).then(() => {
+                        window.feedStripAnchor = null;
+                        // ten sam tekst (np. data w podtytule) ma stać w miejscu, a nie mrugać
+                        ['title', 'sub'].forEach(key => root.classList.toggle('hl-vt-same-' + key, text(body, key) === before[key]));
+                    });
+                };
+                var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (!document.startViewTransition || calm || document.visibilityState !== 'visible') {
+                    return Promise.resolve(update()).then(() => {
+                        if (!calm && body.animate) body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
+                    });
+                }
+                root.classList.add('hl-vt');
+                // szklana nawigacja nad treścią: własne warstwy, inaczej warstwa treści by ją zasłoniła (styl hl-glass-N w app.css)
+                // tylko faktycznie widoczne – schowany toast (opacity 0) dostałby warstwę z rozmyciem w pustym miejscu
+                var shown = g => g.checkVisibility ? g.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : g.getClientRects().length > 0;
+                var glass = [...document.querySelectorAll('.liquid-glass')].filter(g => !body.contains(g) && shown(g)).slice(0, 6);
+                glass.forEach((g, i) => { g.style.viewTransitionName = 'hl-glass-' + i; });
+                var transition = document.startViewTransition(update);
+                return transition.finished.catch(() => {}).then(() => {
+                    root.classList.remove('hl-vt', 'hl-vt-same-title', 'hl-vt-same-sub');
+                    glass.forEach(g => { g.style.viewTransitionName = ''; });
+                });
+            })
+            .catch(error => {
+                done();
+                if (seq !== window.hlTabSeq) return;
+                console.error('Błąd przejścia między zakładkami:', error);
+                openDetailTab(site, link);
+            });
     }
 
     function openDetailTabReload() {

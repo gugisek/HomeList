@@ -14,7 +14,7 @@ include_once __DIR__.'/../../../scripts/sync/sync_lib.php';
 $sync_tag = hl_sync_tag($conn, $user_id, 'today');
 $feed = hl_feed($conn, $user_id, $date, $today);
 $parts = hl_parts();
-$strip_from = hl_add_days($date, -7);
+$strip_from = hl_add_days($date, -14);
 $strip_to = hl_add_days($date, 21);
 $counts = hl_day_counts($conn, $user_id, $strip_from, $strip_to, $today);
 
@@ -23,18 +23,44 @@ $subtitle = in_array($title, ['Dziś', 'Jutro', 'Wczoraj']) ? hl_long_date($date
 $pct = $feed['total'] ? round($feed['done'] / $feed['total'] * 100) : 0;
 $all_done = $feed['total'] > 0 && $feed['done'] === $feed['total'];
 $is_empty = $feed['total'] === 0 && !$feed['overdue'] && !$feed['late'];
+
+// Jedzenie: kapsułka „zostało kcal” w nagłówku (moduł włączony i skrót nie wyłączony w koncie)
+require_once __DIR__.'/../../../scripts/food/food_lib.php';
+$food_pill = null;
+$food_set = hl_food_settings($conn, $user_id);
+if ($food_set['enabled'] && $food_set['show_on_today']) {
+    $food_day = hl_food_day($conn, $user_id, $date);
+    $food_goal = $food_day['goal'];
+    $food_eaten = $food_day['total']['kcal'];
+    $food_left = $food_goal ? $food_goal['kcal'] - $food_eaten : null;
+    $food_pill = [
+        'pct' => $food_goal ? min(100, round($food_eaten / $food_goal['kcal'] * 100)) : 0,
+        'over' => $food_left !== null && $food_left < -$food_goal['kcal'] * 0.05,
+        'num' => number_format(abs($food_left ?? $food_eaten), 0, ',', ' '),
+        'label' => $food_left === null ? 'kcal zjedzone' : ($food_left >= 0 ? 'kcal zostało' : 'kcal ponad cel'),
+    ];
+}
 $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-[#1c1c1e] hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-95 duration-150 cursor-pointer';
 ?>
 <?=$sync_tag?>
-<section id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="sticky top-0 z-[1] pt-6 bg-gradient-to-b -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 from-[#fdfdfd] via-[#fdfdfd]/70 via-70% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/70 dark:to-[#3d3d3d]/0">
-    <div class="flex items-center justify-between gap-3">
+<?php /* nagłówek i pasek dni mają tę samą geometrię co w food.php – przejście Dziś ↔ Jedzenie (hlTabSwap) podmienia tylko to, co się różni */ ?>
+<div id="sticky_nav_body" data-aos="fade-up" data-aos-delay="100" class="hl-page-head -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 bg-gradient-to-b from-[#fdfdfd] via-[#fdfdfd]/80 via-70% to-white/0 dark:from-[#3d3d3d] dark:via-[#3d3d3d]/80 dark:to-[#3d3d3d]/0">
         <div class="min-w-0">
-            <span class="font-medium text-2xl text-black dark:text-white font-[poppins]"><?=$title?></span>
-            <p class="text-sm text-gray-400 first-letter:uppercase truncate"><?=$subtitle?></p>
+            <h1 class="hl-title" data-vt="title"><?=$title?></h1>
+            <p class="hl-sub truncate" data-vt="sub"><?=$subtitle?></p>
         </div>
-        <div class="flex items-center gap-1 flex-none">
+        <div class="flex items-center gap-1 flex-none" data-vt="actions">
             <?php if ($date !== $today): ?>
             <button onclick="feedGoTo('<?=$today?>')" class="text-xs font-medium px-3 py-1.5 rounded-full text-green-500 ring-1 ring-green-400/60 hover:bg-green-400 hover:text-white active:scale-95 duration-150">Dziś</button>
+            <?php endif; ?>
+            <?php if ($food_pill): ?>
+            <button type="button" onclick="openDetailTab('food', 'list=food<?=$date !== $today ? '&date='.$date : ''?>')" class="fd-kpill" title="Jedzenie" aria-label="Jedzenie: <?=$food_pill['num']?> <?=$food_pill['label']?>">
+                <svg viewBox="0 0 36 36" class="fd-kpill-ring" aria-hidden="true">
+                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke-width="4" style="stroke: var(--fd-track)" />
+                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="<?=$food_pill['pct']?> 100" style="stroke: <?=$food_pill['over'] ? 'var(--fd-over)' : 'var(--fd-k)'?>" />
+                </svg>
+                <span class="fd-kpill-text"><b class="fd-num"><?=$food_pill['num']?></b><span><?=$food_pill['label']?></span></span>
+            </button>
             <?php endif; ?>
             <div id="feed-progress" class="relative h-11 w-11 <?=$feed['total'] ? '' : 'hidden'?>" title="Postęp dnia">
                 <svg viewBox="0 0 36 36" class="h-11 w-11 -rotate-90">
@@ -47,11 +73,10 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
                 <?=hl_icon('plus', 'size-6', '2')?>
             </div>
         </div>
-    </div>
-</section>
+</div>
 
 <section class="mt-2" data-aos="fade-up" data-aos-delay="120">
-    <div id="day-strip" class="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pt-1 pb-5 -mb-4">
+    <div id="day-strip" data-vt="strip" class="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pt-1 pb-5 -mb-4">
         <?php
         foreach ($counts as $d => $c) {
             $sel = $d === $date;
@@ -237,9 +262,10 @@ function pushBannerDismiss() {
         const s = strip.getBoundingClientRect(), r = sel.getBoundingClientRect();
         strip.scrollTo({ left: strip.scrollLeft + r.left - s.left - s.width / 2 + r.width / 2, behavior: behavior });
     };
-    if (anchor && anchor.date === sel.dataset.date) {
-        // zmiana dnia: pasek ma nowy zakres dat, więc ustawiamy wybrany dzień tam, gdzie był przed podmianą, i płynnie centrujemy
-        const s = strip.getBoundingClientRect(), r = sel.getBoundingClientRect();
+    const pinned = anchor && strip.querySelector('[data-date="' + anchor.date + '"]');
+    if (pinned) {
+        // zmiana dnia / przejście z Jedzenia: pasek ma nowy zakres dat, więc ustawiamy dzień-kotwicę tam, gdzie był przed podmianą, i płynnie centrujemy
+        const s = strip.getBoundingClientRect(), r = pinned.getBoundingClientRect();
         strip.scrollTo({ left: strip.scrollLeft + r.left - s.left - anchor.x, behavior: 'instant' });
         requestAnimationFrame(() => center('smooth'));
     } else {

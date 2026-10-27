@@ -1,5 +1,5 @@
 <?php
-// Lekkie sprawdzenie, czy widok się zmienił (GET ?scope=list:ID|today|archive) – zwraca tylko tokeny.
+// Lekkie sprawdzenie, czy widok się zmienił (GET ?scope=list:ID|today|archive|food) – zwraca tylko tokeny.
 // Wywoływane cyklicznie przez hlSync (pages/dashboard.php), więc żadnych logów ani zapisów.
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
@@ -14,7 +14,7 @@ $user_id = (int)$_SESSION['login_id'];
 session_write_close();
 
 $scope = (string)($_GET['scope'] ?? '');
-if (!preg_match('/^(list:\d+|today|archive)$/', $scope)) hl_sync_bad();
+if (!preg_match('/^(list:\d+|today|archive|food)$/', $scope)) hl_sync_bad();
 
 $state = hl_sync_state($conn, $user_id, $scope);
 echo json_encode(['status' => 'success', 't' => $state['token'], 'n' => $state['nav'], 's' => $state['shared'] ? 1 : 0]);

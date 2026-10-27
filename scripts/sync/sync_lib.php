@@ -3,7 +3,7 @@
 // (COUNT / MAX(id) / MAX(updated_at)). Klient porównuje go co kilka sekund (scripts/sync/state.php)
 // i dopiero przy różnicy pobiera widok od nowa – serwer nie renderuje niczego „na zapas”.
 //
-// Zakresy (scope): list:ID | today | archive. Token zmienia się przy dodaniu / edycji / usunięciu zadania,
+// Zakresy (scope): list:ID | today | archive | food. Token zmienia się przy dodaniu / edycji / usunięciu zadania,
 // zmianie planu dnia, odhaczeniu rutyny, zmianie nazwy listy i składu jej członków, a także o północy.
 // Kolumny updated_at dodaje database/migration_sync.sql – bez niej wykrywane są tylko dodania i usunięcia.
 
@@ -59,6 +59,17 @@ if (!function_exists('hl_sync_state')) {
         }
         $nav = substr(md5(json_encode([array_map(fn($l) => [$l['name'], $l['full_name'], $l['list_type']], $lists), $members])), 0, 16);
 
+        // Jedzenie: prywatny dziennik (zmiany z innego urządzenia), cel i ustawienia modułu
+        if ($scope === 'food') {
+            $parts = [
+                hl_sync_agg($conn, 'SELECT COUNT(*), MAX(id), MAX(updated_at) FROM food_log WHERE user_id = ?', [$userId], 'i', [$userId]),
+                hl_sync_agg($conn, 'SELECT COUNT(*), MAX(id), MAX(kcal + protein + fat + carbs) FROM food_goals WHERE user_id = ?', [$userId], 'i', [$userId]),
+                hl_sync_agg($conn, 'SELECT enabled, meals FROM food_settings WHERE user_id = ?', [$userId], 'i', [$userId]),
+                date('Y-m-d'),
+            ];
+            return ['token' => substr(md5($scope.json_encode($parts)), 0, 16), 'nav' => $nav, 'shared' => false];
+        }
+
         if (preg_match('/^list:(\d+)$/', $scope, $m)) {
             $listId = (int)$m[1];
             if (!isset($lists[$listId])) return ['token' => 'gone', 'nav' => $nav, 'shared' => false];
@@ -91,6 +102,10 @@ if (!function_exists('hl_sync_state')) {
             $parts[] = hl_sync_agg($conn,
                 'SELECT COUNT(*), MAX(routine_done.id) FROM routine_done JOIN list_elements ON list_elements.id = routine_done.element_id
                  WHERE list_elements.list_id IN ({ids}) AND routine_done.done_date >= ?', $scopeIds, 's', [$since]);
+        }
+        // kapsułka kcal w nagłówku Dziś (moduł Jedzenie)
+        if ($scope === 'today') {
+            $parts[] = hl_sync_agg($conn, 'SELECT COUNT(*), MAX(id), MAX(updated_at) FROM food_log WHERE user_id = ?', [$userId], 'i', [$userId]);
         }
         // nowy dzień = inne terminy, zaległe i archiwum
         $parts[] = date('Y-m-d');

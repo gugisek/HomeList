@@ -17,7 +17,7 @@
 
 
 <script>
-    var HL_SITE_TITLES = { dashboard: "Twoja lista zadań", users: "Użytkownicy", faq: "Pytania na stronie głównej", logs: "Archiwum zmian", reports: "Zgłoszenia błędów", settings: "Ustawienia", profile: "Konto i ustawienia" };
+    var HL_SITE_TITLES = { dashboard: "Twoja lista zadań", users: "Użytkownicy", faq: "Pytania na stronie głównej", logs: "Archiwum zmian", reports: "Zgłoszenia błędów", food: "Baza produktów", settings: "Ustawienia", profile: "Konto i ustawienia" };
 
     // after – opcjonalna funkcja wywołana po wstawieniu podstrony i wykonaniu jej skryptów
     function openPanelSite(site, get, after) {
