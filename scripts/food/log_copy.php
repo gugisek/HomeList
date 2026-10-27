@@ -34,14 +34,14 @@ $stmt->execute();
 $sort = (int)$stmt->get_result()->fetch_row()[0];
 $stmt->close();
 
-$ins = $conn->prepare("INSERT INTO food_log (user_id, log_date, meal, product_id, name, grams, unit_label, unit_g, kcal, protein, fat, carbs, source, sort)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'copy', ?)");
+$ins = $conn->prepare("INSERT INTO food_log (user_id, log_date, meal, product_id, name, grams, unit_label, unit_g, kcal, protein, fat, carbs, sugars, source, sort)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'copy', ?)");
 $ids = [];
 foreach ($rows as $r) {
     $sort++;
     $pid = $r['product_id'] !== null ? (int)$r['product_id'] : null;
-    $ins->bind_param('isiisdsdddddi', $user_id, $to, $to_meal, $pid, $r['name'], $r['grams'], $r['unit_label'], $r['unit_g'],
-        $r['kcal'], $r['protein'], $r['fat'], $r['carbs'], $sort);
+    $ins->bind_param('isiisdsddddddi', $user_id, $to, $to_meal, $pid, $r['name'], $r['grams'], $r['unit_label'], $r['unit_g'],
+        $r['kcal'], $r['protein'], $r['fat'], $r['carbs'], $r['sugars'], $sort);
     $ins->execute();
     $ids[] = $ins->insert_id;
 }

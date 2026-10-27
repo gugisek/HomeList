@@ -101,11 +101,26 @@ $top = [];
 foreach ($stmt->get_result()->fetch_all(MYSQLI_NUM) as [$name, $n, $k]) $top[] = ['name' => $name, 'n' => (int)$n, 'kcal' => round($k)];
 $stmt->close();
 
+// cukry: średnia z dni z wpisami (wpisy bez danych o cukrze się nie wliczają – n_known mówi, ilu brakuje) i główne źródła
+$stmt = $conn->prepare('SELECT COALESCE(SUM(sugars), 0), COUNT(sugars), COUNT(*) FROM food_log WHERE user_id = ? AND log_date BETWEEN ? AND ?');
+$stmt->bind_param('iss', $user_id, $start, $today);
+$stmt->execute();
+[$sugTotal, $sugKnown, $sugAll] = $stmt->get_result()->fetch_row();
+$stmt->close();
+$stmt = $conn->prepare('SELECT name, SUM(sugars) AS s FROM food_log WHERE user_id = ? AND log_date BETWEEN ? AND ? AND sugars > 0
+                        GROUP BY name ORDER BY s DESC LIMIT 3');
+$stmt->bind_param('iss', $user_id, $start, $today);
+$stmt->execute();
+$sugTop = [];
+foreach ($stmt->get_result()->fetch_all(MYSQLI_NUM) as [$name, $s]) $sugTop[] = ['name' => $name, 'sugars' => round($s / max(1, $logged), 1), 'share' => $sugTotal > 0 ? round($s / $sugTotal * 100) : 0];
+$stmt->close();
+$sugars = ['avg' => $logged ? round($sugTotal / $logged, 1) : 0, 'n_known' => (int)$sugKnown, 'n' => (int)$sugAll, 'top' => $sugTop];
+
 hl_food_json('success', '', [
     'range' => $range, 'from' => $from, 'start' => $start, 'today' => $today, 'first' => $first, 'days' => $days,
     'tracked' => $tracked, 'logged' => $logged, 'entries' => $entries, 'avg' => $avg,
     'avg_goal' => $withGoal ? $avgGoal : null, 'with_goal' => $withGoal, 'hit' => $hit,
     'balance' => round($balance), 'balance_days' => $balanceDays, 'streak' => $cur, 'best' => $best,
     'week' => array_map(fn($w) => $w[1] ? round($w[0] / $w[1]) : null, array_values($week)),
-    'meals' => $meals, 'top' => $top,
+    'meals' => $meals, 'top' => $top, 'sugars' => $sugars,
 ]);

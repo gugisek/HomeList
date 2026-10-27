@@ -18,6 +18,7 @@ if (!$e) hl_food_json('error', 'Nie znaleziono wpisu');
 $meal = isset($_POST['meal']) ? (int)$_POST['meal'] : (int)$e['meal'];
 if (!isset(hl_food_meals()[$meal])) hl_food_json('warning', 'Nieprawidłowy posiłek');
 $m = ['kcal' => (float)$e['kcal'], 'protein' => (float)$e['protein'], 'fat' => (float)$e['fat'], 'carbs' => (float)$e['carbs']];
+$sugars = $e['sugars'] !== null ? (float)$e['sugars'] : null;
 $grams = $e['grams'] !== null ? (float)$e['grams'] : null;
 $unit_label = $e['unit_label'];
 $unit_g = $e['unit_g'] !== null ? (float)$e['unit_g'] : null;
@@ -28,6 +29,7 @@ if ($grams !== null) {
         $new = hl_food_float($_POST['grams'], 1, 5000);
         if ($new === null) hl_food_json('warning', 'Podaj gramaturę');
         foreach ($m as $k => $v) $m[$k] = round($v * $new / $grams, $k === 'kcal' ? 1 : 2);
+        if ($sugars !== null) $sugars = round($sugars * $new / $grams, 2);
         $grams = $new;
     }
     if (array_key_exists('unit_label', $_POST)) {
@@ -55,9 +57,9 @@ if ($meal !== (int)$e['meal']) {
     $stmt->close();
 }
 
-$stmt = $conn->prepare('UPDATE food_log SET meal = ?, name = ?, grams = ?, unit_label = ?, unit_g = ?, kcal = ?, protein = ?, fat = ?, carbs = ?, sort = ?
+$stmt = $conn->prepare('UPDATE food_log SET meal = ?, name = ?, grams = ?, unit_label = ?, unit_g = ?, kcal = ?, protein = ?, fat = ?, carbs = ?, sugars = ?, sort = ?
                         WHERE id = ? AND user_id = ?');
-$stmt->bind_param('isdsdddddiii', $meal, $name, $grams, $unit_label, $unit_g, $m['kcal'], $m['protein'], $m['fat'], $m['carbs'], $sort, $id, $user_id);
+$stmt->bind_param('isdsddddddiii', $meal, $name, $grams, $unit_label, $unit_g, $m['kcal'], $m['protein'], $m['fat'], $m['carbs'], $sugars, $sort, $id, $user_id);
 if (!$stmt->execute()) hl_food_json('error', 'Nie udało się zapisać');
 $stmt->close();
 

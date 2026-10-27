@@ -211,6 +211,11 @@
 .fd-row:active { transform: scale(.985); }
 .fd-row-ico { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 999px; }
 .fd-row-ico svg { width: 20px; height: 20px; }
+.fd-offbtn { margin: 4px 0 8px; background: rgba(245, 158, 11, .1); box-shadow: inset 0 0 0 1px rgba(245, 158, 11, .35); }
+.fd-offbtn:hover { background: rgba(245, 158, 11, .16); }
+.fd-offbtn .fd-row-ico { background: #f59e0b; color: #fff; }
+.fd-offbtn-go { flex: none; color: #d97706; }
+.fd-offbtn-go svg { width: 18px; height: 18px; transform: rotate(-90deg); }
 .fd-skel { height: 52px; margin: 4px 0; border-radius: 16px; background: linear-gradient(90deg, var(--fd-track), transparent, var(--fd-track)); background-size: 200% 100%; animation: fd-skel 1.2s linear infinite; }
 @keyframes fd-skel { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
@@ -255,6 +260,18 @@
 .fd-q.is-open .fd-q-body { grid-template-rows: 1fr; }
 .fd-q-body > div { overflow: hidden; }
 .fd-ns { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; }
+/* mała skala Nutri-Score w nagłówku arkusza porcji – wybrana litera wyższa, reszta przygaszona */
+.fd-nsmini { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 6px 6px; border-radius: 12px; cursor: pointer; transition: background-color .2s ease; animation: fd-ns-in .4s var(--hl-ease) both; }
+.fd-nsmini:hover { background: var(--hl-chip); }
+@keyframes fd-ns-in { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+.fd-nsmini-k { font-size: 8px; font-weight: 700; letter-spacing: .08em; line-height: 1; text-transform: uppercase; color: var(--fd-mut); }
+.fd-nsmini-row { display: flex; align-items: center; }
+.fd-nsmini-row i { position: relative; display: grid; place-items: center; width: 11px; height: 14px; font-style: normal; font-size: 8px; font-weight: 700; line-height: 1; text-transform: uppercase; color: rgba(255, 255, 255, .85); opacity: .38; }
+.fd-nsmini-row i:first-child { border-radius: 6px 0 0 6px; }
+.fd-nsmini-row i:last-child { border-radius: 0 6px 6px 0; }
+.fd-nsmini-row i.is-on { z-index: 1; width: 18px; height: 20px; margin: 0 -2px; border-radius: 6px; font-size: 11px; color: #fff; opacity: 1; box-shadow: 0 0 0 2px var(--hl-card); }
+.fd-nsmini-row i.a { background: #038141; } .fd-nsmini-row i.b { background: #85bb2f; } .fd-nsmini-row i.c { background: #fecb02; } .fd-nsmini-row i.d { background: #ee8100; } .fd-nsmini-row i.e { background: #e63e11; }
+.fd-nsmini-row i.c.is-on { color: #3b3b00; }
 .fd-ns.a { background: #038141; } .fd-ns.b { background: #85bb2f; } .fd-ns.c { background: #fecb02; color: #3b3b00; } .fd-ns.d { background: #ee8100; } .fd-ns.e { background: #e63e11; }
 .fd-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--hl-chip); color: var(--hl-ink-2); }
 .fd-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }

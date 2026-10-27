@@ -407,12 +407,21 @@ if (!function_exists('hl_food_norm')) {
     {
         if (!$batch) return [];
         $q = fn($v) => $v === null ? 'NULL' : (is_float($v) || is_int($v) ? (string)$v : "'" . $conn->real_escape_string((string)$v) . "'");
-        $pcols = array_keys($batch[0]['product']);
-        $update = implode(', ', array_map(fn($c) => "`$c` = IF(`source` = 'off', VALUES(`$c`), `$c`)", array_diff($pcols, ['source', 'code', 'status'])));
-        $values = array_map(fn($b) => '(' . implode(',', array_map(fn($c) => $q($b['product'][$c]), $pcols)) . ')', $batch);
-        $conn->query('INSERT INTO food_products (`' . implode('`,`', $pcols) . '`) VALUES ' . implode(',', $values) . " ON DUPLICATE KEY UPDATE $update");
-
         $codes = implode(',', array_map(fn($b) => $q($b['product']['code']), $batch));
+
+        // indeks wyszukiwarki OFF bywa o lata starszy niż API produktu – starsza wersja nie nadpisuje nowszej
+        $known = [];
+        $res = $conn->query("SELECT code, off_modified FROM food_products WHERE source = 'off' AND code IN ($codes)");
+        while ($row = $res->fetch_row()) $known[$row[0]] = (int)$row[1];
+        $fresh = array_values(array_filter($batch, fn($b) => $b['product']['off_modified'] >= ($known[$b['product']['code']] ?? 0)));
+
+        if ($fresh) {
+            $pcols = array_keys($fresh[0]['product']);
+            $update = implode(', ', array_map(fn($c) => "`$c` = IF(`source` = 'off', VALUES(`$c`), `$c`)", array_diff($pcols, ['source', 'code', 'status'])));
+            $values = array_map(fn($b) => '(' . implode(',', array_map(fn($c) => $q($b['product'][$c]), $pcols)) . ')', $fresh);
+            $conn->query('INSERT INTO food_products (`' . implode('`,`', $pcols) . '`) VALUES ' . implode(',', $values) . " ON DUPLICATE KEY UPDATE $update");
+        }
+
         $ids = [];
         $res = $conn->query("SELECT code, id FROM food_products WHERE source = 'off' AND code IN ($codes)");
         while ($row = $res->fetch_row()) $ids[$row[0]] = (int)$row[1];
@@ -420,7 +429,7 @@ if (!function_exists('hl_food_norm')) {
         $dcols = array_merge(['product_id'], array_keys($batch[0]['details']), ['fetched_at']);
         $now = $mode === "live" ? date('Y-m-d H:i:s') : null;
         $values = [];
-        foreach ($batch as $b) {
+        foreach ($fresh as $b) {
             if (!isset($ids[$b['product']['code']])) continue;
             $d = ['product_id' => $ids[$b['product']['code']]] + $b['details'] + ['fetched_at' => $now];
             $values[] = '(' . implode(',', array_map(fn($c) => $q($d[$c]), $dcols)) . ')';
@@ -469,11 +478,12 @@ if (!function_exists('hl_food_norm')) {
             'grams' => $row['grams'] !== null ? (float)$row['grams'] : null,
             'unit_label' => $row['unit_label'], 'unit_g' => $row['unit_g'] !== null ? (float)$row['unit_g'] : null,
             'kcal' => (float)$row['kcal'], 'protein' => (float)$row['protein'], 'fat' => (float)$row['fat'], 'carbs' => (float)$row['carbs'],
+            'sugars' => isset($row['sugars']) ? (float)$row['sugars'] : null,
             'source' => $row['source'], 'ml' => !empty($row['per_ml']),
         ];
     }
 
-    // dzień w dzienniku: wpisy w posiłkach, sumy, cel
+    // dzień w dzienniku: wpisy w posiłkach, sumy, cel; sugars_n = ile wpisów ma dane o cukrze (reszta nie wlicza się do sumy)
     function hl_food_day(mysqli $conn, int $userId, string $date): array
     {
         $stmt = $conn->prepare('SELECT l.*, p.per_ml FROM food_log l LEFT JOIN food_products p ON p.id = l.product_id
@@ -482,20 +492,21 @@ if (!function_exists('hl_food_norm')) {
         $stmt->execute();
         $res = $stmt->get_result();
         $meals = [];
-        foreach (hl_food_meals() as $m => $label) $meals[$m] = ['meal' => $m, 'label' => $label, 'entries' => [], 'kcal' => 0, 'protein' => 0, 'fat' => 0, 'carbs' => 0];
-        $total = ['kcal' => 0, 'protein' => 0, 'fat' => 0, 'carbs' => 0];
+        foreach (hl_food_meals() as $m => $label) $meals[$m] = ['meal' => $m, 'label' => $label, 'entries' => [], 'kcal' => 0, 'protein' => 0, 'fat' => 0, 'carbs' => 0, 'sugars' => 0];
+        $total = ['kcal' => 0, 'protein' => 0, 'fat' => 0, 'carbs' => 0, 'sugars' => 0, 'sugars_n' => 0];
         while ($row = $res->fetch_assoc()) {
             $e = hl_food_entry($row);
             if (!isset($meals[$e['meal']])) continue;
             $meals[$e['meal']]['entries'][] = $e;
-            foreach ($total as $k => $_) {
-                $meals[$e['meal']][$k] += $e[$k];
-                $total[$k] += $e[$k];
+            foreach (['kcal', 'protein', 'fat', 'carbs', 'sugars'] as $k) {
+                $meals[$e['meal']][$k] += $e[$k] ?? 0;
+                $total[$k] += $e[$k] ?? 0;
             }
+            if ($e['sugars'] !== null) $total['sugars_n']++;
         }
         $stmt->close();
         $round = function (array $a): array {
-            foreach (['kcal', 'protein', 'fat', 'carbs'] as $k) $a[$k] = round($a[$k], 1);
+            foreach (['kcal', 'protein', 'fat', 'carbs', 'sugars'] as $k) $a[$k] = round($a[$k], 1);
             return $a;
         };
         return ['date' => $date, 'meals' => array_values(array_map($round, $meals)), 'total' => $round($total), 'goal' => hl_food_goal($conn, $userId, $date)];
@@ -555,7 +566,8 @@ if (!function_exists('hl_food_norm')) {
     {
         $k = $grams / 100;
         return ['kcal' => round((float)$p['kcal'] * $k, 1), 'protein' => round((float)$p['protein'] * $k, 2),
-                'fat' => round((float)$p['fat'] * $k, 2), 'carbs' => round((float)$p['carbs'] * $k, 2)];
+                'fat' => round((float)$p['fat'] * $k, 2), 'carbs' => round((float)$p['carbs'] * $k, 2),
+                'sugars' => isset($p['sugars']) ? round((float)$p['sugars'] * $k, 2) : null];
     }
 
     function hl_food_valid_date($s): bool

@@ -30,6 +30,7 @@ if (isset($_POST['restore'])) {
     $m = ['kcal' => hl_food_float($r['kcal'] ?? '', 0, 20000), 'protein' => hl_food_float($r['protein'] ?? 0, 0, 2000),
           'fat' => hl_food_float($r['fat'] ?? 0, 0, 2000), 'carbs' => hl_food_float($r['carbs'] ?? 0, 0, 2000)];
     if (in_array(null, $m, true)) hl_food_json('error', 'Nie udało się przywrócić wpisu');
+    $m['sugars'] = isset($r['sugars']) ? hl_food_float($r['sugars'], 0, 2000) : null;
     $source = in_array($r['source'] ?? '', ['manual', 'quick', 'barcode', 'copy', 'ai'], true) ? $r['source'] : 'manual';
 } elseif (!empty($_POST['product_id'])) {
     $p = hl_food_product($conn, $user_id, (int)$_POST['product_id']);
@@ -47,7 +48,7 @@ if (isset($_POST['restore'])) {
     if ($kcal === null) hl_food_json('warning', 'Podaj kalorie');
     $name = mb_substr(trim((string)($_POST['name'] ?? '')), 0, 200) ?: 'Szybkie dodanie';
     $m = ['kcal' => $kcal, 'protein' => hl_food_float($_POST['protein'] ?? '', 0, 1000) ?? 0,
-          'fat' => hl_food_float($_POST['fat'] ?? '', 0, 1000) ?? 0, 'carbs' => hl_food_float($_POST['carbs'] ?? '', 0, 1000) ?? 0];
+          'fat' => hl_food_float($_POST['fat'] ?? '', 0, 1000) ?? 0, 'carbs' => hl_food_float($_POST['carbs'] ?? '', 0, 1000) ?? 0, 'sugars' => null];
     $source = 'quick';
 }
 
@@ -57,10 +58,10 @@ $stmt->execute();
 $sort = (int)$stmt->get_result()->fetch_row()[0];
 $stmt->close();
 
-$stmt = $conn->prepare('INSERT INTO food_log (user_id, log_date, meal, product_id, name, grams, unit_label, unit_g, kcal, protein, fat, carbs, source, sort)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-$stmt->bind_param('isiisdsdddddsi', $user_id, $date, $meal, $product_id, $name, $grams, $unit_label, $unit_g,
-    $m['kcal'], $m['protein'], $m['fat'], $m['carbs'], $source, $sort);
+$stmt = $conn->prepare('INSERT INTO food_log (user_id, log_date, meal, product_id, name, grams, unit_label, unit_g, kcal, protein, fat, carbs, sugars, source, sort)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+$stmt->bind_param('isiisdsddddddsi', $user_id, $date, $meal, $product_id, $name, $grams, $unit_label, $unit_g,
+    $m['kcal'], $m['protein'], $m['fat'], $m['carbs'], $m['sugars'], $source, $sort);
 if (!$stmt->execute()) hl_food_json('error', 'Nie udało się dodać wpisu');
 $id = $stmt->insert_id;
 $stmt->close();

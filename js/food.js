@@ -631,9 +631,14 @@
             html = '<p class="fd-mut" style="margin:8px;font-size:13px">W bazie HomeList nie ma „' + esc(q) + '”.</p>';
         }
         if (q && !sh.off) {
-            html += '<button type="button" class="fd-row fd-press" data-off style="margin-top:2px;box-shadow:inset 0 0 0 1px var(--fd-track)">'
-                + '<span class="fd-row-ico" style="background:rgba(245,158,11,.14);color:#d97706">' + I.search + '</span>'
-                + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Szukaj dalej w Open Food Facts</div><div class="text-xs fd-mut">Otwarta baza produktów z kodami kreskowymi</div></div></button>';
+            // lokalna baza ma tylko część OFF – przy niewielu wynikach mocniej zachęcamy do szukania dalej
+            var found = groups.reduce(function (n, g) { return n + g.items.length; }, 0);
+            html += '<button type="button" class="fd-row fd-press fd-offbtn" data-off>'
+                + '<span class="fd-row-ico">' + I.search + '</span>'
+                + '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">'
+                + (found ? 'Nie widzisz swojego produktu? Szukaj dalej' : 'Szukaj „' + esc(q) + '” w Open Food Facts') + '</div>'
+                + '<div class="text-xs fd-mut">Miliony produktów z kodami – znalezione zapiszą się w HomeList</div></div>'
+                + '<span class="fd-offbtn-go">' + I.chev + '</span></button>';
         } else if (sh.off === 'loading') {
             html += '<div class="fd-skel"></div><div class="fd-skel"></div>';
         } else if (sh.off && sh.off.message) {
@@ -736,6 +741,8 @@
                 var q = el('fd_quality');
                 if (q) q.innerHTML = qualityHTML(sh.p);
                 bindQuality();
+                var ns = el('fd_ns_top');
+                if (ns) { ns.innerHTML = nsMiniHTML(sh.p.quality); bindNsMini(); }
                 if (q && res.product.dish && res.product.dish.mine && !el('fd_step').querySelector('[data-editdish]')) {
                     q.insertAdjacentHTML('beforebegin', '<button type="button" class="fd-ghost-btn fd-press" data-editdish style="margin-top:16px">' + I.pot + 'Edytuj przepis dania</button>');
                     bindEditDish();
@@ -839,7 +846,8 @@
             + '<div style="display:flex;align-items:center;gap:4px;margin-left:-8px">'
             + '<button type="button" class="fd-icon-btn fd-press" data-back aria-label="' + (pp.entry ? 'Zamknij' : 'Wróć') + '">' + (pp.entry ? I.x : I.back) + '</button>'
             + '<div style="flex:1;min-width:0"><h2 class="hl-popup-title" style="padding:0;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(p.name) + '</h2>'
-            + '<div class="text-xs fd-mut" style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden">' + tagHTML(p) + esc(sub) + '</div></div></div>'
+            + '<div class="text-xs fd-mut" style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden">' + tagHTML(p) + esc(sub) + '</div></div>'
+            + '<span id="fd_ns_top" style="display:contents">' + nsMiniHTML(pp.quality) + '</span></div>'
             + heroPhotoHTML(p)
             + '<div style="margin-top:12px">' + mealChips() + '</div>'
             + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px">'
@@ -896,8 +904,32 @@
         var del = box.querySelector('[data-del]');
         if (del) del.addEventListener('click', function () { var id = pp.entry.id; closeSheet(true); removeEntry(id); });
         bindQuality();
+        bindNsMini();
         bindEditDish();
         updatePortion();
+    }
+
+    // mała skala Nutri-Score A–E w nagłówku (tylko gdy OFF ją podaje); dotknięcie rozwija „Skład i jakość”
+    function nsMiniHTML(q) {
+        if (!q || !q.nutriscore) return '';
+        var g = q.nutriscore;
+        return '<button type="button" class="fd-nsmini fd-press" data-nsjump title="Nutri-Score ' + g.toUpperCase() + '" aria-label="Nutri-Score ' + g.toUpperCase() + ' – pokaż skład i jakość">'
+            + '<span class="fd-nsmini-k">Nutri-Score</span><span class="fd-nsmini-row" aria-hidden="true">'
+            + ['a', 'b', 'c', 'd', 'e'].map(function (x) { return '<i class="' + x + (x === g ? ' is-on' : '') + '">' + x + '</i>'; }).join('')
+            + '</span></button>';
+    }
+    function bindNsMini() {
+        var b = document.querySelector('#fd_ns_top [data-nsjump]');
+        if (!b) return;
+        b.addEventListener('click', function () {
+            var box = el('fd_q_box');
+            if (!box) return;
+            if (!box.classList.contains('is-open')) {
+                box.classList.add('is-open');
+                box.querySelector('[data-qtoggle]').setAttribute('aria-expanded', 'true');
+            }
+            setTimeout(function () { box.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+        });
     }
 
     // pole szerokie na treść, żeby liczba + jednostka stały na środku między − a +
@@ -1776,6 +1808,36 @@
         });
     }
 
+    // ---------- cukry (podsumowanie dnia i statystyki) ----------
+    // s: { grams, kcal, carbs, goalKcal, top: [{ name, sugars, share }], known, n, perDay }
+    // punkt odniesienia: 10% energii celu (zalecenie WHO dla cukrów wolnych), bez celu 50 g
+    function sugarHTML(s) {
+        var ref = s.goalKcal ? Math.round(s.goalKcal * 0.1 / 4) : 50;
+        var pct = s.grams / ref * 100, over = pct > 100;
+        var color = over ? '#f59e0b' : 'var(--fd-c)';
+        var side = [];
+        if (s.carbs) side.push('<b class="fd-num">' + Math.round(s.grams / s.carbs * 100) + '%</b> węglowodanów');
+        if (s.kcal) side.push('<b class="fd-num">' + Math.round(s.grams * 4 / s.kcal * 100) + '%</b> energii');
+        var html = '<div class="fd-box">'
+            + '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">'
+            + '<div><span class="fd-num" style="font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1">' + dec(s.grams) + '</span>'
+            + '<span class="fd-mut" style="font-size:14px"> g cukrów' + (s.perDay ? ' dziennie' : '') + '</span></div>'
+            + '<div class="fd-mut" style="text-align:right;font-size:12px;line-height:1.5">' + side.join('<br>') + '</div></div>'
+            + '<div class="fd-bar" style="margin-top:12px"><span style="left:0;width:' + Math.min(pct, 100).toFixed(1) + '%;background:' + color + '"></span></div>'
+            + '<p class="fd-mut" style="margin:6px 0 0;font-size:12px">' + (over ? '<b style="color:#d97706">' + Math.round(pct) + '%</b>' : Math.round(pct) + '%')
+            + ' orientacyjnego limitu ' + ref + ' g' + (s.goalKcal ? ' (10% energii celu)' : '') + '</p>';
+        if (s.top.length) {
+            html += '<div class="fd-list" style="margin-top:10px">' + s.top.map(function (t) {
+                return '<div class="fd-li"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(t.name) + '</span>'
+                    + '<span class="fd-num" style="white-space:nowrap;font-size:12px"><b>' + dec(t.sugars) + ' g</b><span class="fd-mut"> · ' + t.share + '%</span></span></div>';
+            }).join('') + '</div>';
+        }
+        html += '</div><p class="fd-mut" style="margin:8px 2px 0;font-size:11px;line-height:1.5">'
+            + (s.known < s.n ? 'Brak danych o cukrze dla ' + (s.n - s.known) + ' z ' + s.n + ' ' + (s.perDay ? 'wpisów' : 'produktów') + ' – nie są wliczone. ' : '')
+            + 'Cukry ogółem, także naturalne z owoców i mleka – limit WHO dotyczy cukrów dodanych, więc traktuj go orientacyjnie.</p>';
+        return html;
+    }
+
     // ---------- podsumowanie dnia (przycisk pod posiłkami): liczby dnia + tabela wszystkich wpisów z makro ----------
     function renderDay(box) {
         var sh = S.sheet, day = S.data.day, t = day.total, goal = day.goal, d = s2d(day.date);
@@ -1805,6 +1867,16 @@
                 + kpi('Białko', dec(t.protein) + '<small> g</small>', goal && goal.protein ? Math.round(t.protein / goal.protein * 100) + '% celu ' + fmt(goal.protein) + ' g' : fmt(t.protein * 4) + ' kcal z białka',
                     goal && goal.protein ? t.protein / goal.protein * 100 : undefined, 'var(--fd-p)')
                 + '</div>';
+
+            // cukry wysoko – tuż pod kafelkami; źródła sumowane po nazwie (dwa razy pomidor = jedna pozycja)
+            if (t.sugars_n) {
+                var bySugar = {};
+                all.forEach(function (e) { if (e.sugars > 0) bySugar[e.name] = (bySugar[e.name] || 0) + e.sugars; });
+                var sugTop = Object.keys(bySugar).sort(function (a, b) { return bySugar[b] - bySugar[a]; }).slice(0, 3).map(function (n) {
+                    return { name: n, sugars: bySugar[n], share: t.sugars ? Math.round(bySugar[n] / t.sugars * 100) : 0 };
+                });
+                html += sec('Cukry', sugarHTML({ grams: t.sugars, kcal: t.kcal, carbs: t.carbs, goalKcal: goal ? goal.kcal : 0, top: sugTop, known: t.sugars_n, n: all.length }));
+            }
 
             html += sec('Makroskładniki', '<div class="fd-bars">' + barsHTML(t, null, goal, MACROS, false) + '</div>');
 
@@ -1929,6 +2001,12 @@
             + kpi('W celu', st.hit.ok + '<small> ' + daysWord(st.hit.ok) + '</small>', st.with_goal > st.hit.pending ? 'z ' + (st.with_goal - st.hit.pending) + ' · ±10% celu' : (st.with_goal ? 'dziś jeszcze trwa' : 'ustaw cel, by liczyć'))
             + kpi('Seria', st.streak + '<small> ' + daysWord(st.streak) + '</small>', 'najdłuższa: ' + st.best + ' ' + daysWord(st.best))
             + '</div>';
+
+        var sg = st.sugars;
+        if (sg && sg.n_known) {
+            html += sec('Cukry – średnio dziennie', sugarHTML({ grams: sg.avg, kcal: st.avg.kcal, carbs: st.avg.carbs, goalKcal: st.avg_goal ? st.avg_goal.kcal : 0,
+                top: sg.top, known: sg.n_known, n: sg.n, perDay: true }));
+        }
 
         // wykres dni: słupek = kcal, kreska = cel obowiązujący tego dnia
         var max = Math.max.apply(null, st.days.map(function (d) { return Math.max(d.kcal, d.goal || 0); })) * 1.08 || 1;
