@@ -271,9 +271,35 @@
         var box = el('bl_seg');
         if (!box) return;
         if (!S.data.bills.length) { box.innerHTML = ''; return; }
-        box.innerHTML = '<div class="bl-seg" role="tablist">'
-            + [['up', 'Nadchodzące'], ['all', 'Wszystkie']].map(function (t) { return '<button type="button" role="tab" aria-selected="' + (S.tab === t[0]) + '" class="' + (S.tab === t[0] ? 'is-on' : '') + '" data-tab="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
-        box.querySelectorAll('[data-tab]').forEach(function (b) { b.onclick = function () { S.tab = b.dataset.tab; renderSeg(); renderList(); }; });
+        box.innerHTML = segHTML(LIST_TABS, S.tab, 'tab');
+        box.querySelectorAll('[data-tab]').forEach(function (b) {
+            b.onclick = function () {
+                var from = segIndex(LIST_TABS, S.tab), to = segIndex(LIST_TABS, b.dataset.tab);
+                if (from === to) return;
+                S.tab = b.dataset.tab;
+                moveSeg(box.querySelector('.bl-seg'), to);
+                renderList();
+                slideIn(el('bl_list'), to > from);
+            };
+        });
+    }
+    var LIST_TABS = [['up', 'Nadchodzące'], ['all', 'Wszystkie']];
+    // segment z przesuwanym wskaźnikiem – przełączanie przez moveSeg(), bez przebudowy HTML
+    function segIndex(opts, v) { for (var i = 0; i < opts.length; i++) if (opts[i][0] === v) return i; return 0; }
+    function segHTML(opts, on, key, style) {
+        return '<div class="bl-seg has-ind" role="tablist" style="--n:' + opts.length + ';--i:' + segIndex(opts, on) + (style ? ';' + style : '') + '"><span class="bl-seg-ind" aria-hidden="true"></span>'
+            + opts.map(function (o) { return '<button type="button" role="tab" aria-selected="' + (o[0] === on) + '" class="' + (o[0] === on ? 'is-on' : '') + '" data-' + key + '="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>';
+    }
+    function moveSeg(seg, i) {
+        seg.style.setProperty('--i', i);
+        seg.querySelectorAll('button').forEach(function (b, j) { b.classList.toggle('is-on', j === i); b.setAttribute('aria-selected', j === i); });
+    }
+    // wjazd nowej zawartości z kierunku przełączenia (.fd-res z food.css)
+    function slideIn(node, next) {
+        if (!node) return;
+        node.classList.remove('fd-res', 'is-next', 'is-prev');
+        void node.offsetWidth;
+        node.classList.add('fd-res', next ? 'is-next' : 'is-prev');
     }
 
     // grupy: zaległe, dziś, jutro, do końca tygodnia, reszta miesiąca, kolejne miesiące
@@ -1091,30 +1117,55 @@
     }
 
     // ---------- statystyki ----------
+    var PERIODS = [['12', '12 miesięcy'], ['year', 'Ten rok'], ['all', 'Od początku']];
     function renderStats(box) {
-        var period = S.sheet.period || '12';
-        if (!S.sheet.st || S.sheet.st.period !== period) {
+        var period = S.sheet.period || '12', r = (S.sheet.stc || {})[period];
+        if (!r) {
             box.innerHTML = loadingHTML('Statystyki');
             bindHead(box);
-            getJSON('scripts/bills/stats.php?period=' + period).then(function (res) {
-                if (!S.sheet || S.sheet.step !== 'stats') return;
-                if (res.status !== 'success') return fail(res);
-                S.sheet.st = res;
-                S.sheet.sel = null;
-                redraw(renderStats);
-            });
+            loadStats(period, function () { redraw(renderStats); });
             return;
         }
-        var r = S.sheet.st, st = r.stats, types = r.types, keys = Object.keys(st.months), html = '';
+        box.innerHTML = headHTML('Statystyki') + '<div class="fd-scroll" style="padding:4px 20px 28px">' + segHTML(PERIODS, period, 'period', 'margin-bottom:12px')
+            + '<div class="bl-st-body" id="bl_st_body">' + statsHTML(r, period) + '</div></div>';
+        bindHead(box);
+        box.querySelectorAll('[data-period]').forEach(function (b) { b.onclick = function () { setPeriod(b.dataset.period); }; });
+        bindStats(box);
+    }
+    function loadStats(period, done) {
+        getJSON('scripts/bills/stats.php?period=' + period).then(function (res) {
+            if (!S.sheet || S.sheet.step !== 'stats') return;
+            if (res.status !== 'success') { var body = el('bl_st_body'); if (body) body.classList.remove('is-loading'); return fail(res); }
+            (S.sheet.stc = S.sheet.stc || {})[period] = res;
+            if ((S.sheet.period || '12') === period) done();
+        });
+    }
+    // zmiana okresu: wskaźnik jedzie od razu, treść wjeżdża z boku (z cache albo po pobraniu)
+    function setPeriod(p) {
+        var from = segIndex(PERIODS, S.sheet.period || '12'), to = segIndex(PERIODS, p);
+        if (from === to) return;
+        S.sheet.period = p;
+        S.sheet.sel = null;
+        moveSeg(el('bl_step').querySelector('.bl-seg'), to);
+        var show = function () {
+            var body = el('bl_st_body');
+            if (!body) return;
+            body.classList.remove('is-loading');
+            body.innerHTML = statsHTML(S.sheet.stc[p], p);
+            bindStats(body);
+            slideIn(body, to > from);
+        };
+        if (S.sheet.stc && S.sheet.stc[p]) show();
+        else { el('bl_st_body').classList.add('is-loading'); loadStats(p, show); }
+    }
+    function statsHTML(r, period) {
+        var st = r.stats, types = r.types, keys = Object.keys(st.months), html = '';
         var totals = keys.map(function (k) { return Object.keys(st.months[k]).reduce(function (a, t) { return a + st.months[k][t]; }, 0); });
         if (S.sheet.sel == null || S.sheet.sel >= keys.length) S.sheet.sel = keys.length - 1;
         var sel = S.sheet.sel, max = Math.max.apply(null, totals.concat([1]));
         var step = max > 20000 ? 10000 : max > 6000 ? 2000 : max > 3000 ? 1000 : max > 1200 ? 500 : 250, top = Math.ceil(max / (2 * step)) * 2 * step;
         var label = { '12': 'Wydane przez ostatnie 12 miesięcy', year: 'Wydane w tym roku', all: 'Wydane od ' + monthYearGen(st.from) }[period];
         var diff = st.total - st.prev_total;
-        html += '<div class="bl-seg is-3" style="margin-bottom:12px">' + [['12', '12 miesięcy'], ['year', 'Ten rok'], ['all', 'Od początku']].map(function (o) {
-            return '<button type="button" class="' + (period === o[0] ? 'is-on' : '') + '" data-period="' + o[0] + '">' + o[1] + '</button>';
-        }).join('') + '</div>';
         html += '<div class="bl-card"><span class="bl-eyebrow">' + label + '</span><div class="bl-big bl-num" style="font-size:38px;margin-top:6px">' + num(Math.round(st.total), 0) + '<small> zł</small></div>'
             + '<p class="text-sm" style="margin:6px 0 0;color:var(--hl-ink-2)">To <b class="bl-num" style="color:var(--hl-ink);font-weight:600">' + money(st.per_day) + '</b> każdego dnia'
             + (period !== 'all' && st.prev_total ? ' · <span style="color:' + (diff > 0 ? 'var(--bl-warn)' : '#16a34a') + ';font-weight:500">' + (diff > 0 ? '+' : '−') + money0(Math.abs(diff)) + ' niż ' + (period === 'year' ? 'w tym samym okresie rok wcześniej' : 'rok wcześniej') + '</span>' : '') + '</p>';
@@ -1172,9 +1223,9 @@
             }).join('') + '</div>';
         }
         html += '<p class="bl-note">Wykres pokazuje faktyczne płatności w danym miesiącu (np. roczna polisa w całości w miesiącu zapłaty). Płatności uzupełnione wstecz są szacunkiem.</p>';
-        box.innerHTML = headHTML('Statystyki') + '<div class="fd-scroll" style="padding:4px 20px 28px">' + html + '</div>';
-        bindHead(box);
-        box.querySelectorAll('[data-period]').forEach(function (b) { b.onclick = function () { S.sheet.period = b.dataset.period; renderStats(el('bl_step')); }; });
+        return html;
+    }
+    function bindStats(box) {
         box.querySelectorAll('[data-col]').forEach(function (b) {
             var pick = function () { if (S.sheet.sel !== +b.dataset.col) { S.sheet.sel = +b.dataset.col; redraw(renderStats); } };
             b.addEventListener('click', pick);

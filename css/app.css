@@ -444,6 +444,16 @@ div:has(> .lds-dual-ring) {
 ::view-transition-group(hl-glass-3), ::view-transition-group(hl-glass-4), ::view-transition-group(hl-glass-5) {
   border-radius: 999px; -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
 }
+/* boczna pigułka: kliknięta jest pod kursorem i właśnie rozwija się do 236px (:hover) – domyślna animacja grupy
+   przechodziła między zrzutem wąskim a szerokim i rozciągała obraz. Bez przejścia: sama warstwa „na żywo”, pigułka animuje się jak zwykle */
+@media (min-width: 768px) {
+  ::view-transition-group(hl-glass-0), ::view-transition-group(hl-glass-1), ::view-transition-group(hl-glass-2),
+  ::view-transition-group(hl-glass-3), ::view-transition-group(hl-glass-4), ::view-transition-group(hl-glass-5),
+  ::view-transition-new(hl-glass-0), ::view-transition-new(hl-glass-1), ::view-transition-new(hl-glass-2),
+  ::view-transition-new(hl-glass-3), ::view-transition-new(hl-glass-4), ::view-transition-new(hl-glass-5) { animation: none; }
+  ::view-transition-old(hl-glass-0), ::view-transition-old(hl-glass-1), ::view-transition-old(hl-glass-2),
+  ::view-transition-old(hl-glass-3), ::view-transition-old(hl-glass-4), ::view-transition-old(hl-glass-5) { display: none; }
+}
 #dashboard_body.hl-tab-wait > * { opacity: .55; transition: opacity .3s ease; }
 
 ::view-transition-group(hl-tab),

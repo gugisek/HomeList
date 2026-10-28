@@ -67,6 +67,17 @@
 .bl-seg.is-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .bl-seg button { height: 38px; border-radius: 14px; font-size: 13px; font-weight: 500; color: var(--hl-ink-2); cursor: pointer; transition: background-color .2s ease, color .2s ease, box-shadow .25s ease; }
 .bl-seg button.is-on { background: var(--hl-card); color: var(--hl-ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 6px 16px -10px rgba(0, 0, 0, .35); }
+/* wariant z przesuwanym wskaźnikiem (jak .fd-seg-ind) – --n przycisków, --i aktywny */
+.bl-seg.has-ind { position: relative; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); }
+.bl-seg-ind { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px - (var(--n, 2) - 1) * 4px) / var(--n, 2)); border-radius: 14px; background: var(--hl-card);
+              box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 6px 16px -10px rgba(0, 0, 0, .35); transform: translateX(calc(var(--i, 0) * (100% + 4px))); transition: transform .45s var(--hl-ease); }
+.bl-seg.has-ind button { position: relative; z-index: 1; -webkit-tap-highlight-color: transparent; }
+.bl-seg.has-ind button:hover { color: var(--hl-ink); }
+.bl-seg.has-ind button.is-on { background: transparent; box-shadow: none; font-weight: 600; }
+/* lista wjeżdża z boku (slideIn) – bez tego na chwilę wystaje poza stronę i pojawia się poziomy scroll */
+.bl-slide-clip { overflow-x: clip; overflow-clip-margin: 6px; }
+.bl-st-body { transition: opacity .2s ease; }
+.bl-st-body.is-loading { opacity: .45; pointer-events: none; }
 .bl-rows { display: flex; flex-direction: column; gap: 8px; }
 .bl-row { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border-radius: 18px; background: var(--hl-card); color: var(--hl-ink);
           box-shadow: inset 0 0 0 1px var(--hl-card-line), 0 1px 2px rgba(0, 0, 0, .05); transition: opacity .35s ease, background-color .2s ease; animation: bl-in .45s var(--hl-ease) both; }
@@ -216,7 +227,7 @@
 
 @keyframes bl-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes bl-pop { 0% { transform: scale(.6); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
-@media (prefers-reduced-motion: reduce) { .bl-row, .bl-alert, .bl-type, .bl-readout { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bl-row, .bl-alert, .bl-type, .bl-readout { animation: none; } .bl-seg-ind { transition: none; } }
 
 /* licznik w menu „więcej” i kropki w nawigacji (lists.php, nav_rail.php) */
 .bl-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: auto; padding: 0 6px; border-radius: 999px; background: #f59e0b; color: #1c1c1e; font-size: 11px; font-weight: 700; }

@@ -33,7 +33,7 @@ $payload = hl_bill_overview($conn, $user_id);
             <div id="bl_alerts"></div>
             <div id="bl_cal" class="hidden md:block"></div>
         </div>
-        <div class="min-w-0">
+        <div class="min-w-0 bl-slide-clip">
             <div id="bl_seg" class="mt-4 md:mt-0"></div>
             <div id="bl_list"></div>
         </div>
