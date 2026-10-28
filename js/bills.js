@@ -618,8 +618,13 @@
             + field(f.type === 'bill' && f.amount_variable ? 'Kwota (szacunek)' : AMOUNT_LABEL[f.type], 'amount', f.amount, 'inputmode="decimal" placeholder="0,00 zł" class="bl-num"') + '</div>';
 
         if (f.type === 'prepaid') {
-            html += lbl('Pakiet') + '<div class="bl-form-group"><div class="bl-f"><span>Ważny przez</span>' + stepper('cycle_every', f.cycle_every + ' dni', 'Dni') + '</div>'
-                + '<label class="bl-f"><span>Ważny do</span><input type="date" data-f="next_due" value="' + esc(f.next_due) + '"></label>'
+            var monthly = f.cycle_unit === 'month';
+            html += lbl('Rozliczenie') + '<div class="bl-seg">' + [['day', 'Co ' + (monthly ? 30 : f.cycle_every) + ' dni'], ['month', 'Co miesiąc']].map(function (o) {
+                return '<button type="button" class="' + (f.cycle_unit === o[0] ? 'is-on' : '') + '" data-pcycle="' + o[0] + '">' + o[1] + '</button>';
+            }).join('') + '</div>'
+                + '<p class="bl-hint">' + (monthly ? 'Pakiet odnawia się co miesiąc w tym samym dniu – np. zawsze 19.' : 'Pakiet ważny określoną liczbę dni – kolejny termin liczymy od dnia doładowania.') + '</p>'
+                + lbl('Pakiet') + '<div class="bl-form-group">' + (monthly ? '' : '<div class="bl-f"><span>Ważny przez</span>' + stepper('cycle_every', f.cycle_every + ' dni', 'Dni') + '</div>')
+                + '<label class="bl-f"><span>' + (monthly ? 'Najbliższa płatność' : 'Ważny do') + '</span><input type="date" data-f="next_due" value="' + esc(f.next_due) + '"></label>'
                 + field('Numer telefonu', 'ref', f.ref, 'inputmode="tel" placeholder="opcjonalnie" maxlength="60"') + '</div>'
                 + '<p class="bl-hint">Przy każdym doładowaniu dopiszesz dodatki, np. internet – policzymy z nich realny koszt numeru.</p>';
         } else if (f.type !== 'loan') {
@@ -705,6 +710,15 @@
             b.onclick = function () {
                 var c = { m: ['month', 1], q: ['month', 3], y: ['year', 1], x: [f.cycle_unit === 'day' ? 'day' : 'week', f.cycle_unit === 'day' ? f.cycle_every : 2] }[b.dataset.cycle];
                 f.cycle_unit = c[0]; f.cycle_every = c[1];
+                again();
+            };
+        });
+        box.querySelectorAll('[data-pcycle]').forEach(function (b) {
+            b.onclick = function () {
+                if (f.cycle_unit === b.dataset.pcycle) return;
+                f.cycle_unit = b.dataset.pcycle;
+                f.cycle_every = f.cycle_unit === 'month' ? 1 : 30;
+                if (!S.sheet.edit) f.next_due = f.cycle_unit === 'month' ? addMonths(today(), 1) : addDays(today(), 30);
                 again();
             };
         });
@@ -811,7 +825,7 @@
                 + '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px" class="bl-mut"><span>' + shortDate(b.start_date) + '</span><span>Ostatnia: ' + (st.remaining.last_due ? monthYear(st.remaining.last_due) : '–') + '</span></div></div>';
         }
         if (b.type === 'prepaid' && d.next[0]) {
-            var due = d.next[0].due, left = Math.max(0, diffDays(t, due)), len = b.cycle_unit === 'day' ? b.cycle_every : 30, warn = left <= 7;
+            var due = d.next[0].due, left = Math.max(0, diffDays(t, due)), len = b.cycle_unit === 'day' ? b.cycle_every : diffDays(addMonths(due, -1), due), warn = left <= 7;
             html += '<div class="bl-card" style="display:flex;align-items:center;gap:16px"><div class="bl-ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9155" style="stroke:var(--bl-track)"/>'
                 + '<circle cx="18" cy="18" r="15.9155" stroke-linecap="round" stroke-dasharray="' + Math.round(Math.min(1, left / len) * 100) + ' 100" style="stroke:' + (warn ? '#f59e0b' : '#22c55e') + '"/></svg>'
                 + '<span><span><b class="bl-num" style="display:block;font-size:22px;font-weight:600">' + left + '</b><span class="bl-mut" style="font-size:10px">' + plural(left, 'dzień', 'dni', 'dni') + '</span></span></span></div>'
@@ -1066,7 +1080,7 @@
         html += '<span class="bl-lbl"><span>Zapłacono</span></span><div class="fd-chips" style="flex-wrap:wrap;margin:0;padding:0">'
             + [[today(), 'Dziś'], [y, 'Wczoraj']].map(function (o) { return '<button type="button" class="fd-chip fd-press' + (p.paid_on === o[0] ? ' is-on' : '') + '" data-on="' + o[0] + '">' + o[1] + '</button>'; }).join('')
             + '<label class="fd-chip' + (p.paid_on !== today() && p.paid_on !== y ? ' is-on' : '') + '" style="display:inline-flex;align-items:center;gap:6px">Inny dzień<input type="date" data-pdate value="' + esc(p.paid_on) + '" max="' + today() + '" style="width:118px;border:0;outline:0;background:transparent;color:inherit;font:inherit"></label></div>'
-            + (prepaid ? '<p class="bl-hint">Kolejny termin policzymy od dnia doładowania.</p>' : '');
+            + (prepaid && b.cycle_unit === 'day' ? '<p class="bl-hint">Kolejny termin policzymy od dnia doładowania.</p>' : '');
         html += '<div style="display:flex;align-items:baseline;justify-content:space-between;margin:18px 4px 4px"><span class="text-sm" style="color:var(--hl-ink-2)">Razem</span>'
             + '<span class="bl-big bl-num" style="font-size:28px" data-total>' + num(total, 2) + '<small> zł</small></span></div>';
         box.innerHTML = headHTML(prepaid ? 'Doładowanie' : 'Płatność') + '<div class="fd-scroll" style="padding:4px 20px 24px">' + html + '</div>'

@@ -620,6 +620,8 @@ if (!function_exists('hl_bill_types')) {
         if (isset($in['cycle_unit']) && in_array($in['cycle_unit'], ['day', 'week', 'month', 'year'], true)) $unit = $in['cycle_unit'];
         if (isset($in['cycle_every'])) $every = max(1, min(400, (int)$in['cycle_every']));
         if ($type === 'loan') [$unit, $every] = [$unit === 'year' ? 'year' : 'month', $unit === 'year' ? 1 : $every];
+        // na kartę: pakiet na X dni (od doładowania) albo rozliczenie co miesiąc w stałym dniu
+        if ($type === 'prepaid') [$unit, $every] = $unit === 'month' ? ['month', 1] : ['day', $every];
 
         $reminders = array_values(array_unique(array_filter(array_map('intval', explode(',', (string)($in['reminders'] ?? '1'))), function ($d) { return $d >= 0 && $d <= 60; })));
         if (!isset($in['reminders'])) $reminders = $existing['reminders'] ?? [1];
@@ -629,7 +631,7 @@ if (!function_exists('hl_bill_types')) {
             'type' => $type, 'name' => mb_substr($name, 0, 120), 'note' => mb_substr(trim((string)($in['note'] ?? '')), 0, 500) ?: null,
             'ref' => mb_substr(trim((string)($in['ref'] ?? '')), 0, 60) ?: null,
             'amount' => $amount, 'amount_variable' => $variable ? 1 : 0, 'cycle_unit' => $unit, 'cycle_every' => $every,
-            'anchor' => $type === 'prepaid' ? 'last_paid' : 'schedule',
+            'anchor' => $type === 'prepaid' && $unit === 'day' ? 'last_paid' : 'schedule',
             'pay_mode' => ($in['pay_mode'] ?? '') === 'auto' ? 'auto' : 'manual', 'reminders' => implode(',', $reminders),
             'end_date' => $date('end_date'),
             'trial_until' => $date('trial_until'), 'review_at' => $existing['review_at'] ?? null,
