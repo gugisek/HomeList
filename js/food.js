@@ -101,6 +101,8 @@
         var pending = null;
         try { pending = sessionStorage.getItem('hl_food_open'); sessionStorage.removeItem('hl_food_open'); } catch (e) {}
         if (pending === 'goal' || pending === 'dishes') setTimeout(function () { openSheet({ step: pending }); }, 300);
+        // „Popraw” w profilu (Twój wkład): own:ID
+        else if (pending && /^own:\d+$/.test(pending)) setTimeout(function () { openSheet({ step: 'loading' }); editOwn(+pending.slice(4), 'close'); }, 300);
     };
 
     // synchronizacja (hlSyncApply) i powrót po zapisie: dane bieżącego dnia bez spinnera
@@ -675,6 +677,10 @@
         if (p.source === 'dish') {
             t = p.mine ? 'Danie domowe' : (p.home ? 'Danie domowe' : 'Danie społeczności') + (p.author ? ' · ' + p.author : '');
             if (!p.mine && !p.home) cls += ' community';
+        } else if (p.source === 'user' && p.status === 'approved') {
+            // sprawdzony przez administratora = część bazy HomeList
+            t = 'HomeList';
+            cls += ' is-hl';
         } else t = p.status === 'pending' ? 'Czeka na akceptację' : TAGS[p.source] || '';
         return '<span class="fd-tag ' + cls + '">' + esc(t) + '</span>';
     }
@@ -1183,8 +1189,17 @@
                 }).join('') + '</tbody></table>'
                 + (p.dish.cooked_g ? '<p class="fd-mut" style="margin:6px 0 0;font-size:12px">Waga po ugotowaniu: ' + fmt(p.dish.cooked_g) + ' g</p>' : '');
         }
-        if (p.source === 'off') body += '<p class="fd-mut" style="margin:14px 0 0;font-size:11px">Dane: Open Food Facts (ODbL)' + (p.code ? ' · kod ' + esc(p.code) : '') + '</p>';
-        if (p.source === 'user' && p.owner) body += '<p class="fd-mut" style="margin:14px 0 0;font-size:11px">Dodał(a): ' + esc(p.owner) + (p.status === 'pending' ? ' · czeka na akceptację' : '') + '</p>';
+        var foot = [];
+        if (p.source === 'off') foot.push('Dane: Open Food Facts (ODbL)');
+        if (p.source === 'user') {
+            if (p.owner) foot.push('Dodał(a): ' + esc(p.owner));
+            foot.push(p.status === 'approved' ? 'sprawdzone przez HomeList' : p.status === 'pending' ? 'czeka na akceptację' : 'odrzucone – widzisz tylko Ty');
+        }
+        if (p.code) foot.push('kod ' + esc(p.code));
+        if (foot.length) body += '<p class="fd-mut" style="margin:14px 0 0;font-size:11px">' + foot.join(' · ') + '</p>';
+        if (p.source === 'user' && p.mine && p.status !== 'approved' && !pp.entry) {
+            body += '<button type="button" class="fd-ghost-btn fd-press" data-editown style="margin-top:12px">' + I.list + 'Popraw dane produktu</button>';
+        }
 
         return '<div class="fd-q" id="fd_q_box" style="margin-top:16px">'
             + '<button type="button" class="fd-q-head" data-qtoggle aria-expanded="false"><span class="fd-eyebrow">Skład i jakość</span>'
@@ -1204,6 +1219,8 @@
     }
 
     function bindQuality() {
+        var e = document.querySelector('#fd_q_box [data-editown]');
+        if (e) e.addEventListener('click', function () { editOwn(S.sheet.p.product.id, 'portion'); });
         var b = document.querySelector('#fd_q_box [data-qtoggle]');
         if (!b) return;
         b.addEventListener('click', function () {
@@ -1259,9 +1276,8 @@
     }
 
     // ---------- policz ze zdjęcia (AI przez czat) ----------
-    // Bez płatnego API: polecenie (scripts/food/ai_prompt.php) trafia do schowka, użytkownik wkleja je w ChatGPT razem ze zdjęciem,
+    // Bez płatnego API: polecenie (scripts/food/ai_prompt.php) trafia do schowka, użytkownik wkleja je w czacie (wybór w Konto > Jedzenie) razem ze zdjęciem,
     // a odpowiedź (JSON) wraca przez schowek. ai_match.php dopasowuje składniki do bazy HomeList, ai_log.php zapisuje je jako osobne wpisy.
-    var AI_CHAT = 'https://chatgpt.com/';
     var AI_KEY = 'hl_food_ai'; // czas skopiowania polecenia – po powrocie z czatu (także po przeładowaniu PWA) kreator zaczyna od wklejania
 
     function aiState() {
@@ -1287,7 +1303,7 @@
     }
 
     function renderAi(box) {
-        var sh = S.sheet, a = aiState();
+        var sh = S.sheet, a = aiState(), chat = S.data.settings;
         var li = function (n, title, sub, act) {
             return '<li class="fd-ai-li' + (n === 1 && a.copied ? ' is-done' : '') + '"><span class="fd-ai-n">' + (n === 1 && a.copied ? I.check : n) + '</span>'
                 + '<div style="flex:1;min-width:0"><b>' + title + '</b><span>' + sub + '</span></div>' + (act || '') + '</li>';
@@ -1299,8 +1315,8 @@
             + '<ol class="fd-ai-list">'
             + li(1, 'Skopiuj polecenie', 'Mówi czatowi, jak liczyć i w jakim formacie odpowiedzieć.',
                 '<button type="button" class="fd-ai-act fd-press" data-aicopy' + (a.prompt ? '' : ' disabled') + '>' + I.copy + '<span>' + (a.copied ? 'Jeszcze raz' : 'Kopiuj') + '</span></button>')
-            + li(2, 'Wklej je w czacie i dodaj zdjęcie', 'Działa w darmowym ChatGPT, także w aplikacji na telefonie.',
-                '<a class="fd-ai-act fd-press" href="' + AI_CHAT + '" target="_blank" rel="noopener">' + I.out + '<span>ChatGPT</span></a>')
+            + li(2, 'Wklej je w czacie i dodaj zdjęcie', 'Działa w darmowej wersji ' + esc(chat.ai_chat_label) + ', także w aplikacji na telefonie.',
+                '<a class="fd-ai-act fd-press" href="' + esc(chat.ai_chat_url) + '" target="_blank" rel="noopener">' + I.out + '<span>' + esc(chat.ai_chat_label) + '</span></a>')
             + li(3, 'Skopiuj odpowiedź i wróć tutaj', 'Przycisk „Kopiuj” jest w rogu bloku z kodem.')
             + '</ol>'
             + '<label class="hl-label" for="fd_ainote" style="margin-top:18px">Czego nie widać na zdjęciu? <span class="fd-mut" style="font-weight:400">(opcjonalnie)</span></label>'
@@ -1808,17 +1824,53 @@
     }
 
     // ---------- własny produkt ----------
+    // 14 alergenów UE – klucze jak w hl_food_allergen_names() (food_lib.php)
+    var ALLERGENS = [['gluten', 'gluten'], ['milk', 'mleko'], ['eggs', 'jaja'], ['nuts', 'orzechy'], ['peanuts', 'orzeszki ziemne'], ['soybeans', 'soja'],
+        ['sesame-seeds', 'sezam'], ['fish', 'ryby'], ['crustaceans', 'skorupiaki'], ['molluscs', 'mięczaki'], ['celery', 'seler'], ['mustard', 'gorczyca'],
+        ['sulphur-dioxide-and-sulphites', 'siarczyny'], ['lupin', 'łubin']];
+    var OWN_FIELDS = ['name', 'brand', 'code', 'kcal', 'protein', 'fat', 'carbs', 'sat_fat', 'sugars', 'fiber', 'salt', 'unit_label', 'unit_g', 'package_g', 'ingredients'];
+
+    // edycja własnego produktu (oczekujący / odrzucony) albo z profilu („Twój wkład”); back: portion | close
+    function editOwn(id, back) {
+        var sh = S.sheet, prev = sh.p;
+        setStep('loading');
+        getJSON('scripts/food/product_edit.php?id=' + id).then(function (res) {
+            if (S.sheet !== sh) return;
+            if (res.status !== 'success') { fail(res); return back === 'portion' && prev ? (sh.p = prev, setStep('portion', true)) : closeSheet(true); }
+            var o = res.product;
+            // liczby jako tekst – pola formularza i walidacja pracują na tekście (0 nie może zniknąć)
+            OWN_FIELDS.forEach(function (k) { if (typeof o[k] === 'number') o[k] = String(o[k]); else if (o[k] === null) delete o[k]; });
+            o.back = back;
+            o.prevP = prev;
+            sh.own = o;
+            setStep('own');
+        });
+    }
+
     function renderOwn(box) {
         var sh = S.sheet, o = sh.own || (sh.own = {});
         var u = o.per_ml ? 'ml' : 'g';
+        o.allergens = o.allergens || [];
+        o.traces = o.traces || [];
         var num = function (k, label, color, opt) {
             return '<label class="fd-field" style="padding-right:12px">' + (color ? '<span class="fd-dot" style="background:' + color + '"></span>' : '')
                 + '<input type="text" inputmode="decimal" data-o="' + k + '" placeholder="' + (opt ? '–' : '0') + '" aria-label="' + label + '" value="' + esc(o[k] !== undefined ? o[k] : '') + '">'
                 + '<span class="text-xs fd-mut" style="white-space:nowrap">' + label + '</span></label>';
         };
-        box.innerHTML = headHTML('Własny produkt', true)
+        // wybór z chipów: multi = lista (alergeny), pojedynczy = ponowne dotknięcie odznacza
+        var chips = function (k, opts, multi) {
+            return '<div class="fd-chips fd-wrap" data-ochips="' + k + '"' + (multi ? ' data-multi="1"' : '') + '>' + opts.map(function (x) {
+                var on = multi ? o[k].indexOf(x[0]) >= 0 : String(o[k]) === String(x[0]);
+                return '<button type="button" class="fd-chip fd-press' + (on ? ' is-on' : '') + '" data-v="' + esc(x[0]) + '" aria-pressed="' + on + '">' + x[1] + '</button>';
+            }).join('') + '</div>';
+        };
+        var hasQuality = !!(o.ingredients || o.allergens.length || o.traces.length || o.nutriscore || o.nova || o.palm_oil != null || o.diet);
+        var editing = !!o.id;
+        box.innerHTML = headHTML(editing ? 'Popraw produkt' : 'Własny produkt', true)
             + '<div class="fd-scroll" style="padding:8px 20px 12px">'
             + (o.notFound ? '<p class="fd-pill" style="margin:0 0 12px;border-radius:14px;padding:8px 12px;display:flex">' + (o.offError ? 'Open Food Facts nie odpowiada – dodaj produkt ręcznie' : 'Nie znaleźliśmy kodu ' + esc(o.code) + (o.name ? ' („' + esc(o.name) + '” bez wartości odżywczych)' : '')) + '</p>' : '')
+            + (editing && o.status === 'rejected' ? '<div class="fd-note is-warn"><b>Administrator odrzucił produkt</b>' + (o.review_note ? '<span>„' + esc(o.review_note) + '”</span>' : '') + '<span>Popraw dane i zapisz – produkt wróci do sprawdzenia.</span></div>' : '')
+            + '<div id="fd_olabel" style="margin-bottom:16px"></div><input type="file" id="fd_ofile" accept="image/*" capture="environment" hidden>'
             + '<label class="hl-label" for="fd_oname">Nazwa</label>'
             + '<div class="fd-field"><input id="fd_oname" data-o="name" type="text" placeholder="np. Pasztet babci" value="' + esc(o.name || '') + '"></div>'
             + '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px">'
@@ -1832,12 +1884,63 @@
             + '<details class="fd-more" style="margin-top:14px"' + (o.sugars || o.fiber || o.salt || o.sat_fat ? ' open' : '') + '><summary class="fd-eyebrow">Więcej z etykiety (opcjonalnie)</summary>'
             + '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px">'
             + num('sat_fat', 'nasycone g', '', 1) + num('sugars', 'cukry g', '', 1) + num('fiber', 'błonnik g', '', 1) + num('salt', 'sól g', '', 1) + '</div></details>'
-            + '<span class="fd-eyebrow" style="margin:18px 0 8px">Porcja (opcjonalnie)</span>'
-            + '<div style="display:flex;gap:8px"><div class="fd-field" style="flex:1"><input data-o="unit_label" type="text" placeholder="np. plaster, sztuka" aria-label="Nazwa porcji" value="' + esc(o.unit_label || '') + '"></div>'
+            + '<span class="fd-eyebrow" style="margin:18px 0 8px">Opakowanie i porcja (opcjonalnie)</span>'
+            + '<label class="fd-field" style="padding-right:12px"><span class="text-xs fd-mut" style="white-space:nowrap">Całe opakowanie</span><input data-o="package_g" type="text" inputmode="decimal" placeholder="np. ' + (u === 'ml' ? '500' : '250') + '" aria-label="Wielkość opakowania" value="' + esc(o.package_g || '') + '" style="text-align:right"><span class="text-xs fd-mut">' + u + '</span></label>'
+            + '<div style="display:flex;gap:8px;margin-top:8px"><div class="fd-field" style="flex:1"><input data-o="unit_label" type="text" placeholder="Porcja, np. plaster, sztuka" aria-label="Nazwa porcji" value="' + esc(o.unit_label || '') + '"></div>'
             + '<label class="fd-field" style="width:110px;padding-right:12px"><input data-o="unit_g" type="text" inputmode="decimal" placeholder="20" aria-label="Waga porcji" value="' + esc(o.unit_g || '') + '"><span class="text-xs fd-mut">' + u + '</span></label></div>'
-            + '<p class="fd-pill" style="margin:16px 0 0;border-radius:14px;padding:10px 12px;display:flex;line-height:1.5">Od razu widzisz go Ty i domownicy. Dla pozostałych pojawi się po akceptacji administratora.</p>'
-            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-commit>' + (o.forDish ? 'Zapisz i dodaj do dania' : 'Zapisz i wybierz porcję') + '</button></div>';
-        bindHead(box, function () { setStep(o.notFound ? 'scan' : o.forDish ? 'dish' : 'search', true); });
+            + '<details class="fd-more" style="margin-top:18px"' + (hasQuality ? ' open' : '') + '><summary class="fd-eyebrow">Skład i jakość (opcjonalnie)</summary>'
+            + '<label class="hl-label" for="fd_oingr" style="margin-top:10px">Skład</label>'
+            + '<textarea id="fd_oingr" data-o="ingredients" class="fd-area" rows="4" maxlength="5000" placeholder="Przepisz skład z opakowania, np. mąka pszenna, cukier, olej rzepakowy, emulgator (E322)…">' + esc(o.ingredients || '') + '</textarea>'
+            + '<p class="fd-mut" style="font-size:12px;margin:6px 2px 0">Dodatki E wpisane w składzie rozpoznamy sami.</p>'
+            + '<span class="hl-label" style="margin-top:14px">Alergeny <span class="fd-mut" style="font-weight:400">– pogrubione w składzie</span></span>' + chips('allergens', ALLERGENS, true)
+            + '<span class="hl-label" style="margin-top:14px">Może zawierać</span>' + chips('traces', ALLERGENS, true)
+            + '<span class="hl-label" style="margin-top:14px">Nutri-Score <span class="fd-mut" style="font-weight:400">– jeśli jest na opakowaniu</span></span>'
+            + chips('nutriscore', ['a', 'b', 'c', 'd', 'e'].map(function (x) { return [x, '<span class="fd-ns ' + x + '">' + x + '</span>']; }))
+            + '<span class="hl-label" style="margin-top:14px">Przetworzenie (NOVA)</span>'
+            + chips('nova', [[1, '1 · nieprzetworzone'], [2, '2 · składnik kulinarny'], [3, '3 · przetworzone'], [4, '4 · wysoko przetworzone']])
+            + '<span class="hl-label" style="margin-top:14px">Olej palmowy</span>' + chips('palm_oil', [[1, 'zawiera'], [0, 'bez oleju palmowego']])
+            + '<span class="hl-label" style="margin-top:14px">Dieta</span>' + chips('diet', [['vegan', 'wegańskie'], ['vegetarian', 'wegetariańskie'], ['none', 'z mięsem / rybą']])
+            + '</details>'
+            + '<p class="fd-pill" style="margin:16px 0 0;border-radius:14px;padding:10px 12px;display:flex;line-height:1.5">Od razu widzisz go Ty i domownicy. Dla pozostałych pojawi się po akceptacji administratora – wtedy dostanie znaczek HomeList.</p>'
+            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-commit>' + (editing ? 'Zapisz poprawki' : o.forDish ? 'Zapisz i dodaj do dania' : 'Zapisz i wybierz porcję') + '</button></div>';
+        var goBack = function () {
+            if (o.back === 'close') return closeSheet(true);
+            if (o.back === 'portion' && o.prevP) { sh.own = null; sh.p = o.prevP; return setStep('portion', true); }
+            setStep(o.notFound ? 'scan' : o.forDish ? 'dish' : 'search', true);
+        };
+        bindHead(box, goBack);
+        box.querySelectorAll('[data-ochips]').forEach(function (row) {
+            var k = row.dataset.ochips, multi = !!row.dataset.multi;
+            row.addEventListener('click', function (ev) {
+                var b = ev.target.closest('[data-v]');
+                if (!b) return;
+                var v = b.dataset.v;
+                if (multi) {
+                    var i = o[k].indexOf(v);
+                    if (i >= 0) o[k].splice(i, 1); else o[k].push(v);
+                } else o[k] = String(o[k]) === v ? null : v;
+                row.querySelectorAll('[data-v]').forEach(function (x) {
+                    var on = multi ? o[k].indexOf(x.dataset.v) >= 0 : String(o[k]) === x.dataset.v;
+                    x.classList.toggle('is-on', on);
+                    x.setAttribute('aria-pressed', on);
+                });
+                vib();
+            });
+        });
+        el('fd_ofile').addEventListener('change', function () {
+            var file = this.files && this.files[0];
+            this.value = '';
+            if (!file) return;
+            // etykieta musi być czytelna – większa rozdzielczość niż zdjęcie dania
+            shrinkPhoto(file, 2200).then(function (blob) {
+                if (o.labelPreview) URL.revokeObjectURL(o.labelPreview);
+                o.labelBlob = blob;
+                o.labelPreview = URL.createObjectURL(blob);
+                o.labelRemove = false;
+                renderOwnLabel();
+            }).catch(function () { fail({ status: 'warning', message: 'Nie udało się wczytać zdjęcia – spróbuj innego pliku' }); });
+        });
+        renderOwnLabel();
         var check = function () {
             var v = function (k) { return parseFloat(String(o[k] || '').replace(',', '.')); };
             var filled = ['kcal', 'protein', 'fat', 'carbs'].every(function (k) { return !isNaN(v(k)); });
@@ -1850,19 +1953,36 @@
             c.textContent = ok ? 'Zgadza się: z makro wychodzi ~' + fmt(est) + ' kcal' : 'Sprawdź etykietę: z makro wychodzi ~' + fmt(est) + ' kcal, a wpisano ' + fmt(v('kcal'));
         };
         box.querySelectorAll('[data-o]').forEach(function (i) { i.addEventListener('input', function () { o[i.dataset.o] = i.value; check(); }); });
-        box.querySelectorAll('[data-ml]').forEach(function (b) { b.addEventListener('click', function () { o.per_ml = b.dataset.ml === '1'; renderOwn(box); }); });
+        box.querySelectorAll('[data-ml]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var top = box.querySelector('.fd-scroll').scrollTop;
+                o.per_ml = b.dataset.ml === '1';
+                renderOwn(box);
+                box.querySelector('.fd-scroll').scrollTop = top;
+            });
+        });
         check();
-        if (window.matchMedia('(hover: hover)').matches) setTimeout(function () { (o.name ? box.querySelector('[data-o=kcal]') : el('fd_oname')).focus(); }, 350);
+        if (!editing && window.matchMedia('(hover: hover)').matches) setTimeout(function () { (o.name ? box.querySelector('[data-o=kcal]') : el('fd_oname')).focus(); }, 350);
         box.querySelector('[data-commit]').addEventListener('click', function (ev) {
             var btn = ev.currentTarget;
             btn.disabled = true;
             var data = {};
-            ['name', 'brand', 'code', 'kcal', 'protein', 'fat', 'carbs', 'sat_fat', 'sugars', 'fiber', 'salt', 'unit_label', 'unit_g'].forEach(function (k) { data[k] = String(o[k] || '').trim().replace(',', '.'); });
+            OWN_FIELDS.forEach(function (k) { data[k] = String(o[k] || '').trim(); if (k !== 'ingredients' && k !== 'name' && k !== 'brand' && k !== 'unit_label') data[k] = data[k].replace(',', '.'); });
             data.per_ml = o.per_ml ? 1 : 0;
+            data.allergens = o.allergens.join(',');
+            data.traces = o.traces.join(',');
+            ['nutriscore', 'nova', 'palm_oil', 'diet'].forEach(function (k) { data[k] = o[k] == null ? '' : o[k]; });
+            if (o.id) data.id = o.id;
+            if (o.labelBlob) data.label_photo = o.labelBlob;
+            if (o.labelRemove) data.label_photo_remove = 1;
             post('scripts/food/product_save.php', data).then(function (res) {
                 if (!S.sheet || S.sheet !== sh) return;
                 var done = function (p) {
+                    if (o.labelPreview) URL.revokeObjectURL(o.labelPreview);
                     sh.own = null;
+                    // poprawka z profilu – wracamy tam; z arkusza porcji – porcja z nowymi wartościami
+                    if (o.back === 'close') { closeSheet(true); return toast(res.message || 'Zapisano produkt'); }
+                    if (o.back === 'portion') { toast(res.message || 'Zapisano produkt'); return openPortion(p, null, false); }
                     // składnik dania – zamiast porcji wracamy do edytora
                     if (o.forDish && sh.dish) { sh.scanFor = null; dishAdd(sh.dish, p); return setStep('dish', true); }
                     openPortion(p, null, false, o.notFound ? 'barcode' : undefined);
@@ -1872,6 +1992,27 @@
                 if (res.status !== 'success') { btn.disabled = false; return fail(res); }
                 done(res.product);
             });
+        });
+    }
+
+    // zdjęcie etykiety – tylko do weryfikacji przez administratora, nie pokazujemy go innym
+    function renderOwnLabel() {
+        var o = S.sheet && S.sheet.own, box = el('fd_olabel');
+        if (!o || !box) return;
+        var src = o.labelPreview || (!o.labelRemove && o.label_photo);
+        box.innerHTML = src
+            ? '<figure class="fd-hero-photo fd-label-photo" style="margin:0"><img src="' + esc(src) + '" alt="Zdjęcie etykiety"><figcaption>Zdjęcie etykiety · widzi je tylko administrator</figcaption><div class="fd-photo-act">'
+                + '<button type="button" class="fd-press" data-lpick>' + I.camera + 'Zmień</button>'
+                + '<button type="button" class="fd-press" data-ldel aria-label="Usuń zdjęcie etykiety">' + I.trash + '</button></div></figure>'
+            : '<button type="button" class="fd-photo-add fd-press" data-lpick>' + I.camera + '<span><b>Zrób zdjęcie etykiety</b>'
+                + '<small>Tabela wartości i skład – administrator szybciej sprawdzi produkt. Nikt inny go nie zobaczy.</small></span></button>';
+        box.querySelectorAll('[data-lpick]').forEach(function (b) { b.addEventListener('click', function () { el('fd_ofile').click(); }); });
+        var del = box.querySelector('[data-ldel]');
+        if (del) del.addEventListener('click', function () {
+            if (o.labelPreview) URL.revokeObjectURL(o.labelPreview);
+            o.labelBlob = o.labelPreview = null;
+            o.labelRemove = !!o.label_photo;
+            renderOwnLabel();
         });
     }
 
@@ -1935,12 +2076,12 @@
         setStep('dish');
     }
 
-    // zdjęcie zmniejszamy w przeglądarce (telefon robi kilka MB, serwer nie ma GD) – JPEG, dłuższy bok 1600 px
-    function shrinkPhoto(file) {
+    // zdjęcie zmniejszamy w przeglądarce (telefon robi kilka MB, serwer nie ma GD) – JPEG, dłuższy bok 1600 px (albo max)
+    function shrinkPhoto(file, max) {
         return new Promise(function (ok, no) {
             var img = new Image(), url = URL.createObjectURL(file);
             img.onload = function () {
-                var s = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+                var s = Math.min(1, (max || 1600) / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
                 c.width = Math.round(img.naturalWidth * s);
                 c.height = Math.round(img.naturalHeight * s);
                 c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);

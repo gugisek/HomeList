@@ -14,13 +14,14 @@ if (isset($_POST['meals'])) {
     if (!$meals) hl_food_json('warning', 'Zostaw włączony co najmniej jeden posiłek');
     $s['meals'] = $meals;
 }
+if (isset($_POST['ai_chat']) && isset(hl_food_ai_chats()[$_POST['ai_chat']])) $s['ai_chat'] = $_POST['ai_chat'];
 
 $enabled = (int)$s['enabled'];
 $today = (int)$s['show_on_today'];
 $meals = implode(',', $s['meals']);
-$stmt = $conn->prepare('INSERT INTO food_settings (user_id, enabled, meals, show_on_today) VALUES (?, ?, ?, ?)
-                        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), meals = VALUES(meals), show_on_today = VALUES(show_on_today)');
-$stmt->bind_param('iisi', $user_id, $enabled, $meals, $today);
+$stmt = $conn->prepare('INSERT INTO food_settings (user_id, enabled, meals, show_on_today, ai_chat) VALUES (?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), meals = VALUES(meals), show_on_today = VALUES(show_on_today), ai_chat = VALUES(ai_chat)');
+$stmt->bind_param('iisis', $user_id, $enabled, $meals, $today, $s['ai_chat']);
 if (!$stmt->execute()) hl_food_json('error', 'Nie udało się zapisać ustawień');
 $stmt->close();
-hl_food_json('success', 'Zapisano', ['settings' => $s]);
+hl_food_json('success', 'Zapisano', ['settings' => hl_food_settings($conn, $user_id)]);

@@ -1,7 +1,7 @@
 <?php
 // Moderacja bazy produktów (moduł „Baza produktów”) – produkty użytkowników i zgłoszone jednostki porcji (type = unit):
 //   GET  – lista oczekujących produktów (read)
-//   POST id, type?, action = approve | reject (edit) | delete (full)
+//   POST id, type?, action = approve | reject (edit) | delete (full), note? = powód odrzucenia (autor widzi go w „Twój wkład”)
 // Decyzja zapisuje reviewed_by / reviewed_at (historia na stronie) i wpis w archiwum zmian (logs).
 // Usunięcie nie rusza dziennika – wpisy mają własną kopię nazwy i makro.
 $SECURITY_REQUIRED_MODULE = ['food', 'read'];
@@ -51,6 +51,7 @@ if ($action === 'delete') {
     if (!$unit) {
         $conn->query("DELETE FROM food_product_units WHERE product_id = $id");
         $conn->query("DELETE FROM food_product_details WHERE product_id = $id");
+        hl_food_delete_photo($row['label_photo']);
     }
     // usunięty wiersz znika z historii na stronie – zostaje ślad w archiwum zmian
     hl_log($conn, $id, $unit ? 'food_unit' : 'food_product', $what . '<br/>Status: ' . $row['status'], '', 3, $unit ? 'Usunięto jednostkę porcji' : 'Usunięto produkt z bazy');
@@ -60,6 +61,15 @@ if ($action === 'delete') {
     $stmt->bind_param('sii', $status, $me, $id);
     $stmt->execute();
     $stmt->close();
+    if (!$unit) {
+        // akceptacja czyści dawną uwagę; odrzucenie bez powodu też ją czyści (nieaktualna)
+        $note = $action === 'reject' ? (mb_substr(trim((string)($_POST['note'] ?? '')), 0, 300) ?: null) : null;
+        $stmt = $conn->prepare('UPDATE food_products SET review_note = ? WHERE id = ?');
+        $stmt->bind_param('si', $note, $id);
+        $stmt->execute();
+        $stmt->close();
+        if ($note !== null) $what .= '<br/>Powód: ' . htmlspecialchars($note, ENT_QUOTES, 'UTF-8');
+    }
     hl_log($conn, $id, $unit ? 'food_unit' : 'food_product', 'Status: ' . $row['status'], $what . '<br/>Status: ' . $status, 1,
         ($action === 'approve' ? 'Zaakceptowano ' : 'Odrzucono ') . ($unit ? 'jednostkę porcji' : 'produkt'));
 }

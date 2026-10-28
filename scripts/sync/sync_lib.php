@@ -3,7 +3,7 @@
 // (COUNT / MAX(id) / MAX(updated_at)). Klient porównuje go co kilka sekund (scripts/sync/state.php)
 // i dopiero przy różnicy pobiera widok od nowa – serwer nie renderuje niczego „na zapas”.
 //
-// Zakresy (scope): list:ID | today | archive | food. Token zmienia się przy dodaniu / edycji / usunięciu zadania,
+// Zakresy (scope): list:ID | today | archive | food | bills. Token zmienia się przy dodaniu / edycji / usunięciu zadania,
 // zmianie planu dnia, odhaczeniu rutyny, zmianie nazwy listy i składu jej członków, a także o północy.
 // Kolumny updated_at dodaje database/migration_sync.sql – bez niej wykrywane są tylko dodania i usunięcia.
 
@@ -70,6 +70,17 @@ if (!function_exists('hl_sync_state')) {
             return ['token' => substr(md5($scope.json_encode($parts)), 0, 16), 'nav' => $nav, 'shared' => false];
         }
 
+        // Opłaty: definicje, płatności (także dopisane automatycznie) i wejścia na karnet
+        if ($scope === 'bills') {
+            $parts = [
+                hl_sync_agg($conn, 'SELECT COUNT(*), MAX(id), MAX(updated_at) FROM bills WHERE owner_id = ?', [$userId], 'i', [$userId]),
+                hl_sync_agg($conn, 'SELECT COUNT(*), MAX(p.id), MAX(p.updated_at) FROM bill_payments p JOIN bills b ON b.id = p.bill_id WHERE b.owner_id = ?', [$userId], 'i', [$userId]),
+                hl_sync_agg($conn, 'SELECT COUNT(*), MAX(v.id) FROM bill_visits v JOIN bills b ON b.id = v.bill_id WHERE b.owner_id = ?', [$userId], 'i', [$userId]),
+                date('Y-m-d'),
+            ];
+            return ['token' => substr(md5($scope.json_encode($parts)), 0, 16), 'nav' => $nav, 'shared' => false];
+        }
+
         if (preg_match('/^list:(\d+)$/', $scope, $m)) {
             $listId = (int)$m[1];
             if (!isset($lists[$listId])) return ['token' => 'gone', 'nav' => $nav, 'shared' => false];
@@ -106,6 +117,9 @@ if (!function_exists('hl_sync_state')) {
         // kapsułka kcal w nagłówku Dziś (moduł Jedzenie)
         if ($scope === 'today') {
             $parts[] = hl_sync_agg($conn, 'SELECT COUNT(*), MAX(id), MAX(updated_at) FROM food_log WHERE user_id = ?', [$userId], 'i', [$userId]);
+            // „Do zapłaty” i kropki płatności w pasku dni (moduł Opłaty)
+            $parts[] = hl_sync_agg($conn, 'SELECT COUNT(*), MAX(id), MAX(updated_at) FROM bills WHERE owner_id = ?', [$userId], 'i', [$userId]);
+            $parts[] = hl_sync_agg($conn, 'SELECT COUNT(*), MAX(p.id), MAX(p.updated_at) FROM bill_payments p JOIN bills b ON b.id = p.bill_id WHERE b.owner_id = ?', [$userId], 'i', [$userId]);
         }
         // nowy dzień = inne terminy, zaległe i archiwum
         $parts[] = date('Y-m-d');

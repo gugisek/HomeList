@@ -18,6 +18,11 @@ $strip_from = hl_add_days($date, -14);
 $strip_to = hl_add_days($date, 21);
 $counts = hl_day_counts($conn, $user_id, $strip_from, $strip_to, $today);
 
+// Opłaty: „Do zapłaty dziś” nad porami dnia i bursztynowa kropka w pasku dni przy dniach z płatnościami
+require_once __DIR__.'/../../../scripts/bills/bills_lib.php';
+$bill_items = hl_bill_day_items($conn, $user_id, $date, $today);
+$bill_days = hl_bill_days($conn, $user_id, $strip_from, $strip_to, $today);
+
 $title = hl_relative_day($date, $today);
 $subtitle = in_array($title, ['Dziś', 'Jutro', 'Wczoraj']) ? hl_long_date($date) : (int)date('j', strtotime($date)).' '.hl_month_name(date('n', strtotime($date))).(date('Y', strtotime($date)) !== date('Y') ? ' '.date('Y', strtotime($date)) : '');
 $pct = $feed['total'] ? round($feed['done'] / $feed['total'] * 100) : 0;
@@ -90,14 +95,14 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
             echo '<button type="button" onclick="feedGoTo(\''.$d.'\')" data-date="'.$d.'" '.($sel ? 'data-selected="1"' : '').' class="flex-none w-12 flex flex-col items-center gap-0.5 py-2 rounded-2xl duration-150 active:scale-95 '.$cls.'">';
             echo '<span class="text-[10px] uppercase tracking-wide '.$name_cls.'">'.hl_day_name($d, true).'</span>';
             echo '<span class="text-base font-semibold leading-none">'.(int)date('j', strtotime($d)).'</span>';
-            echo '<span class="flex gap-0.5 h-1 mt-1" '.($sel ? 'id="strip-selected-dots"' : '').'>';
+            echo '<span class="flex gap-0.5 h-1 mt-1"><span class="flex gap-0.5" '.($sel ? 'id="strip-selected-dots"' : '').'>';
             $shown = min($c['total'], 4);
             $done_shown = $c['total'] ? (int)round($c['done'] / $c['total'] * $shown) : 0;
             for ($i = 0; $i < $shown; $i++) {
                 $dot = $i < $done_shown ? 'bg-green-400' : ($sel ? 'bg-white/40 dark:bg-black/30' : 'bg-gray-300 dark:bg-gray-500');
                 echo '<span class="h-1 w-1 rounded-full '.$dot.'"></span>';
             }
-            echo '</span></button>';
+            echo '</span>'.(isset($bill_days[$d]) ? '<span class="h-1 w-1 rounded-full bg-amber-400" title="Płatność"></span>' : '').'</span></button>';
         }
         ?>
     </div>
@@ -133,6 +138,8 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
             </div>
         </div>
     </div>
+
+    <?php if ($bill_items): hl_render_bill_section($bill_items, $date, $today); endif; ?>
 
     <?php if ($is_empty): ?>
     <div class="flex items-center justify-center py-10">

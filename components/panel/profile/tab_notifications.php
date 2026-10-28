@@ -6,6 +6,7 @@ $acc_push_toggles = [
     'notify_timed' => ['Zadania z godziną', '5 minut przed zaplanowaną godziną'],
     'notify_routines' => ['Rutyny', 'Uwzględniaj rutyny (pojedyncze możesz wyciszyć w ich szczegółach)'],
     'notify_lists' => ['Nowe zadania na listach wspólnych', 'Gdy ktoś inny doda zadania – seria scalona w jedno powiadomienie (pojedyncze listy wyciszysz w ich szczegółach)'],
+    'notify_bills' => ['Opłaty', 'Rano: płatności (ile dni wcześniej – ustawiasz przy każdej opłacie), zaległe, koniec okresu próbnego, termin wypowiedzenia, koniec umowy i polisy'],
 ];
 if (hl_can('reports', 'read')) {
     $acc_push_toggles['notify_reports'] = ['Zgłoszenia błędów', 'Gdy użytkownik zgłosi błąd w aplikacji (dla administratorów)'];

@@ -269,8 +269,15 @@ if (!function_exists('hl_food_norm')) {
         return !empty($p['photo']) ? 'scripts/food/photo.php?id=' . (int)$p['id'] . '&v=' . substr(md5($p['photo']), 0, 8) : null;
     }
 
+    // zdjęcie etykiety (do weryfikacji produktu) – tylko dla autora i moderatorów, ten sam endpoint z label=1
+    function hl_food_label_photo_url(array $p): ?string
+    {
+        return !empty($p['label_photo']) ? 'scripts/food/photo.php?id=' . (int)$p['id'] . '&label=1&v=' . substr(md5($p['label_photo']), 0, 8) : null;
+    }
+
     // typ z zawartości pliku; zdjęcie zmniejsza przeglądarka (serwer nie ma GD) – tu tylko limit i walidacja
-    function hl_food_save_photo(array $upload, int $userId): array
+    // $prefix: dish (zdjęcie dania) albo label (zdjęcie etykiety produktu)
+    function hl_food_save_photo(array $upload, int $userId, string $prefix = 'dish'): array
     {
         if (($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($upload['tmp_name'])) {
             return ['ok' => false, 'error' => 'Nie udało się przesłać zdjęcia'];
@@ -279,7 +286,7 @@ if (!function_exists('hl_food_norm')) {
         $info = @getimagesize($upload['tmp_name']);
         $types = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'];
         if (!$info || !isset($types[$info[2]])) return ['ok' => false, 'error' => 'Zdjęcie musi być w formacie JPG, PNG lub WEBP'];
-        $file = 'dish-' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $types[$info[2]];
+        $file = $prefix . '-' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $types[$info[2]];
         if (!move_uploaded_file($upload['tmp_name'], hl_food_photo_dir() . $file)) return ['ok' => false, 'error' => 'Nie udało się zapisać zdjęcia'];
         return ['ok' => true, 'file' => $file];
     }
@@ -287,6 +294,77 @@ if (!function_exists('hl_food_norm')) {
     function hl_food_delete_photo(?string $file): void
     {
         if ($file && is_file(hl_food_photo_dir() . basename($file))) @unlink(hl_food_photo_dir() . basename($file));
+    }
+
+    // ---------- produkty od użytkowników ----------
+
+    // „Skład i jakość” z formularza (własny produkt, poprawki moderatora) – ten sam format co dane z OFF;
+    // null = nic nie podano (wiersz szczegółów zbędny)
+    function hl_food_details_from_post(array $in): ?array
+    {
+        $names = hl_food_allergen_names();
+        $tags = function ($v) use ($names) {
+            $list = is_array($v) ? $v : explode(',', (string)$v);
+            $list = array_values(array_unique(array_filter(array_map('trim', $list), fn($t) => isset($names[$t]))));
+            return $list ? implode(',', $list) : null;
+        };
+        $pick = fn($k, array $allowed) => in_array((string)($in[$k] ?? ''), array_map('strval', $allowed), true) ? (string)$in[$k] : null;
+        $ingredients = trim(preg_replace('/[ \t]+/', ' ', str_replace("\r", '', (string)($in['ingredients'] ?? ''))));
+        $ingredients = $ingredients !== '' ? mb_substr($ingredients, 0, 5000, 'UTF-8') : null;
+        // dodatki E z treści składu („E330”, „E 322”, „e-471”) – sekcja jakości pokaże nazwy i ocenę EFSA
+        $additives = null;
+        if ($ingredients !== null && preg_match_all('/\bE\s?-?(\d{3,4}[a-z]?)\b/iu', $ingredients, $m)) {
+            $additives = implode(',', array_slice(array_unique(array_map(fn($c) => 'e' . strtolower($c), $m[1])), 0, 40));
+        }
+        $nova = $pick('nova', [1, 2, 3, 4]);
+        $palm = $pick('palm_oil', [0, 1]);
+        $diet = $pick('diet', ['vegan', 'vegetarian', 'none']);
+        $d = [
+            'ingredients' => $ingredients, 'ingredients_lang' => $ingredients !== null ? 'pl' : null,
+            'allergens' => $tags($in['allergens'] ?? ''), 'traces' => $tags($in['traces'] ?? ''), 'additives' => $additives,
+            'nova' => $nova !== null ? (int)$nova : null, 'nutriscore' => $pick('nutriscore', ['a', 'b', 'c', 'd', 'e']),
+            'palm_oil' => $palm !== null ? (int)$palm : null,
+            'vegan' => $diet === null ? null : (int)($diet === 'vegan'),
+            'vegetarian' => $diet === null ? null : (int)($diet !== 'none'),
+        ];
+        return array_filter($d, fn($v) => $v !== null) ? $d : null;
+    }
+
+    function hl_food_details_save(mysqli $conn, int $productId, ?array $d): void
+    {
+        if ($d === null) {
+            $conn->query('DELETE FROM food_product_details WHERE product_id = ' . $productId);
+            return;
+        }
+        $stmt = $conn->prepare('REPLACE INTO food_product_details (product_id, ingredients, ingredients_lang, allergens, traces, additives, nova, nutriscore, palm_oil, vegan, vegetarian)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt->bind_param('isssssisiii', $productId, $d['ingredients'], $d['ingredients_lang'], $d['allergens'], $d['traces'], $d['additives'],
+                          $d['nova'], $d['nutriscore'], $d['palm_oil'], $d['vegan'], $d['vegetarian']);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    // komplet pól formularza produktu (edycja przez autora albo moderatora) – surowe wartości, nie etykiety
+    function hl_food_edit_data(mysqli $conn, array $p): array
+    {
+        $num = fn($v) => $v !== null ? (float)$v : null;
+        $d = $conn->query('SELECT * FROM food_product_details WHERE product_id = ' . (int)$p['id'])->fetch_assoc() ?: [];
+        $unit = $conn->query('SELECT label, grams FROM food_product_units WHERE product_id = ' . (int)$p['id'] . ' AND owner_id IS NULL ORDER BY sort, id LIMIT 1')->fetch_assoc();
+        $split = fn($s) => array_values(array_filter(explode(',', (string)$s)));
+        $vegan = $d['vegan'] ?? null;
+        $vegetarian = $d['vegetarian'] ?? null;
+        return [
+            'id' => (int)$p['id'], 'name' => $p['name'], 'brand' => $p['brand'], 'code' => $p['code'], 'per_ml' => (bool)$p['per_ml'],
+            'kcal' => (float)$p['kcal'], 'protein' => (float)$p['protein'], 'fat' => (float)$p['fat'], 'carbs' => (float)$p['carbs'],
+            'sugars' => $num($p['sugars']), 'fiber' => $num($p['fiber']), 'sat_fat' => $num($p['sat_fat']), 'salt' => $num($p['salt']),
+            'package_g' => $num($p['package_g']),
+            'unit_label' => $unit['label'] ?? null, 'unit_g' => isset($unit['grams']) ? (float)$unit['grams'] : null,
+            'ingredients' => $d['ingredients'] ?? null, 'allergens' => $split($d['allergens'] ?? ''), 'traces' => $split($d['traces'] ?? ''),
+            'nutriscore' => $d['nutriscore'] ?? null, 'nova' => isset($d['nova']) ? (int)$d['nova'] : null,
+            'palm_oil' => isset($d['palm_oil']) ? (int)$d['palm_oil'] : null,
+            'diet' => $vegan === null && $vegetarian === null ? null : ((int)$vegan === 1 ? 'vegan' : ((int)$vegetarian === 1 ? 'vegetarian' : 'none')),
+            'label_photo' => hl_food_label_photo_url($p), 'status' => $p['status'], 'review_note' => $p['review_note'] ?? null,
+        ];
     }
 
     // ---------- Open Food Facts ----------
@@ -490,15 +568,31 @@ if (!function_exists('hl_food_norm')) {
         return $row;
     }
 
+    // czaty AI ze skrótem w „Policz ze zdjęcia” – wszystkie rozpoznają zdjęcia w darmowej wersji
+    function hl_food_ai_chats(): array
+    {
+        return [
+            'chatgpt' => ['label' => 'ChatGPT', 'url' => 'https://chatgpt.com/'],
+            'gemini' => ['label' => 'Gemini', 'url' => 'https://gemini.google.com/app'],
+            'claude' => ['label' => 'Claude', 'url' => 'https://claude.ai/new'],
+            'copilot' => ['label' => 'Copilot', 'url' => 'https://copilot.microsoft.com/'],
+            'grok' => ['label' => 'Grok', 'url' => 'https://grok.com/'],
+            'mistral' => ['label' => 'Le Chat', 'url' => 'https://chat.mistral.ai/chat'],
+        ];
+    }
+
     function hl_food_settings(mysqli $conn, int $userId): array
     {
-        $stmt = $conn->prepare('SELECT enabled, meals, show_on_today FROM food_settings WHERE user_id = ?');
+        $stmt = $conn->prepare('SELECT enabled, meals, show_on_today, ai_chat FROM food_settings WHERE user_id = ?');
         $stmt->bind_param('i', $userId);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         $meals = array_values(array_intersect(array_keys(hl_food_meals()), array_map('intval', explode(',', $row['meals'] ?? '1,2,3,4,5'))));
-        return ['enabled' => (bool)($row['enabled'] ?? false), 'meals' => $meals ?: [1, 2, 3, 4, 5], 'show_on_today' => (bool)($row['show_on_today'] ?? true)];
+        $chats = hl_food_ai_chats();
+        $chat = isset($chats[$row['ai_chat'] ?? '']) ? $row['ai_chat'] : 'chatgpt';
+        return ['enabled' => (bool)($row['enabled'] ?? false), 'meals' => $meals ?: [1, 2, 3, 4, 5], 'show_on_today' => (bool)($row['show_on_today'] ?? true),
+                'ai_chat' => $chat, 'ai_chat_label' => $chats[$chat]['label'], 'ai_chat_url' => $chats[$chat]['url']];
     }
 
     function hl_food_entry(array $row): array

@@ -60,6 +60,10 @@ $rail_reports_new = isset($rail_admin['reports']) ? (int)$conn->query('SELECT CO
 // Jedzenie: w pigułce po włączeniu modułu, wcześniej w menu „więcej”
 $rail_food = (bool)($conn->query('SELECT enabled FROM food_settings WHERE user_id = '.$rail_uid)->fetch_row()[0] ?? false);
 $rail_d['food'] = 'M6 3v6a2 2 0 0 0 4 0V3M8 3v18M17 21V3c-2 1.4-3 4-3 7.5V13h3';
+// Opłaty: zawsze w pigułce; kropka = ręczne płatności na dziś i zaległe
+require_once __DIR__.'/../../scripts/bills/bills_lib.php';
+$rail_bills_due = hl_bill_due_count($conn, (int)$rail_uid);
+$rail_d['bills'] = 'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z';
 
 $rail_img = !empty($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] : 'default.png';
 ?>
@@ -75,6 +79,11 @@ $rail_img = !empty($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] 
             <span class="hl-rail-label">Jedzenie</span>
         </a>
         <?php endif; ?>
+        <a data-rail="list_bills" onclick="hlNav('list=bills')" class="hl-rail-item" title="Opłaty">
+            <span class="hl-rail-ico"><?=$rail_icon($rail_d['bills'], '1.8')?></span>
+            <span data-bills-dot class="hl-rail-dot"<?=$rail_bills_due ? '' : ' hidden'?>></span>
+            <span class="hl-rail-label">Opłaty</span>
+        </a>
         <span class="hl-rail-sep"></span>
         <div id="rail_lists" class="hl-rail-scroll">
             <?php foreach ($rail_lists as $l): $tone = $rail_tones[(int)$l['id'] % count($rail_tones)]; ?>

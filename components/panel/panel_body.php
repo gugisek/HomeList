@@ -190,12 +190,15 @@ if (panelSiteUrl && /^[a-z_]+$/.test(panelSiteUrl)) {
     panelSiteGet = "";
     history.replaceState(null, "", window.location.pathname);
 }
-// panel.php?list=ID (powiadomienie o nowych zadaniach) – od razu ta lista
+// panel.php?list=ID (powiadomienie o nowych zadaniach) albo list=bills (przypomnienie o opłatach) – od razu ta zakładka
 var panelListUrl = new URLSearchParams(window.location.search).get("list");
-if (panelListUrl && /^\d+$/.test(panelListUrl)) {
+if (panelListUrl && /^(\d+|bills)$/.test(panelListUrl)) {
     panelSite = "dashboard";
     panelSiteGet = "";
     localStorage.setItem("current_todo", "list=" + panelListUrl);
+    // panel.php?list=bills&bill=ID (przypomnienie o jednej opłacie) – po wejściu otwórz jej szczegóły (js/bills.js)
+    var panelBillUrl = new URLSearchParams(window.location.search).get("bill");
+    if (panelListUrl === "bills" && panelBillUrl && /^\d+$/.test(panelBillUrl)) try { sessionStorage.setItem("hl_bills_open", "bill:" + panelBillUrl); } catch (e) {}
     try { sessionStorage.setItem("hl_started", "1"); } catch (e) {}
     history.replaceState(null, "", window.location.pathname);
 }

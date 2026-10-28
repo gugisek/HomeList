@@ -14,8 +14,9 @@ $can_delete = hl_can('food', 'full');
 $me = (int)$_SESSION['login_id'];
 
 $items = [];
-$res = $conn->query("SELECT p.*, (SELECT COUNT(*) FROM food_log l WHERE l.product_id = p.id) AS uses
-                     FROM food_products p WHERE (p.source = 'user' OR (p.source = 'dish' AND p.public = 1)) AND p.status = 'pending' ORDER BY p.id LIMIT 200");
+$res = $conn->query("SELECT p.*, d.ingredients, d.allergens, d.traces, d.additives, d.nutriscore, d.nova, d.palm_oil, d.vegan, d.vegetarian,
+                            (SELECT COUNT(*) FROM food_log l WHERE l.product_id = p.id) AS uses
+                     FROM food_products p LEFT JOIN food_product_details d ON d.product_id = p.id WHERE (p.source = 'user' OR (p.source = 'dish' AND p.public = 1)) AND p.status = 'pending' ORDER BY p.id LIMIT 200");
 while ($row = $res->fetch_assoc()) $items[] = $row;
 // składniki udostępnianych dań – moderator ocenia przepis, nie etykietę
 $dish_items = [];
@@ -36,11 +37,12 @@ while ($row = $res->fetch_assoc()) $units[] = $row;
 // historia: produkty użytkowników + zgłoszone jednostki, najnowsze na górze
 $history = [];
 $res = $conn->query("(SELECT IF(p.source = 'dish', 'dish', 'product') AS kind, p.id, p.name, p.brand, NULL AS label, NULL AS grams, p.per_ml, p.kcal, p.status,
-                             p.created_at, p.owner_id, p.reviewed_by, p.reviewed_at
+                             p.created_at, p.owner_id, p.reviewed_by, p.reviewed_at, p.code, p.review_note, p.label_photo,
+                             (SELECT COUNT(*) FROM food_log l WHERE l.product_id = p.id) AS uses
                       FROM food_products p WHERE p.source = 'user' OR (p.source = 'dish' AND p.public = 1))
                      UNION ALL
                      (SELECT 'unit', un.id, p.name, p.brand, un.label, un.grams, p.per_ml, NULL, un.status,
-                             un.created_at, un.owner_id, un.reviewed_by, un.reviewed_at
+                             un.created_at, un.owner_id, un.reviewed_by, un.reviewed_at, p.code, NULL, NULL, NULL
                       FROM food_product_units un JOIN food_products p ON p.id = un.product_id WHERE un.owner_id IS NOT NULL)
                      ORDER BY created_at DESC, id DESC LIMIT 200");
 while ($row = $res->fetch_assoc()) $history[] = $row;
@@ -71,9 +73,12 @@ $actions = function (string $kind, int $id, bool $inHistory) use ($can_edit, $ca
     if (!$can_edit) return '';
     $t = $kind === 'product' ? '' : ", '$kind'";
     $show = fn($s) => $inHistory ? ' data-show="' . $s . '"' : '';
+    // odrzucenie produktu / dania pyta o powód (autor zobaczy go w „Twój wkład”), jednostki – od razu
+    $reject = $kind === 'unit' ? 'foodModerate(' . $id . ", 'reject'$t)" : 'foodReject(' . $id . ", '$kind')";
     return '<div class="mt-3 flex flex-wrap gap-2">'
         . '<button type="button"' . $show('pending rejected') . ' onclick="foodModerate(' . $id . ", 'approve'$t)\" class=\"hl-btn hl-btn-green hl-btn-sm\">" . $icon($check) . 'Akceptuj</button>'
-        . '<button type="button"' . $show('pending approved') . ' onclick="foodModerate(' . $id . ", 'reject'$t)\" class=\"hl-btn hl-btn-ghost hl-btn-sm\">" . ($inHistory ? 'Odrzuć / cofnij' : 'Odrzuć') . '</button>'
+        . ($kind === 'product' ? '<button type="button" onclick="foodEdit(' . $id . ')" class="hl-btn hl-btn-soft hl-btn-sm">' . $icon('m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125') . 'Popraw</button>' : '')
+        . '<button type="button"' . $show('pending approved') . ' onclick="' . $reject . '" class="hl-btn hl-btn-ghost hl-btn-sm">' . ($inHistory ? 'Odrzuć / cofnij' : 'Odrzuć') . '</button>'
         . ($can_delete && $kind !== 'dish' ? '<button type="button" onclick="foodModerate(' . $id . ", 'delete'$t)\" class=\"hl-btn hl-btn-danger hl-btn-sm\">Usuń</button>" : '')
         . '</div>';
 };
@@ -119,6 +124,17 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                     <?php if (!empty($p['photo'])): ?>
                     <img src="<?=hl_e(hl_food_photo_url($p))?>" alt="Zdjęcie dania" loading="lazy" class="mt-3 w-full max-w-sm aspect-[16/10] object-cover rounded-2xl ring-1 ring-black/5 dark:ring-white/10">
                     <?php endif; ?>
+                    <?php if (!empty($p['label_photo'])): ?>
+                    <a href="<?=hl_e(hl_food_label_photo_url($p))?>" target="_blank" rel="noopener" class="group relative mt-3 block w-full max-w-sm overflow-hidden rounded-2xl ring-1 ring-black/5 dark:ring-white/10 bg-black">
+                        <img src="<?=hl_e(hl_food_label_photo_url($p))?>" alt="Zdjęcie etykiety" loading="lazy" class="w-full max-h-72 object-contain group-hover:opacity-90 duration-150">
+                        <span class="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">Zdjęcie etykiety · otwórz w pełnym rozmiarze</span>
+                    </a>
+                    <?php elseif ($p['source'] === 'user'): ?>
+                    <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">Bez zdjęcia etykiety</p>
+                    <?php endif; ?>
+                    <?php if (!empty($p['review_note'])): ?>
+                    <p class="mt-2 rounded-xl bg-gray-50 dark:bg-white/5 px-3 py-2 text-xs text-gray-600 dark:text-gray-300">Poprawka po odrzuceniu. Wcześniejsza uwaga: „<?=hl_e($p['review_note'])?>”</p>
+                    <?php endif; ?>
                     <?php if ($p['source'] === 'dish' && !empty($dish_items[(int)$p['id']])): $di = $dish_items[(int)$p['id']]; ?>
                     <ul class="mt-3 divide-y divide-black/5 dark:divide-white/10 text-sm">
                         <?php foreach ($di as $it): ?>
@@ -141,7 +157,30 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                         </div>
                         <?php endforeach; ?>
                     </div>
-                    <?php if ($p['source'] !== 'dish'): ?>
+                    <?php if ($p['source'] !== 'dish'):
+                        $extra = array_filter(['nasycone' => $p['sat_fat'], 'cukry' => $p['sugars'], 'błonnik' => $p['fiber'], 'sól' => $p['salt']], fn($v) => $v !== null);
+                        $an = hl_food_allergen_names();
+                        $tagList = fn($s) => implode(', ', array_map(fn($t) => $an[$t] ?? $t, array_filter(explode(',', (string)$s))));
+                        $diet = $p['vegan'] === null && $p['vegetarian'] === null ? null : ((int)$p['vegan'] === 1 ? 'wegańskie' : ((int)$p['vegetarian'] === 1 ? 'wegetariańskie' : 'z mięsem / rybą'));
+                        $facts = array_filter([
+                            $extra ? implode(' · ', array_map(fn($k, $v) => $k . ' ' . $fmt($v) . ' g', array_keys($extra), $extra)) : null,
+                            $p['quantity'] ? 'opakowanie ' . hl_e($p['quantity']) : null,
+                            $p['nutriscore'] ? 'Nutri-Score <span class="fd-ns ' . hl_e($p['nutriscore']) . '" style="width:18px;height:18px;font-size:10px;border-radius:5px">' . hl_e($p['nutriscore']) . '</span>' : null,
+                            $p['nova'] ? 'NOVA ' . (int)$p['nova'] : null,
+                            $p['palm_oil'] !== null ? ((int)$p['palm_oil'] ? 'z olejem palmowym' : 'bez oleju palmowego') : null,
+                            $diet,
+                        ]);
+                    ?>
+                    <?php if ($facts): ?><p class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600 dark:text-gray-300"><?=implode('<span class="text-gray-300 dark:text-gray-600">·</span>', $facts)?></p><?php endif; ?>
+                    <?php if ($p['ingredients']): ?>
+                    <details class="mt-2 text-xs text-gray-600 dark:text-gray-300">
+                        <summary class="cursor-pointer font-medium text-gray-700 dark:text-gray-200">Skład<?=$p['additives'] ? ' · dodatki: ' . hl_e(strtoupper(str_replace(',', ', ', $p['additives']))) : ''?></summary>
+                        <p class="mt-1 leading-relaxed"><?=hl_e($p['ingredients'])?></p>
+                    </details>
+                    <?php endif; ?>
+                    <?php if ($p['allergens'] || $p['traces']): ?>
+                    <p class="mt-1 text-xs text-gray-600 dark:text-gray-300"><?=$p['allergens'] ? '<b class="font-medium">Alergeny:</b> ' . hl_e($tagList($p['allergens'])) : ''?><?=$p['allergens'] && $p['traces'] ? ' · ' : ''?><?=$p['traces'] ? '<b class="font-medium">Może zawierać:</b> ' . hl_e($tagList($p['traces'])) : ''?></p>
+                    <?php endif; ?>
                     <p class="mt-2 inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium <?=$match ? 'bg-green-50 text-green-700 dark:bg-green-400/10 dark:text-green-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300'?>">
                         <?=$match ? 'Kalorie zgadzają się z makro (~' . $est . ' kcal)' : 'Sprawdź: z makro wychodzi ~' . $est . ' kcal, a podano ' . $fmt($p['kcal'])?>
                     </p>
@@ -180,6 +219,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
 
     <!-- historia dodań i decyzji -->
     <section data-fpanel="history" class="mt-4"<?=$tab !== 'history' ? ' hidden' : ''?>>
+        <input type="search" id="fa_hq" class="hl-input mb-3" placeholder="Szukaj: nazwa, marka, kod, autor…" autocomplete="off" aria-label="Szukaj w historii">
         <div class="flex flex-wrap gap-2">
             <?php foreach (['all' => 'Wszystko', 'product' => 'Produkty', 'unit' => 'Jednostki', 'dish' => 'Dania', 'pending' => 'Czeka', 'approved' => 'Zaakceptowane', 'rejected' => 'Odrzucone'] as $k => $label): ?>
             <button type="button" data-fhist="<?=$k?>" class="fa-filter rounded-full px-3 py-1.5 text-xs font-medium duration-150"><?=$label?></button>
@@ -191,7 +231,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                 $u = $h['per_ml'] ? 'ml' : 'g';
                 $self = $h['reviewed_by'] !== null && (int)$h['reviewed_by'] === (int)$h['owner_id'];
             ?>
-            <div id="fh_<?=$h['kind']?>_<?=(int)$h['id']?>" data-kind="<?=$h['kind']?>" data-status="<?=$h['status']?>" class="hl-card px-4 py-3 duration-300">
+            <div id="fh_<?=$h['kind']?>_<?=(int)$h['id']?>" data-kind="<?=$h['kind']?>" data-status="<?=$h['status']?>" data-q="<?=hl_e(hl_food_norm($h['name'] . ' ' . $h['brand'] . ' ' . $h['label'] . ' ' . $h['code'] . ' ' . $who($h['owner_id'])))?>" class="hl-card px-4 py-3 duration-300">
                 <div class="flex items-start gap-3">
                     <img class="size-9 flex-none rounded-full object-cover border border-black/10" src="<?=$pic($h['owner_id'])?>" alt="">
                     <div class="min-w-0 flex-1">
@@ -203,7 +243,8 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                             </p>
                             <span data-badge class="fa-badge ml-auto"></span>
                         </div>
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Dodał(a): <?=hl_e($who($h['owner_id']))?> · <?=$when($h['created_at'])?></p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Dodał(a): <?=hl_e($who($h['owner_id']))?> · <?=$when($h['created_at'])?><?=$h['kind'] !== 'unit' ? ' · w dziennikach: ' . (int)$h['uses'] : ''?><?=$h['kind'] === 'product' && $h['code'] ? ' · kod ' . hl_e($h['code']) : ''?><?=$h['label_photo'] ? ' · <a class="underline" target="_blank" rel="noopener" href="' . hl_e(hl_food_label_photo_url($h)) . '">etykieta</a>' : ''?></p>
+                        <?php if ($h['review_note']): ?><p class="text-xs text-gray-500 dark:text-gray-400">Uwaga: „<?=hl_e($h['review_note'])?>”</p><?php endif; ?>
                         <p data-decision class="text-xs text-gray-500 dark:text-gray-400">
                             <?php if ($h['status'] === 'pending'): ?>Czeka na decyzję
                             <?php elseif ($self): ?>Dodane przez moderatora – zatwierdzone od razu<?=$h['reviewed_at'] ? ' · ' . $when($h['reviewed_at']) : ''?>
@@ -220,6 +261,89 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     </section>
 
     <p class="mt-6 ml-1 text-xs text-gray-500 dark:text-gray-400">Odrzucone zostaje widoczne tylko dla autora. Usunięcie nie zmienia wpisów w dziennikach – mają własną kopię wartości.</p>
+
+    <?php if ($can_edit):
+        $fa_chip = 'inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-white/[.06] dark:text-gray-300 duration-150 peer-checked:bg-gray-900 peer-checked:text-white dark:peer-checked:bg-white dark:peer-checked:text-black peer-focus-visible:ring-2 peer-focus-visible:ring-green-400';
+        $fa_radio = function (string $name, array $opts) use ($fa_chip) {
+            $out = '<div class="mt-1.5 flex flex-wrap gap-1.5">';
+            foreach ($opts as $v => $label) $out .= '<label class="relative cursor-pointer"><input type="radio" name="' . $name . '" value="' . hl_e((string)$v) . '" class="peer sr-only"><span class="' . $fa_chip . '">' . $label . '</span></label>';
+            return $out . '</div>';
+        };
+        $fa_checks = function (string $name) use ($fa_chip) {
+            $out = '<div class="mt-1.5 flex flex-wrap gap-1.5">';
+            foreach (hl_food_allergen_names() as $k => $label) $out .= '<label class="relative cursor-pointer"><input type="checkbox" name="' . $name . '" value="' . $k . '" class="peer sr-only"><span class="' . $fa_chip . '">' . $label . '</span></label>';
+            return $out . '</div>';
+        };
+        $fa_num = fn($name, $label) => '<label class="block"><span class="hl-label">' . $label . '</span><input name="' . $name . '" type="text" inputmode="decimal" class="hl-input" autocomplete="off"></label>';
+    ?>
+    <!-- poprawianie produktu użytkownika: wszystkie pola + podgląd etykiety obok -->
+    <dialog id="fa_edit" class="fa-dialog w-[min(980px,calc(100vw-24px))]">
+        <form id="fa_edit_form" method="dialog" class="flex max-h-[calc(100dvh-48px)] flex-col">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <h2 class="hl-popup-title !p-0 flex-1 min-w-0 truncate">Popraw produkt</h2>
+                <span id="fa_edit_status" class="fa-badge"></span>
+                <button type="button" data-fa-close class="hl-icon-btn" aria-label="Zamknij"><?=$icon('M6 18 18 6M6 6l12 12', 'size-5')?></button>
+            </div>
+            <!-- relative: ukryte pola wyboru (sr-only, absolute) zostają w przewijanej części, zamiast rozpychać okno -->
+            <div class="relative min-h-0 flex-1 overflow-y-auto px-5 pb-4">
+                <div id="fa_edit_grid" class="grid gap-5">
+                    <div id="fa_edit_photo" class="hidden md:sticky md:top-0 self-start">
+                        <a target="_blank" rel="noopener" class="block overflow-hidden rounded-2xl bg-black ring-1 ring-black/5 dark:ring-white/10"><img alt="Zdjęcie etykiety" class="w-full max-h-[70vh] object-contain"></a>
+                        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Zdjęcie etykiety od autora – kliknij, żeby otworzyć w pełnym rozmiarze.</p>
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <p id="fa_edit_note" class="hidden rounded-xl bg-gray-50 dark:bg-white/5 px-3 py-2 text-xs text-gray-600 dark:text-gray-300"></p>
+                        <label class="block"><span class="hl-label">Nazwa</span><input name="name" type="text" maxlength="200" class="hl-input" required></label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="block"><span class="hl-label">Marka</span><input name="brand" type="text" maxlength="120" class="hl-input"></label>
+                            <label class="block"><span class="hl-label">Kod kreskowy</span><input name="code" type="text" inputmode="numeric" class="hl-input"></label>
+                        </div>
+                        <div>
+                            <span class="hl-label">Wartości na 100</span>
+                            <?=$fa_radio('per_ml', ['0' => 'g', '1' => 'ml'])?>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3"><?=$fa_num('kcal', 'kcal')?><?=$fa_num('protein', 'Białko g')?><?=$fa_num('fat', 'Tłuszcz g')?><?=$fa_num('carbs', 'Węglowodany g')?></div>
+                        <p id="fa_edit_check" class="rounded-xl px-3 py-1.5 text-xs font-medium"></p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3"><?=$fa_num('sat_fat', 'w tym nasycone g')?><?=$fa_num('sugars', 'w tym cukry g')?><?=$fa_num('fiber', 'Błonnik g')?><?=$fa_num('salt', 'Sól g')?></div>
+                        <div class="grid grid-cols-3 gap-3"><?=$fa_num('package_g', 'Opakowanie g/ml')?><label class="block"><span class="hl-label">Porcja – nazwa</span><input name="unit_label" type="text" maxlength="60" class="hl-input" placeholder="np. plaster"></label><?=$fa_num('unit_g', 'Porcja g/ml')?></div>
+                        <label class="block"><span class="hl-label">Skład</span><textarea name="ingredients" rows="4" maxlength="5000" class="hl-input !h-auto py-2.5"></textarea></label>
+                        <div><span class="hl-label">Alergeny</span><?=$fa_checks('allergens')?></div>
+                        <div><span class="hl-label">Może zawierać</span><?=$fa_checks('traces')?></div>
+                        <div class="grid sm:grid-cols-2 gap-3">
+                            <div><span class="hl-label">Nutri-Score</span><?=$fa_radio('nutriscore', ['' => 'brak'] + array_combine(['a', 'b', 'c', 'd', 'e'], array_map(fn($x) => '<span class="fd-ns ' . $x . '" style="width:18px;height:18px;font-size:10px;border-radius:5px">' . $x . '</span>', ['a', 'b', 'c', 'd', 'e'])))?></div>
+                            <div><span class="hl-label">NOVA</span><?=$fa_radio('nova', ['' => 'brak', 1 => '1', 2 => '2', 3 => '3', 4 => '4'])?></div>
+                            <div><span class="hl-label">Olej palmowy</span><?=$fa_radio('palm_oil', ['' => 'nie wiadomo', 1 => 'zawiera', 0 => 'bez'])?></div>
+                            <div><span class="hl-label">Dieta</span><?=$fa_radio('diet', ['' => 'nie wiadomo', 'vegan' => 'wegańskie', 'vegetarian' => 'wegetariańskie', 'none' => 'z mięsem / rybą'])?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 border-t border-black/5 dark:border-white/10 px-5 py-4">
+                <button type="button" data-fa-close class="hl-btn hl-btn-ghost">Anuluj</button>
+                <button type="button" data-fa-save="0" class="hl-btn hl-btn-soft">Zapisz poprawki</button>
+                <button type="button" data-fa-save="1" class="hl-btn hl-btn-green"><?=$icon($check)?>Zapisz i akceptuj</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- powód odrzucenia – autor zobaczy go w ustawieniach Jedzenia („Twój wkład”) -->
+    <dialog id="fa_reject" class="fa-dialog w-[min(460px,calc(100vw-24px))]">
+        <form method="dialog" class="p-5">
+            <h2 class="hl-popup-title !p-0">Odrzucić?</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Produkt zostanie tylko u autora. Napisz, co poprawić – zobaczy to w „Twój wkład” i będzie mógł wysłać poprawkę.</p>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+                <?php foreach (['Wartości nie zgadzają się z etykietą', 'Brak zdjęcia etykiety', 'Duplikat produktu', 'Niepełna nazwa'] as $r): ?>
+                <button type="button" data-fa-reason class="rounded-full bg-gray-100 dark:bg-white/[.06] px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300"><?=$r?></button>
+                <?php endforeach; ?>
+            </div>
+            <textarea id="fa_reject_note" rows="3" maxlength="300" class="hl-input !h-auto mt-3 py-2.5" placeholder="Powód (opcjonalnie)"></textarea>
+            <div class="mt-4 flex justify-end gap-2">
+                <button type="button" data-fa-close class="hl-btn hl-btn-ghost">Anuluj</button>
+                <button type="button" id="fa_reject_ok" class="hl-btn hl-btn-danger">Odrzuć</button>
+            </div>
+        </form>
+    </dialog>
+    <?php endif; ?>
 </div>
 
 <style>
@@ -234,7 +358,19 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
 #food_admin_root [data-status="pending"] .fa-badge::before { content: "Czeka"; }
 #food_admin_root [data-status="approved"] .fa-badge::before { content: "Zaakceptowane"; }
 #food_admin_root [data-status="rejected"] .fa-badge::before { content: "Odrzucone"; }
+/* atrybut hidden musi wygrać z klasami flex / hl-btn (zakładki, przyciski zależne od statusu) */
+#food_admin_root [hidden] { display: none !important; }
+#food_admin_root .fa-dialog { margin: auto; padding: 0; border: 0; border-radius: 24px; overflow: hidden; max-height: calc(100dvh - 48px); background: var(--hl-card); color: var(--hl-ink); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .5); }
+#food_admin_root .fa-dialog::backdrop { background: rgba(0, 0, 0, .45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+#food_admin_root .fa-dialog[open] { animation: fa-in .25s cubic-bezier(.2, .8, .2, 1); }
+@keyframes fa-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+#fa_edit_grid.has-photo { grid-template-columns: 1fr; }
+@media (min-width: 768px) { #fa_edit_grid.has-photo { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); } }
+#fa_edit_check.is-ok { background: rgba(74, 222, 128, .14); color: #15803d; }
+#fa_edit_check.is-warn { background: rgba(245, 158, 11, .16); color: #b45309; }
 @media (prefers-color-scheme: dark) {
+    #fa_edit_check.is-ok { color: #4ade80; }
+    #fa_edit_check.is-warn { color: #fcd34d; }
     #food_admin_root [data-status="pending"] .fa-badge { color: #fcd34d; }
     #food_admin_root [data-status="approved"] .fa-badge { color: #4ade80; }
     #food_admin_root [data-status="rejected"] .fa-badge { color: #fb7185; }
@@ -252,15 +388,23 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     }
     function applyHist() {
         root.querySelectorAll('[data-fhist]').forEach(function (b) { b.classList.toggle('is-on', b.dataset.fhist === histFilter); });
+        var q = foodNorm(document.getElementById('fa_hq').value).split(' ').filter(Boolean);
         root.querySelectorAll('[id^="fh_"]').forEach(function (r) {
-            r.hidden = !(histFilter === 'all' || r.dataset.kind === histFilter || r.dataset.status === histFilter);
+            r.hidden = !(histFilter === 'all' || r.dataset.kind === histFilter || r.dataset.status === histFilter)
+                || q.some(function (t) { return r.dataset.q.indexOf(t) < 0; });
             // przyciski zależne od statusu (akceptacja tylko gdy nie jest zaakceptowane itd.)
             r.querySelectorAll('[data-show]').forEach(function (b) { b.hidden = b.dataset.show.split(' ').indexOf(r.dataset.status) < 0; });
         });
     }
     root.querySelectorAll('[data-ftab]').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.ftab); }); });
     root.querySelectorAll('[data-fhist]').forEach(function (b) { b.addEventListener('click', function () { histFilter = b.dataset.fhist; applyHist(); }); });
+    document.getElementById('fa_hq').addEventListener('input', applyHist);
     applyHist();
+
+    // jak hl_food_norm(): małe litery, bez polskich znaków
+    function foodNorm(s) {
+        return String(s || '').toLowerCase().replace(/ł/g, 'l').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9%]+/g, ' ').trim();
+    }
 
     function fade(el) {
         if (!el) return;
@@ -270,13 +414,14 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     }
     function pad(n) { return String(n).padStart(2, '0'); }
 
-    window.foodModerate = function (id, action, type) {
+    window.foodModerate = function (id, action, type, note) {
         var kind = type === 'unit' || type === 'dish' ? type : 'product';
         if (action === 'delete' && !confirm(kind === 'unit' ? 'Usunąć tę jednostkę?' : 'Usunąć ten produkt z bazy?')) return;
         var fd = new FormData();
         fd.append('id', id);
         fd.append('action', action);
         if (type === 'unit') fd.append('type', type);
+        if (note) fd.append('note', note);
         hlJson('scripts/food/moderate.php', fd).then(function (r) {
             showAlert(r.status || 'error', r.message || 'Nieznany status odpowiedzi');
             if (r.status !== 'success') return;
@@ -307,5 +452,98 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
             if (dot && !root.querySelector('[id^="fp_"]:not([data-gone]), [id^="fu_"]:not([data-gone])')) dot.remove();
         });
     };
+
+    var edit = document.getElementById('fa_edit'), rej = document.getElementById('fa_reject');
+    if (!edit) return;
+    root.querySelectorAll('[data-fa-close]').forEach(function (b) { b.addEventListener('click', function () { b.closest('dialog').close(); }); });
+    // klik w tło zamyka
+    [edit, rej].forEach(function (d) { d.addEventListener('click', function (ev) { if (ev.target === d) d.close(); }); });
+
+    // odrzucenie z powodem
+    var rejectFor = null;
+    window.foodReject = function (id, kind) {
+        rejectFor = { id: id, kind: kind };
+        document.getElementById('fa_reject_note').value = '';
+        rej.showModal();
+    };
+    rej.querySelectorAll('[data-fa-reason]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var t = document.getElementById('fa_reject_note');
+            t.value = t.value.trim() ? t.value.trim() + '. ' + b.textContent : b.textContent;
+            t.focus();
+        });
+    });
+    document.getElementById('fa_reject_ok').addEventListener('click', function () {
+        if (!rejectFor) return;
+        rej.close();
+        foodModerate(rejectFor.id, 'reject', rejectFor.kind === 'dish' ? 'dish' : undefined, document.getElementById('fa_reject_note').value.trim());
+    });
+
+    // poprawianie produktu: dane z product_edit.php, zapis przez product_save.php (moderator może od razu zaakceptować)
+    var form = document.getElementById('fa_edit_form'), editId = null;
+    var setVal = function (name, v) {
+        form.querySelectorAll('[name="' + name + '"]').forEach(function (i) {
+            if (i.type === 'radio') i.checked = i.value === (v === null || v === undefined ? '' : String(v));
+            else if (i.type === 'checkbox') i.checked = (v || []).indexOf(i.value) >= 0;
+            else i.value = v === null || v === undefined ? '' : String(v);
+        });
+    };
+    var num = function (name) { return parseFloat(String(form.elements[name].value).replace(',', '.')); };
+    var check = function () {
+        var c = document.getElementById('fa_edit_check'), k = num('kcal');
+        var est = 4 * (num('protein') || 0) + 4 * (num('carbs') || 0) + 9 * (num('fat') || 0) + 2 * (num('fiber') || 0);
+        if (isNaN(k)) { c.className = 'rounded-xl px-3 py-1.5 text-xs font-medium'; c.textContent = ''; return; }
+        var ok = Math.abs(est - k) <= Math.max(25, k * 0.15);
+        c.className = 'rounded-xl px-3 py-1.5 text-xs font-medium ' + (ok ? 'is-ok' : 'is-warn');
+        c.textContent = ok ? 'Kalorie zgadzają się z makro (~' + Math.round(est) + ' kcal)' : 'Z makro wychodzi ~' + Math.round(est) + ' kcal, a wpisano ' + k;
+    };
+    form.addEventListener('input', check);
+    window.foodEdit = function (id) {
+        fetch('scripts/food/product_edit.php?id=' + id, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (r) {
+            if (r.status !== 'success') return showAlert(r.status || 'error', r.message || 'Nie udało się wczytać produktu');
+            var p = r.product;
+            editId = p.id;
+            form.reset();
+            ['name', 'brand', 'code', 'kcal', 'protein', 'fat', 'carbs', 'sat_fat', 'sugars', 'fiber', 'salt', 'package_g', 'unit_label', 'unit_g', 'ingredients',
+             'nutriscore', 'nova', 'palm_oil', 'diet', 'allergens', 'traces'].forEach(function (k) { setVal(k, p[k]); });
+            setVal('per_ml', p.per_ml ? 1 : 0);
+            edit.dataset.status = p.status;
+            var photo = document.getElementById('fa_edit_photo');
+            photo.classList.toggle('hidden', !p.label_photo);
+            document.getElementById('fa_edit_grid').classList.toggle('has-photo', !!p.label_photo);
+            if (p.label_photo) { photo.querySelector('img').src = p.label_photo; photo.querySelector('a').href = p.label_photo; }
+            var note = document.getElementById('fa_edit_note');
+            note.classList.toggle('hidden', !p.review_note);
+            note.textContent = p.review_note ? 'Uwaga przy odrzuceniu: „' + p.review_note + '”' : '';
+            edit.querySelector('[data-fa-save="1"]').hidden = p.status === 'approved';
+            check();
+            edit.showModal();
+        });
+    };
+    edit.querySelectorAll('[data-fa-save]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            if (!form.reportValidity()) return;
+            var fd = new FormData(), approve = b.dataset.faSave === '1';
+            fd.append('id', editId);
+            ['name', 'brand', 'code', 'ingredients', 'unit_label'].forEach(function (k) { fd.append(k, form.elements[k].value.trim()); });
+            ['kcal', 'protein', 'fat', 'carbs', 'sat_fat', 'sugars', 'fiber', 'salt', 'package_g', 'unit_g'].forEach(function (k) { fd.append(k, form.elements[k].value.trim().replace(',', '.')); });
+            ['per_ml', 'nutriscore', 'nova', 'palm_oil', 'diet'].forEach(function (k) { var c = form.querySelector('[name="' + k + '"]:checked'); fd.append(k, c ? c.value : ''); });
+            ['allergens', 'traces'].forEach(function (k) {
+                fd.append(k, [].map.call(form.querySelectorAll('[name="' + k + '"]:checked'), function (i) { return i.value; }).join(','));
+            });
+            if (approve) fd.append('approve', 1);
+            b.disabled = true;
+            hlJson('scripts/food/product_save.php', fd).then(function (r) {
+                b.disabled = false;
+                showAlert(r.status || 'error', r.message || 'Nieznany status odpowiedzi');
+                if (r.status !== 'success') return;
+                edit.close();
+                // karta z nowymi wartościami – najprościej przeładować podstronę na tej samej zakładce
+                var tab = root.querySelector('[data-ftab][aria-selected="true"]');
+                if (typeof openPanelSite === 'function') openPanelSite('food', 'tab=' + (tab ? tab.dataset.ftab : 'products'));
+                else location.reload();
+            });
+        });
+    });
 })();
 </script>

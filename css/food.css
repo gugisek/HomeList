@@ -515,3 +515,20 @@
   .fd-tag.ai, .fd-ai-low, .fd-ai-item.is-warn .fd-ai-swap:not(.is-on) { color: #fcd34d; }
   .fd-ai-flow span { background: #3d3d3d; }
 }
+
+/* produkty od użytkowników (2.3.0): znaczek HomeList po akceptacji, formularz ze składem i zdjęciem etykiety */
+.fd-tag.user.is-hl { background: linear-gradient(135deg, rgba(74, 222, 128, .2), rgba(56, 189, 248, .2)); color: #047857; }
+.fd-tag.user.is-hl::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+.fd-chips.fd-wrap { flex-wrap: wrap; overflow: visible; margin: 6px 0 0; padding: 0; }
+.fd-chips.fd-wrap .fd-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; }
+.fd-chips.fd-wrap .fd-ns { width: 20px; height: 20px; border-radius: 6px; font-size: 11px; }
+.fd-label-photo { aspect-ratio: 4 / 3; }
+.fd-label-photo img { object-fit: contain; background: #111; }
+.fd-label-photo figcaption { top: 0; bottom: auto; padding: 10px 14px 28px; font-size: 12px; background: linear-gradient(rgba(0, 0, 0, .6), transparent); }
+.fd-note { display: flex; flex-direction: column; gap: 2px; margin: 0 0 14px; padding: 10px 12px; border-radius: 14px; font-size: 13px; line-height: 1.45; background: var(--fd-field); }
+.fd-note.is-warn { background: rgba(244, 63, 94, .1); color: #be123c; }
+.fd-note span { color: var(--hl-ink-2); }
+@media (prefers-color-scheme: dark) {
+  .fd-tag.user.is-hl { color: #6ee7b7; }
+  .fd-note.is-warn { color: #fda4af; }
+}

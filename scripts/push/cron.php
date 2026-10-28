@@ -12,6 +12,7 @@ include __DIR__.'/../conn_db.php';
 include __DIR__.'/../planner/planner_lib.php';
 include __DIR__.'/push_lib.php';
 include __DIR__.'/../access.php';
+require_once __DIR__.'/../bills/bills_lib.php';
 
 $cron_key = substr(hash('sha256', 'hl-cron'.(hl_vapid()['pem'] ?? '')), 0, 32);
 if (PHP_SAPI === 'cli') {
@@ -208,6 +209,38 @@ foreach ($pending as $p) {
     $stmt->bind_param('ii', $lid, $max_id);
     $stmt->execute();
     $stmt->close();
+}
+
+// 6. opłaty – raz dziennie o porze „Rano”, osobno od planu dnia (inny link); każde zdarzenie najwyżej raz (push_log)
+$users = mysqli_query($conn, "SELECT DISTINCT push_subscriptions.user_id FROM push_subscriptions
+                              LEFT JOIN push_settings ON push_settings.user_id=push_subscriptions.user_id
+                              WHERE push_settings.enabled IS NULL OR push_settings.enabled=1");
+while ($u = mysqli_fetch_assoc($users)) {
+    $uid = (int)$u['user_id'];
+    $s = hl_push_settings($conn, $uid);
+    if (!$s['notify_bills'] || !hl_in_window($now, hl_min($s['morning_start']))) continue;
+    try {
+        $events = hl_bill_push_events($conn, $uid, $today);
+    } catch (mysqli_sql_exception $ex) {
+        break; // przed migracją Opłat
+    }
+    $events = array_values(array_filter($events, fn($e) => hl_push_claim($conn, $uid, $e['key'], $today)));
+    if (!$events) continue;
+    $bill_ids = array_unique(array_column($events, 'bill_id'));
+    if (count($events) === 1) {
+        $title = $events[0]['name'];
+        $body = mb_strtoupper(mb_substr($events[0]['text'], 0, 1)).mb_substr($events[0]['text'], 1);
+    } else {
+        $title = 'Opłaty · '.count($events).' '.hl_plural(count($events), 'przypomnienie', 'przypomnienia', 'przypomnień');
+        $body = implode("\n", array_map(fn($e) => $e['name'].' – '.$e['text'], $events));
+    }
+    // jedna opłata → od razu jej szczegóły
+    $url = 'panel.php?list=bills'.(count($bill_ids) === 1 ? '&bill='.$bill_ids[0] : '');
+    if ($dry) {
+        echo "[user $uid] $title\n$body\n($url)\n\n";
+        continue;
+    }
+    $sent_total += hl_push_notify($conn, $uid, $title, $body, 'bills', $url);
 }
 
 if ($dry) {

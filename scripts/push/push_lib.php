@@ -136,7 +136,7 @@ function hl_push_notify($conn, $user_id, $title, $body, $tag, $url = 'panel.php'
 function hl_push_defaults() {
     return [
         'enabled' => 1, 'morning_start' => '07:00', 'afternoon_start' => '12:00', 'evening_start' => '17:00', 'day_end' => '21:30',
-        'notify_parts' => 1, 'notify_missed' => 1, 'notify_deadlines' => 1, 'notify_timed' => 1, 'notify_routines' => 1, 'notify_lists' => 1, 'notify_reports' => 1,
+        'notify_parts' => 1, 'notify_missed' => 1, 'notify_deadlines' => 1, 'notify_timed' => 1, 'notify_routines' => 1, 'notify_lists' => 1, 'notify_reports' => 1, 'notify_bills' => 1,
     ];
 }
 

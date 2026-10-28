@@ -14,7 +14,7 @@ $user_id = (int)$_SESSION['login_id'];
 session_write_close();
 
 $scope = (string)($_GET['scope'] ?? '');
-if (!preg_match('/^(list:\d+|today|archive|food)$/', $scope)) hl_sync_bad();
+if (!preg_match('/^(list:\d+|today|archive|food|bills)$/', $scope)) hl_sync_bad();
 
 $state = hl_sync_state($conn, $user_id, $scope);
 echo json_encode(['status' => 'success', 't' => $state['token'], 'n' => $state['nav'], 's' => $state['shared'] ? 1 : 0]);

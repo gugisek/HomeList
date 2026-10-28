@@ -84,6 +84,53 @@ function hl_render_feed_item(array $it, $date, $today, $variant = 'part', array 
     echo '</div></li>';
 }
 
+// Opłaty w planie dnia (hl_bill_day_items): ręczne odhacza się tu jak zadanie, kwota zmienna / doładowanie otwiera arkusz w zakładce Opłaty.
+// Elementy nie mają klasy feed-item – nie liczą się do postępu dnia i nie przeciąga się ich między porami.
+function hl_render_bill_section(array $items, $date, $today) {
+    $money = fn($v) => number_format($v, 2, ',', "\u{00a0}")."\u{00a0}zł";
+    $open = array_sum(array_map(fn($b) => $b['paid'] ? 0 : $b['amount'], $items));
+    $title = $date === $today ? 'Do zapłaty' : ($date < $today ? 'Zapłacone tego dnia' : 'Płatności tego dnia');
+    $card = 'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z';
+    $dot = '<svg viewBox="0 0 2 2" class="h-0.5 w-0.5 flex-none fill-gray-300 dark:fill-gray-500"><circle cx="1" cy="1" r="1" /></svg>';
+    echo '<div data-feed-section="bills" class="mt-5">
+        <div class="flex items-center gap-2 px-1 text-amber-500">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="'.$card.'" /></svg>
+            <h3 class="text-sm font-semibold">'.$title.'</h3>
+            <span class="bl-today-sum ml-auto text-xs text-gray-400 tabular-nums">'.($open > 0 ? $money($open) : ($date >= $today ? 'opłacone' : '')).'</span>
+        </div>
+        <ul class="feed-list mt-1" data-bills>';
+    foreach ($items as $b) {
+        $mode = $b['pay_mode'] === 'auto' && !$b['overdue'] ? 'info' : ($b['variable'] || $b['prepaid'] ? 'sheet' : 'direct');
+        if ($date < $today) $mode = 'info';
+        $meta = [];
+        if ($b['overdue']) {
+            $n = (int)round((strtotime($today) - strtotime($b['due'])) / 86400);
+            $meta[] = '<span class="whitespace-nowrap text-amber-500">Zaległa od '.$n.' '.($n === 1 ? 'dnia' : 'dni').'</span>';
+        }
+        if ($b['installment'] && $b['installments']) $meta[] = '<span class="whitespace-nowrap">'.($b['installment'] === $b['installments'] ? 'Ostatnia rata' : 'Rata '.$b['installment'].' z '.$b['installments']).'</span>';
+        elseif ($b['prepaid']) $meta[] = '<span class="whitespace-nowrap">Doładowanie pakietu</span>';
+        elseif ($b['variable'] && !$b['paid']) $meta[] = '<span class="truncate">Kwota zmienna – wpiszesz przy opłaceniu</span>';
+        if ($b['pay_mode'] === 'auto') $meta[] = '<span class="whitespace-nowrap">Pobiera się automatycznie</span>';
+        if (!$meta) $meta[] = '<span class="whitespace-nowrap">Opłaty</span>';
+        echo '<li class="bl-today group relative flex items-center gap-3 my-1.5 py-3 pl-3 pr-3 sm:pr-4 sm:mx-0 -mx-4 rounded-2xl bg-white dark:bg-[#2f2f2f] border '.($b['overdue'] ? 'border-amber-400/60' : 'border-amber-400/30').' shadow-sm hover:shadow-md transition-[box-shadow,opacity,transform] duration-200 md:hover:scale-[1.01] cursor-pointer select-none'.($b['paid'] ? ' is-done' : '').'"
+                data-key="bill-'.$b['bill_id'].'-'.$b['due'].'" data-bill="'.$b['bill_id'].'" data-due="'.$b['due'].'" data-mode="'.$mode.'" data-amount="'.$b['amount'].'" data-done="'.($b['paid'] ? '1' : '0').'" onclick="feedBillOpen(this)">';
+        if ($mode === 'info') {
+            echo '<span class="grid place-items-center size-[1.6rem] flex-none rounded-[.6rem]" style="background:color-mix(in srgb,'.$b['color'].' 14%,transparent);color:'.$b['color'].'"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="'.$card.'" /></svg></span>';
+        } else {
+            echo '<button type="button" aria-label="Opłacone" title="Opłacone" class="feed-check" onclick="event.stopPropagation();feedBillToggle(this)">
+                    <svg viewBox="0 0 24 24" class="size-4"><path class="feed-check-path" d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>';
+        }
+        echo '<div class="min-w-0 flex-1">
+                <h2 class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate"><span class="feed-title">'.hl_e($b['name']).'</span></h2>
+                <div class="flex items-center gap-1.5 text-xs text-gray-400 mt-1 min-w-0">'.implode($dot, $meta).'</div>
+              </div>
+              <span class="flex-none text-sm font-semibold tabular-nums text-gray-800 dark:text-gray-200">'.($b['estimate'] ? '~' : '').$money($b['amount']).'</span>
+            </li>';
+    }
+    echo '</ul></div>';
+}
+
 function hl_feed_assets() {
 ?>
 <style>
@@ -119,6 +166,56 @@ function hl_feed_assets() {
 function feedOpen(li) {
     if (window.feedDragging) return;
     openPopupDetailsElement(li.dataset.id);
+}
+
+// Opłaty w planie dnia: tap = szczegóły w zakładce Opłaty, kółko = opłacone (kwota zmienna / doładowanie – arkusz w Opłatach)
+function feedBillGo(open) {
+    try { sessionStorage.setItem('hl_bills_open', open); } catch (e) {}
+    openDetailTab('bills', 'list=bills');
+}
+function feedBillOpen(li) {
+    feedBillGo('bill:' + li.dataset.bill);
+}
+function feedBillToggle(btn) {
+    const li = btn.closest('.bl-today');
+    if (!li || li.dataset.busy) return;
+    if (li.dataset.mode === 'sheet' && li.dataset.done !== '1') return feedBillGo('pay:' + li.dataset.bill + ':' + li.dataset.due);
+    const done = li.dataset.done !== '1';
+    li.dataset.busy = '1';
+    feedSetDone(li, done);
+    if (done) { feedBurst(btn); if (navigator.vibrate) navigator.vibrate(12); }
+    feedBillSum();
+    const fd = new FormData();
+    fd.append('bill_id', li.dataset.bill);
+    fd.append('due', li.dataset.due);
+    fd.append('action', done ? 'paid' : 'undo');
+    fetch('scripts/bills/pay.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(res => {
+            delete li.dataset.busy;
+            if (res.status !== 'success') {
+                feedSetDone(li, !done);
+                feedBillSum();
+                return showAlert(res.status === 'warning' ? 'warning' : 'error', res.message || 'Nieznany status odpowiedzi');
+            }
+            // licznik w menu „więcej” i kropki w nawigacji
+            fetch('scripts/bills/overview.php', { cache: 'no-store' }).then(r => r.json()).then(o => {
+                document.querySelectorAll('[data-bills-badge]').forEach(b => { b.textContent = o.due_count; b.hidden = !o.due_count; });
+                document.querySelectorAll('[data-bills-dot]').forEach(d => { d.hidden = !o.due_count; });
+            }).catch(() => {});
+        })
+        .catch(() => {
+            delete li.dataset.busy;
+            feedSetDone(li, !done);
+            feedBillSum();
+            showAlert('error', 'Wystąpił problem połączenia z serwerem');
+        });
+}
+function feedBillSum() {
+    const sum = document.querySelector('[data-feed-section="bills"] .bl-today-sum');
+    if (!sum) return;
+    const open = [...document.querySelectorAll('.bl-today[data-done="0"]')].reduce((a, li) => a + parseFloat(li.dataset.amount || 0), 0);
+    sum.textContent = open > 0 ? open.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u00a0zł' : 'opłacone';
 }
 
 function feedSetDone(li, done) {

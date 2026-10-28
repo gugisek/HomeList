@@ -1,15 +1,24 @@
 <?php
 // Zdjęcie dania (GET id = id produktu). Tylko dla tych, którzy widzą danie (dom, a udostępnione po akceptacji – wszyscy)
 // oraz dla moderatorów bazy produktów (ocena dania w kolejce).
+// Zdjęcie etykiety produktu (GET id, label=1) – tylko autor i moderatorzy (służy do weryfikacji wartości).
 $SECURITY_REQUIRED_MODULE = ['dashboard', 'read'];
 include '../security.php';
 require_once 'food_lib.php';
 session_write_close();
 
 $id = (int)($_GET['id'] ?? 0);
-$p = hl_food_product($conn, (int)$_SESSION['login_id'], $id);
-if (!$p && hl_can('food', 'read')) $p = $conn->query("SELECT * FROM food_products WHERE id = $id")->fetch_assoc();
-$path = $p && $p['photo'] ? hl_food_photo_dir() . basename($p['photo']) : '';
+$me = (int)$_SESSION['login_id'];
+if (!empty($_GET['label'])) {
+    $p = $conn->query("SELECT * FROM food_products WHERE id = $id")->fetch_assoc();
+    if ($p && (int)$p['owner_id'] !== $me && !hl_can('food', 'read')) $p = null;
+    $file = $p['label_photo'] ?? null;
+} else {
+    $p = hl_food_product($conn, $me, $id);
+    if (!$p && hl_can('food', 'read')) $p = $conn->query("SELECT * FROM food_products WHERE id = $id")->fetch_assoc();
+    $file = $p['photo'] ?? null;
+}
+$path = $file ? hl_food_photo_dir() . basename($file) : '';
 $info = $path && is_file($path) ? @getimagesize($path) : false;
 if (!$info) {
     http_response_code(404);

@@ -227,6 +227,7 @@ fixRoundedCorners();
         if (site === 'todo') hlMorphTab();
         else if (site === 'today') hlMorphFeed();
         else if (site === 'food' && window.hlFood) window.hlFood.refresh();
+        else if (site === 'bills' && window.hlBills) window.hlBills.refresh();
     }
 
     // powrót z tła / z innej karty / po odzyskaniu sieci – sprawdzamy od razu
@@ -300,6 +301,7 @@ fixRoundedCorners();
         if (list === 'today') return 'today';
         if (list === 'settings') return 'settings_app';
         if (list === 'food') return 'food';
+        if (list === 'bills') return 'bills';
         return 'todo';
     }
 

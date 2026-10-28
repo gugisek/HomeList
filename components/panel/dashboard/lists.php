@@ -13,6 +13,10 @@ $food_on = (bool)($conn->query('SELECT enabled FROM food_settings WHERE user_id 
 // z ikoną Jedzenia na pasku mieszczą się dwie listy (reszta w „więcej”)
 $nav_max = $food_on ? 2 : 3;
 $food_icon = 'M6 3v6a2 2 0 0 0 4 0V3M8 3v18M17 21V3c-2 1.4-3 4-3 7.5V13h3';
+// Opłaty: zawsze w menu „więcej”; licznik = ręczne płatności na dziś i zaległe (aktualizuje go też js/bills.js)
+require_once __DIR__.'/../../../scripts/bills/bills_lib.php';
+$bills_due = hl_bill_due_count($conn, (int)$user_id);
+$bills_icon = 'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z';
 $routine_icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-3.5 inline -mt-0.5 mr-1 opacity-60"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>';
 ?>
 <?php
@@ -48,6 +52,7 @@ $more_admin = array_filter([
             <?php if (!$food_on): ?>
             <a onclick="moreMenuClose();openDetailTab(`food`,`list=food`)" class="lists_main_nav list_food hl-menu-item"><?=$more_icon($food_icon)?>Licznik kalorii</a>
             <?php endif; ?>
+            <a onclick="moreMenuClose();openDetailTab(`bills`,`list=bills`)" class="lists_main_nav list_bills hl-menu-item"><?=$more_icon($bills_icon)?>Opłaty<span data-bills-badge class="bl-badge"<?=$bills_due ? '' : ' hidden'?>><?=$bills_due?></span></a>
             <a onclick="moreMenuClose();openDetailTab(`todo`,`list=archive`)" id="nav_button_details" class="lists_main_nav list_archive hl-menu-item"><?=$more_icon('m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z')?>Archiwum</a>
             <a onclick="moreMenuClose();openDetailTab(`settings_app`,`list=settings`)" id="nav_button_details" class="lists_main_nav list_settings hl-menu-item"><?=$more_icon('M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z')?>Konto i ustawienia</a>
             <?php if ($more_admin): ?>
@@ -89,11 +94,12 @@ $more_admin = array_filter([
     </div>
     </div>
     </a>
-    <a onclick="moreMenu()" id="more_btn" title="Więcej" class="liquid-glass liquid-glass-more rounded-full size-[52px] shrink-0 flex items-center justify-center hover:scale-105 cursor-pointer active:scale-95 text-white/60 hover:text-white duration-150">
+    <a onclick="moreMenu()" id="more_btn" title="Więcej" class="relative liquid-glass liquid-glass-more rounded-full size-[52px] shrink-0 flex items-center justify-center hover:scale-105 cursor-pointer active:scale-95 text-white/60 hover:text-white duration-150">
         <span class="hl-more-ico">
             <svg class="is-dots" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
             <svg class="is-x" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
         </span>
+        <span data-bills-dot class="bl-navdot"<?=$bills_due ? '' : ' hidden'?>></span>
     </a>
     </div>
 </section>
