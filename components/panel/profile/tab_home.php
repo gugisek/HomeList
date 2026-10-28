@@ -1,9 +1,13 @@
 <?php if (!isset($acc)) exit; // część account.php
+require_once __DIR__ . '/../../../scripts/food/food_lib.php';
+$acc_home_food = hl_food_settings($conn, $acc_id);
+$acc_home_goal = $acc_home_food['enabled'] ? hl_food_goal($conn, $acc_id, date('Y-m-d')) : null;
 $acc_home_cards = [
     'personal' => ['Imię, zdjęcie, email i opis', $acc['mail']],
     'security' => ['Hasło i weryfikacja dwuetapowa', 'Weryfikacja dwuetapowa ' . ($acc_2fa ? 'włączona' : 'wyłączona')],
     'devices' => ['Zapamiętane logowania', $acc_devices ? count($acc_devices) . ' ' . $acc_plural(count($acc_devices), 'urządzenie', 'urządzenia', 'urządzeń') : 'Brak zapamiętanych urządzeń'],
     'notifications' => ['Przypomnienia push i pory dnia', 'Przypomnienia ' . ($ps['enabled'] ? 'włączone' : 'wyłączone')],
+    'food' => ['Licznik kalorii, posiłki i dzienny cel', !$acc_home_food['enabled'] ? 'Licznik kalorii wyłączony' : ($acc_home_goal ? 'Cel: ' . number_format($acc_home_goal['kcal'], 0, ',', ' ') . ' kcal' : 'Licznik kalorii włączony')],
     'report' => ['Coś nie działa? Daj znać twórcom', 'Krótki opis i zrzut ekranu'],
 ];
 ?>

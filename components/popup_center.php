@@ -175,9 +175,15 @@
     popup<?=$name_in_scripts?>OpenClose();
     fetch('<?=$path?>?id=' + id)
       .then(r => r.text())
+      .catch(() => '')
       .then(data => {
         var parser = new DOMParser();
         var doc = parser.parseFromString(data, 'text/html');
+        // pusta odpowiedź (błąd PHP przy wyłączonym display_errors, brak sieci) – komunikat zamiast pustego popupu
+        if (!doc.body.innerHTML.trim()) {
+          popupOutput.innerHTML = '<div class="-mt-[43px] py-6 text-center text-sm text-gray-500 dark:text-gray-400">Nie udało się wczytać zawartości. Spróbuj ponownie.</div>';
+          return;
+        }
         popupOutput.innerHTML = doc.body.innerHTML;
         document.querySelectorAll('.popup-script').forEach(s => s.remove());
         doc.querySelectorAll('script').forEach(s => {

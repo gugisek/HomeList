@@ -9,6 +9,7 @@ $lp_long = hl_long_date($lp_today);
 
 <section class="lp-hero" id="dzis" data-sky="green">
     <div class="lp-wrap lp-hero-copy">
+        <a href="#jedzenie" class="lp-news"><em>Nowość</em><span>Licznik kalorii i makro</span><?=lp_icon('arrow', 'lp-i-xs', '2')?></a>
         <p class="lp-hero-date"><b>Dziś</b><span><?=$lp_long?></span></p>
         <h1 class="lp-h1">
             <span class="lp-h1-line">Twój dzień,</span>

@@ -33,6 +33,7 @@ include 'components/landing/ui.php';
         <?php include 'components/landing/hero.php'; ?>
         <?php include 'components/landing/morning.php'; ?>
         <?php include 'components/landing/together.php'; ?>
+        <?php include 'components/landing/food.php'; ?>
         <?php include 'components/landing/evening.php'; ?>
         <?php include 'components/landing/everywhere.php'; ?>
         <?php include 'components/landing/anytime.php'; ?>

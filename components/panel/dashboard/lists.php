@@ -29,13 +29,16 @@ $more_admin = array_filter([
 ?>
 <section data-toast-dock class="md:hidden font-[poppins] z-[49] xs:scale-100 scale-90 text-white fixed sm:bottom-8 bottom-4 flex items-center justify-center gap-2">
     <section id="more_menu" class="hl-pop absolute bottom-[4.25rem] z-[49] max-h-[calc(100dvh-7.5rem)] rounded-[26px] origin-bottom flex flex-col gap-2">
-        <div id="more_nav_body" class="<?=count($nav_lists) > $nav_max ? "" : "hidden "?>hl-menu flex-initial min-h-[5.5rem] max-h-[32vh] overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-col gap-0.5">
+        <!-- ramka (::before) na nieprzewijanym kafelku, scroll w środku – inaczej dolna krawędź jedzie z treścią -->
+        <div class="<?=count($nav_lists) > $nav_max ? "" : "hidden "?>hl-menu flex-initial <?=$more_admin ? 'min-h-[7.5rem] max-h-[50vh]' : 'min-h-[5.5rem] max-h-[45vh]'?> overflow-hidden flex flex-col">
+        <div id="more_nav_body" class="hl-menu-scroll flex-1 min-h-0 rounded-[20px] overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-col gap-0.5">
             <span class="hl-menu-label">Pozostałe listy</span>
             <?php foreach ($nav_lists as $i => $row): ?>
             <a onclick="moreMenuClose();openDetailTab(`todo`,`list=<?=(int)$row['id']?>`)" id="nav_button_details" class="lists_main_nav list_<?=(int)$row['id']?> hl-menu-item <?=$i < $nav_max ? 'hidden' : ''?>">
                 <span class="truncate"><?=($row['list_type'] === 'routine' ? $routine_icon : '').htmlspecialchars($row['full_name'])?></span>
             </a>
             <?php endforeach; ?>
+        </div>
         </div>
         <div class="hl-menu flex-none flex flex-col gap-0.5">
             <a onclick="moreMenuClose();openPopupAddLists();" class="hl-menu-item"><?=$more_icon('M12 4.5v15m7.5-7.5h-15')?>Utwórz nową listę</a>

@@ -21,9 +21,10 @@ $owner = $members[0] ?? null;
 $is_shared = count($members) > 1;
 $code = (string)$row['list_code'];
 
+// bez literału '0000-00-00' w SQL – MySQL 8 (strict, NO_ZERO_DATE) rzuca na nim błąd; >= '1000-01-01' pomija NULL i daty zerowe
 $stmt = $conn->prepare(
     "SELECT SUM(status_id NOT IN (2, 4)) AS open,
-            SUM(status_id NOT IN (2, 4) AND deadline_date IS NOT NULL AND deadline_date <> '0000-00-00 00:00:00' AND deadline_date < NOW()) AS overdue,
+            SUM(status_id NOT IN (2, 4) AND deadline_date >= '1000-01-01' AND deadline_date < NOW()) AS overdue,
             SUM(status_id IN (2, 4)) AS done
      FROM list_elements WHERE list_id = ?"
 );

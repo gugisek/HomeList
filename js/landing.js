@@ -307,6 +307,245 @@
         setTimeout(add, reduced ? 0 : 1800);
     }, .4);
 
+    /* ---------- Obiad: licznik kalorii – podgląd porcji, zanim trafi do dziennika (jak preview() w food.js) ---------- */
+    const fmtK = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    const decK = v => String(Math.round(v * 10) / 10).replace('.', ',');
+
+    // płynna zmiana liczby od aktualnie wyświetlanej wartości
+    function tween(el, to, f, dur) {
+        f = f || fmtK;
+        const from = el._v ?? 0;
+        cancelAnimationFrame(el._raf);
+        if (reduced || Math.abs(from - to) < .05) { el._v = to; el.textContent = f(to); return; }
+        const t0 = performance.now();
+        const step = (t) => {
+            const p = clamp((t - t0) / (dur || 600), 0, 1);
+            el._v = from + (to - from) * (1 - Math.pow(1 - p, 3));
+            el.textContent = f(el._v);
+            if (p < 1) el._raf = requestAnimationFrame(step);
+        };
+        el._raf = requestAnimationFrame(step);
+    }
+
+    $$('[data-food-count], [data-dish-count]').forEach(el => onView(el, () => {
+        setTimeout(() => tween(el, +(el.dataset.foodCount || el.dataset.dishCount), null, 1800), reduced ? 0 : 500);
+    }, .6));
+
+    const food = $('[data-food]');
+    if (food) {
+        const D = JSON.parse(food.dataset.food);
+        const KEYS = ['kcal', 'protein', 'fat', 'carbs'];
+        const G = D.goal;
+        const sheet = $('[data-food-sheet]', food);
+        const range = $('[data-food-range]', sheet);
+        const cta = $('[data-food-add]', sheet);
+        const meal = $('[data-food-meal]', food);
+        const entries = $('[data-food-entries]', meal);
+        const copyBtn = $('[data-food-copy]', meal);
+        const ring = $('[data-food-ring]', food), ghost = $('[data-food-ghost]', food);
+        const zero = () => ({ kcal: 0, protein: 0, fat: 0, carbs: 0 });
+        let base = zero(), idx = 0, grams = D.products[0].grams, ghostOn = false, busy = false;
+
+        const portion = () => {
+            const p = D.products[idx], o = {};
+            KEYS.forEach(k => { o[k] = p.p100[k] * grams / 100; });
+            return o;
+        };
+        const plural = n => n + ' ' + (n === 1 ? 'produkt' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'produkty' : 'produktów');
+        const unitsText = () => {
+            const p = D.products[idx], n = grams / p.unit[1];
+            return Math.abs(n - Math.round(n * 2) / 2) < .01 ? decK(Math.round(n * 2) / 2) + ' × ' + p.unit[0] : '';
+        };
+
+        function render() {
+            const p = D.products[idx], a = ghostOn ? portion() : zero();
+            const eaten = base.kcal + a.kcal, left = G.kcal - eaten;
+            food.classList.toggle('is-over', left < -G.kcal * .05);
+            const bp = Math.min(base.kcal / G.kcal, 1) * 100, tp = Math.min(eaten / G.kcal, 1) * 100;
+            ring.setAttribute('stroke-dasharray', bp.toFixed(1) + ' 100');
+            ghost.setAttribute('stroke-dasharray', '0 ' + bp.toFixed(1) + ' ' + Math.max(0, tp - bp).toFixed(1) + ' 100');
+            tween($('[data-food-left]', food), Math.abs(left));
+            $('[data-food-left-label]', food).textContent = left >= 0 ? 'kcal zostało' : 'kcal ponad cel';
+            tween($('[data-food-eaten]', food), eaten);
+            $('[data-food-daybar]', food).style.width = bp + '%';
+
+            KEYS.slice(1).forEach(k => {
+                const row = $('[data-food-bar="' + k + '"]', food), b = base[k], add = a[k], tot = b + add;
+                const fill = Math.min(b / G[k], 1) * 100, gw = Math.max(0, Math.min(tot / G[k], 1) * 100 - fill);
+                $('[data-food-bar-fill]', row).style.width = fill + '%';
+                const gh = $('[data-food-bar-ghost]', row);
+                gh.style.left = fill + '%';
+                gh.style.width = gw + '%';
+                $('[data-food-bar-txt]', row).innerHTML = add >= .5
+                    ? fmtK(b) + ' <b class="is-plus">+' + fmtK(add) + '</b> → <b>' + fmtK(tot) + '</b> / ' + G[k] + ' g'
+                    : '<b>' + fmtK(tot) + '</b> / ' + G[k] + ' g';
+            });
+
+            const pv = portion();
+            tween($('[data-food-kcal]', sheet), pv.kcal);
+            KEYS.slice(1).forEach(k => tween($('[data-food-m="' + k + '"]', sheet), pv[k], decK));
+            $('[data-food-grams]', sheet).textContent = grams + ' ' + p.u;
+            $('[data-food-units]', sheet).textContent = unitsText();
+            range.style.setProperty('--fill', ((grams - range.min) / (range.max - range.min) * 100) + '%');
+            $$('[data-grams]', sheet).forEach(c => c.classList.toggle('is-on', +c.dataset.grams === grams));
+            if (!busy && idx < D.products.length) $('[data-food-cta]', cta).textContent = 'Dodaj do obiadu · ' + fmtK(pv.kcal) + ' kcal';
+        }
+
+        function setProduct(i, animate) {
+            idx = i;
+            const p = D.products[i];
+            grams = p.grams;
+            $('[data-food-name]', sheet).textContent = p.name;
+            const tag = $('[data-food-tag]', sheet);
+            tag.textContent = p.tag;
+            tag.classList.toggle('is-dish', p.tag === 'Danie domowe');
+            $('[data-food-per]', sheet).textContent = p.p100.kcal + ' kcal / 100 ' + p.u;
+            $('[data-food-ns]', sheet).dataset.foodNs = p.ns;
+            range.max = p.max;
+            range.value = grams;
+            $('[data-food-chips]', sheet).innerHTML = p.chips.map(c => '<button type="button" data-grams="' + c[0] + '">' + c[1] + ' · ' + c[0] + ' ' + p.u + '</button>').join('');
+            if (animate) {
+                sheet.classList.remove('is-swap');
+                void sheet.offsetWidth;
+                sheet.classList.add('is-swap');
+            }
+            render();
+        }
+
+        function addEntry(name, amount, kcal) {
+            const li = document.createElement('li');
+            li.className = 'is-new';
+            li.innerHTML = '<div><b></b><small></small></div><span><b>' + fmtK(kcal) + '</b> kcal</span>';
+            $('div b', li).textContent = name;
+            $('small', li).textContent = amount;
+            entries.appendChild(li);
+            const n = entries.children.length;
+            $('[data-food-meal-sub]', meal).textContent = plural(n);
+            const mk = $('[data-food-meal-kcal]', meal);
+            tween(mk, (mk._v ?? 0) + kcal);
+            copyBtn.hidden = true;
+        }
+
+        function reset() {
+            base = Object.assign({}, D.base);
+            entries.innerHTML = '';
+            $('[data-food-meal-sub]', meal).textContent = 'Nic jeszcze nie dodano';
+            tween($('[data-food-meal-kcal]', meal), 0);
+            copyBtn.hidden = false;
+            cta.classList.remove('is-reset', 'is-added');
+            range.disabled = false;
+            ghostOn = true;
+            setProduct(0, true);
+        }
+
+        range.addEventListener('input', () => {
+            grams = +range.value;
+            sheet.classList.remove('is-hinting');
+            render();
+        });
+        sheet.addEventListener('click', (e) => {
+            const chip = e.target.closest('[data-grams]');
+            if (!chip || range.disabled) return;
+            grams = +chip.dataset.grams;
+            range.value = grams;
+            sheet.classList.remove('is-hinting');
+            render();
+        });
+
+        cta.addEventListener('click', () => {
+            if (busy) return;
+            if (cta.classList.contains('is-reset')) return reset();
+            const p = D.products[idx], a = portion(), u = unitsText();
+            KEYS.forEach(k => { base[k] += a[k]; });
+            addEntry(p.name, grams + ' ' + p.u + (u ? ' · ' + u : ''), a.kcal);
+            if (navigator.vibrate) navigator.vibrate(12);
+            busy = true;
+            ghostOn = false;
+            cta.classList.add('is-added');
+            $('[data-food-cta]', cta).textContent = 'Dodano do obiadu';
+            render();
+            setTimeout(() => {
+                busy = false;
+                cta.classList.remove('is-added');
+                if (idx + 1 < D.products.length) {
+                    ghostOn = true;
+                    setProduct(idx + 1, true);
+                } else {
+                    // obiad skompletowany – arkusz czeka na powtórkę
+                    idx = D.products.length;
+                    cta.classList.add('is-reset');
+                    range.disabled = true;
+                    $('[data-food-cta]', cta).textContent = 'Obiad zapisany · zacznij od nowa';
+                }
+            }, reduced ? 300 : 1100);
+        });
+
+        copyBtn.addEventListener('click', () => {
+            D.yesterday.forEach(([name, amount, kcal, protein, fat, carbs], i) => {
+                setTimeout(() => {
+                    addEntry(name, amount, kcal);
+                    base.kcal += kcal; base.protein += protein; base.fat += fat; base.carbs += carbs;
+                    render();
+                }, reduced ? 0 : i * 180);
+            });
+        });
+
+        setProduct(0, false);
+        // wejście w ekran: najpierw zjedzone do tej pory, potem „duch” porcji z arkusza
+        onView(food, () => {
+            setTimeout(() => {
+                base = Object.assign({}, D.base);
+                render();
+            }, reduced ? 0 : 500);
+            setTimeout(() => {
+                ghostOn = true;
+                sheet.classList.add('is-hinting');
+                render();
+            }, reduced ? 0 : 1500);
+        }, .3);
+    }
+
+    /* ---------- Obiad: skaner kodów w pętli, skład produktu ---------- */
+    const scan = $('[data-scan]');
+    if (scan) {
+        const items = [
+            ['Jogurt naturalny 2%', '60 kcal / 100 g', 'a', '5 900000 012345'],
+            ['Baton proteinowy', '352 kcal / 100 g', 'c', '5 901234 567890'],
+            ['Sok pomarańczowy 100%', '44 kcal / 100 ml', 'c', '4 006381 333931'],
+        ];
+        let i = 0, timer = null;
+        const cycle = () => {
+            const [name, kcal, ns, ean] = items[i++ % items.length];
+            scan.classList.remove('is-found');
+            scan.classList.add('is-scanning');
+            $('[data-scan-ean]', scan).textContent = ean;
+            timer = setTimeout(() => {
+                $('[data-scan-name]', scan).textContent = name;
+                $('[data-scan-kcal]', scan).textContent = kcal;
+                const b = $('[data-scan-ns]', scan);
+                b.textContent = ns;
+                b.className = 'lp-ns lp-ns-' + ns;
+                scan.classList.replace('is-scanning', 'is-found');
+                timer = setTimeout(cycle, 2800);
+            }, 1900);
+        };
+        if (reduced) scan.classList.add('is-found');
+        else new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting && !timer) cycle();
+                if (!e.isIntersecting) { clearTimeout(timer); timer = null; }
+            });
+        }, { threshold: .4 }).observe(scan);
+    }
+
+    const quality = $('[data-quality]');
+    if (quality) quality.addEventListener('click', (e) => {
+        const tab = e.target.closest('[data-q]');
+        if (!tab) return;
+        $$('[data-q]', quality).forEach(b => b.setAttribute('aria-selected', b === tab ? 'true' : 'false'));
+        $$('[data-q-pane]', quality).forEach(p => { p.hidden = p.dataset.qPane !== tab.dataset.q; });
+    });
+
     /* ---------- Wieczór: licznik serii i powiadomienia ---------- */
     const big = $('[data-count]');
     onView(big, () => {
