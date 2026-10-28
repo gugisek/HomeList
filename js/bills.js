@@ -289,7 +289,11 @@
     }
     function rowMeta(u, b) {
         if (u.overdue) return ['Zaległa od ' + (-diffDays(today(), u.due)) + ' ' + plural(diffDays(today(), u.due), 'dnia', 'dni', 'dni'), true];
-        if (u.paid) return ['Opłacone', false];
+        if (u.paid && u.source === 'auto') return ['Pobrane automatycznie', false, true];
+        if (u.paid) {
+            var on = u.paid_on || u.due, ago = diffDays(on, today());
+            return ['Opłacone ' + (ago === 0 ? 'dziś' : ago === 1 ? 'wczoraj' : shortDate(on)) + ' · ręcznie', false, true];
+        }
         if (u.skipped) return ['Pominięte', false];
         if (u.installment && b.installments) return ['Rata ' + u.installment + ' z ' + b.installments, false];
         if (b.type === 'prepaid') return ['Pakiet ważny do ' + shortDate(u.due), false];
@@ -301,12 +305,15 @@
         var b = billOf(u.bill_id);
         if (!b) return '';
         var m = rowMeta(u, b), key = u.bill_id + '|' + u.due;
-        var right = b.pay_mode === 'auto' && !u.overdue
+        // pobrane automatycznie – sam znacznik (cofnięcie i tak dopisałby je z powrotem)
+        var right = u.paid && u.source === 'auto'
+            ? '<span class="bl-chk is-done is-static" title="Pobrane automatycznie">' + I.check + '</span>'
+            : b.pay_mode === 'auto' && !u.overdue && !u.paid
             ? '<span class="bl-auto" title="Płatność automatyczna">' + I.repeat + 'Auto</span>'
             : '<button type="button" class="bl-chk' + (u.paid ? ' is-done' : '') + '" data-pay="' + key + '" aria-label="' + (u.paid ? 'Cofnij opłacenie: ' : 'Oznacz jako opłacone: ') + esc(b.name) + '">' + I.check + '</button>';
         return '<div class="bl-row' + (u.paid || u.skipped ? ' is-paid' : '') + (u.overdue ? ' is-overdue' : '') + '" style="animation-delay:' + Math.min(i * 25, 300) + 'ms">'
             + '<button type="button" class="bl-row-main" data-open="' + b.id + '">' + tile(b.type)
-            + '<span style="flex:1;min-width:0"><span class="bl-row-name">' + esc(b.name) + '</span><span class="bl-row-meta' + (m[1] ? ' is-warn' : '') + '">' + esc(m[0]) + '</span></span>'
+            + '<span style="flex:1;min-width:0"><span class="bl-row-name">' + esc(b.name) + '</span><span class="bl-row-meta' + (m[1] ? ' is-warn' : '') + (m[2] ? ' is-ok' : '') + '">' + esc(m[0]) + '</span></span>'
             + '<span class="bl-row-amt"><b>' + (u.estimate ? '~' : '') + money(u.amount) + '</b><span>' + whenLabel(u.due) + '</span></span></button>' + right + '</div>';
     }
     function renderList() {

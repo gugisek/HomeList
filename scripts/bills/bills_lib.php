@@ -323,12 +323,15 @@ if (!function_exists('hl_bill_types')) {
             foreach (hl_bill_due_dates($b, max($from, $b['start_date']), $to, $lastPaid[$id] ?? null) as $due) {
                 $p = $payments[$id][$due] ?? null;
                 if ($due < $today && ($p || $b['pay_mode'] === 'auto')) continue;
+                // historia wpisana przy dodawaniu opłaty to nie zdarzenie – nie pokazujemy jej w „Dziś”
+                if ($p && $p['source'] === 'estimate') continue;
                 $out[] = [
                     'bill_id' => $id, 'due' => $due,
                     'amount' => $p && $p['status'] === 'paid' ? $p['amount'] : hl_bill_price_on($prices[$id] ?? [], $b, $due),
                     'estimate' => $b['amount_variable'] && !$p,
                     'paid' => $p !== null && $p['status'] === 'paid', 'skipped' => $p !== null && $p['status'] === 'skipped',
                     'overdue' => $due < $today && !$p,
+                    'paid_on' => $p['paid_on'] ?? null, 'source' => $p['source'] ?? null,
                     'installment' => hl_bill_installment_no($b, $due),
                 ];
             }
@@ -730,6 +733,10 @@ if (!function_exists('hl_bill_types')) {
             } else {
                 hl_bill_fill($conn, $b, hl_bill_add_days($extra['next_due'], -1), 'estimate');
             }
+        }
+        // nowa automatyczna z terminem dziś (albo wcześniej) – pobrana jeszcze przed dodaniem, więc to historia, a nie płatność „dziś”
+        if ($b['pay_mode'] === 'auto' && !$b['amount_variable'] && $b['anchor'] === 'schedule' && $extra['next_due'] && $extra['next_due'] <= $today) {
+            hl_bill_fill($conn, $b, $today, 'estimate');
         }
         return $id;
     }
