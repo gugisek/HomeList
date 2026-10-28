@@ -29,19 +29,19 @@ if ($dish_ids) {
 }
 
 $units = [];
-$res = $conn->query("SELECT un.id, un.label, un.grams, un.created_at, un.owner_id, p.name, p.brand, p.code, p.quantity, p.package_g, p.serving_g, p.per_ml
+$res = $conn->query("SELECT un.id, un.product_id, un.label, un.grams, un.created_at, un.owner_id, p.name, p.brand, p.code, p.quantity, p.package_g, p.serving_g, p.per_ml
                      FROM food_product_units un JOIN food_products p ON p.id = un.product_id
                      WHERE un.status = 'pending' ORDER BY un.id LIMIT 200");
 while ($row = $res->fetch_assoc()) $units[] = $row;
 
 // historia: produkty użytkowników + zgłoszone jednostki, najnowsze na górze
 $history = [];
-$res = $conn->query("(SELECT IF(p.source = 'dish', 'dish', 'product') AS kind, p.id, p.name, p.brand, NULL AS label, NULL AS grams, p.per_ml, p.kcal, p.status,
+$res = $conn->query("(SELECT IF(p.source = 'dish', 'dish', 'product') AS kind, p.id, p.id AS product_id, p.name, p.brand, NULL AS label, NULL AS grams, p.per_ml, p.kcal, p.status,
                              p.created_at, p.owner_id, p.reviewed_by, p.reviewed_at, p.code, p.review_note, p.label_photo,
                              (SELECT COUNT(*) FROM food_log l WHERE l.product_id = p.id) AS uses
                       FROM food_products p WHERE p.source = 'user' OR (p.source = 'dish' AND p.public = 1))
                      UNION ALL
-                     (SELECT 'unit', un.id, p.name, p.brand, un.label, un.grams, p.per_ml, NULL, un.status,
+                     (SELECT 'unit', un.id, un.product_id, p.name, p.brand, un.label, un.grams, p.per_ml, NULL, un.status,
                              un.created_at, un.owner_id, un.reviewed_by, un.reviewed_at, p.code, NULL, NULL, NULL
                       FROM food_product_units un JOIN food_products p ON p.id = un.product_id WHERE un.owner_id IS NOT NULL)
                      ORDER BY created_at DESC, id DESC LIMIT 200");
@@ -69,7 +69,7 @@ $tab = in_array($_GET['tab'] ?? '', ['products', 'units', 'history'], true) ? $_
 $tabs = ['products' => ['Produkty', count($items)], 'units' => ['Jednostki', count($units)], 'history' => ['Historia', null]];
 
 // przyciski decyzji; w historii widoczne zależnie od statusu (data-show), żeby po kliknięciu nie przeładowywać strony
-$actions = function (string $kind, int $id, bool $inHistory) use ($can_edit, $can_delete, $icon, $check) {
+$actions = function (string $kind, int $id, bool $inHistory, int $productId = 0) use ($can_edit, $can_delete, $icon, $check) {
     if (!$can_edit) return '';
     $t = $kind === 'product' ? '' : ", '$kind'";
     $show = fn($s) => $inHistory ? ' data-show="' . $s . '"' : '';
@@ -79,6 +79,8 @@ $actions = function (string $kind, int $id, bool $inHistory) use ($can_edit, $ca
         . '<button type="button"' . $show('pending rejected') . ' onclick="foodModerate(' . $id . ", 'approve'$t)\" class=\"hl-btn hl-btn-green hl-btn-sm\">" . $icon($check) . 'Akceptuj</button>'
         . ($kind === 'product' ? '<button type="button" onclick="foodEdit(' . $id . ')" class="hl-btn hl-btn-soft hl-btn-sm">' . $icon('m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125') . 'Popraw</button>' : '')
         . '<button type="button"' . $show('pending approved') . ' onclick="' . $reject . '" class="hl-btn hl-btn-ghost hl-btn-sm">' . ($inHistory ? 'Odrzuć / cofnij' : 'Odrzuć') . '</button>'
+        // wszystkie jednostki produktu: poprawki, nowe, decyzje – w jednym oknie
+        . ($kind !== 'dish' && $productId ? '<button type="button" onclick="foodUnits(' . $productId . ')" class="hl-btn hl-btn-ghost hl-btn-sm">' . $icon('M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z') . 'Jednostki produktu</button>' : '')
         . ($can_delete && $kind !== 'dish' ? '<button type="button" onclick="foodModerate(' . $id . ", 'delete'$t)\" class=\"hl-btn hl-btn-danger hl-btn-sm\">Usuń</button>" : '')
         . '</div>';
 };
@@ -185,7 +187,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                         <?=$match ? 'Kalorie zgadzają się z makro (~' . $est . ' kcal)' : 'Sprawdź: z makro wychodzi ~' . $est . ' kcal, a podano ' . $fmt($p['kcal'])?>
                     </p>
                     <?php endif; ?>
-                    <?=$actions($p['source'] === 'dish' ? 'dish' : 'product', (int)$p['id'], false)?>
+                    <?=$actions($p['source'] === 'dish' ? 'dish' : 'product', (int)$p['id'], false, (int)$p['id'])?>
                 </div>
             </div>
         </div>
@@ -210,7 +212,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                         <?=hl_e($who($un['owner_id']))?> · <?=$when($un['created_at'])?>
                         <?=$un['code'] ? ' · kod ' . hl_e($un['code']) : ''?> · OFF: <?=$known ? hl_e(implode(', ', $known)) : 'brak danych o opakowaniu'?>
                     </p>
-                    <?=$actions('unit', (int)$un['id'], false)?>
+                    <?=$actions('unit', (int)$un['id'], false, (int)$un['product_id'])?>
                 </div>
             </div>
         </div>
@@ -243,7 +245,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                             </p>
                             <span data-badge class="fa-badge ml-auto"></span>
                         </div>
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Dodał(a): <?=hl_e($who($h['owner_id']))?> · <?=$when($h['created_at'])?><?=$h['kind'] !== 'unit' ? ' · w dziennikach: ' . (int)$h['uses'] : ''?><?=$h['kind'] === 'product' && $h['code'] ? ' · kod ' . hl_e($h['code']) : ''?><?=$h['label_photo'] ? ' · <a class="underline" target="_blank" rel="noopener" href="' . hl_e(hl_food_label_photo_url($h)) . '">etykieta</a>' : ''?></p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Dodał(a): <?=hl_e($who($h['owner_id']))?> · <?=$when($h['created_at'])?><?=$h['kind'] !== 'unit' ? ' · w dziennikach: ' . (int)$h['uses'] : ''?><?=$h['kind'] !== 'dish' && $h['code'] ? ' · kod ' . hl_e($h['code']) : ''?><?=$h['label_photo'] ? ' · <a class="underline" target="_blank" rel="noopener" href="' . hl_e(hl_food_label_photo_url($h)) . '">etykieta</a>' : ''?></p>
                         <?php if ($h['review_note']): ?><p class="text-xs text-gray-500 dark:text-gray-400">Uwaga: „<?=hl_e($h['review_note'])?>”</p><?php endif; ?>
                         <p data-decision class="text-xs text-gray-500 dark:text-gray-400">
                             <?php if ($h['status'] === 'pending'): ?>Czeka na decyzję
@@ -251,7 +253,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                             <?php else: ?><?=$h['status'] === 'approved' ? 'Zaakceptował(a)' : 'Odrzucił(a)'?>: <?=$h['reviewed_by'] !== null ? hl_e($who($h['reviewed_by'])) : 'nieznane (przed zapisem historii)'?><?=$h['reviewed_at'] ? ' · ' . $when($h['reviewed_at']) : ''?>
                             <?php endif; ?>
                         </p>
-                        <?=$actions($h['kind'], (int)$h['id'], true)?>
+                        <?=$actions($h['kind'], (int)$h['id'], true, (int)$h['product_id'])?>
                     </div>
                 </div>
             </div>
@@ -324,6 +326,20 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                 <button type="button" data-fa-save="1" class="hl-btn hl-btn-green"><?=$icon($check)?>Zapisz i akceptuj</button>
             </div>
         </form>
+    </dialog>
+
+    <!-- wszystkie jednostki porcji produktu: poprawki, nowe, decyzje (rysuje foodUnits z units_admin.php) -->
+    <dialog id="fa_units" class="fa-dialog w-[min(620px,calc(100vw-24px))]">
+        <div class="flex max-h-[calc(100dvh-48px)] flex-col">
+            <div class="flex items-start gap-3 px-5 pt-5 pb-3">
+                <div class="min-w-0 flex-1">
+                    <h2 id="fa_units_title" class="hl-popup-title !p-0 truncate">Jednostki produktu</h2>
+                    <p id="fa_units_sub" class="mt-0.5 text-xs text-gray-500 dark:text-gray-400"></p>
+                </div>
+                <button type="button" data-fa-close class="hl-icon-btn" aria-label="Zamknij"><?=$icon('M6 18 18 6M6 6l12 12', 'size-5')?></button>
+            </div>
+            <div id="fa_units_body" class="relative min-h-0 flex-1 overflow-y-auto px-5 pb-5"></div>
+        </div>
     </dialog>
 
     <!-- powód odrzucenia – autor zobaczy go w ustawieniach Jedzenia („Twój wkład”) -->
@@ -545,5 +561,107 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
             });
         });
     });
+    // jednostki produktu: lista wszystkich (każdy status), poprawki w miejscu, nowe od razu zaakceptowane
+    var unitsDlg = document.getElementById('fa_units'), unitsPid = 0, unitsDirty = false;
+    var escH = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var numPl = function (v) { return String(Math.round(v * 10) / 10).replace('.', ','); };
+    var dateTxt = function (d) { if (!d) return ''; var x = new Date(d.replace(' ', 'T')); return x.getDate() + '.' + pad(x.getMonth() + 1) + '.' + x.getFullYear(); };
+    var SRC = { off: 'Open Food Facts', base: 'podstawowy', user: 'od użytkownika', dish: 'danie' };
+    unitsDlg.addEventListener('click', function (ev) { if (ev.target === unitsDlg) unitsDlg.close(); });
+    // zmiany w jednostkach zmieniają kolejkę i historię – po zamknięciu odświeżamy podstronę
+    unitsDlg.addEventListener('close', function () {
+        if (!unitsDirty) return;
+        unitsDirty = false;
+        var tab = root.querySelector('[data-ftab][aria-selected="true"]');
+        if (typeof openPanelSite === 'function') openPanelSite('food', 'tab=' + (tab ? tab.dataset.ftab : 'units'));
+    });
+
+    function unitsRender(r) {
+        var p = r.product, u = p.per_ml ? 'ml' : 'g', body = document.getElementById('fa_units_body');
+        document.getElementById('fa_units_title').textContent = p.name;
+        document.getElementById('fa_units_sub').textContent = [p.brand, p.code ? 'kod ' + p.code : 'bez kodu', p.quantity, SRC[p.source], numPl(p.kcal) + ' kcal / 100 ' + u].filter(Boolean).join(' · ');
+        var field = 'h-10 rounded-xl bg-gray-50 dark:bg-white/5 px-3 text-sm text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-green-400';
+        var html = '<p class="hl-eyebrow mt-1">Jednostki (' + r.units.length + ')</p><div class="mt-2 flex flex-col gap-2">';
+        if (!r.units.length) html += '<p class="text-sm text-gray-500 dark:text-gray-400">Produkt nie ma jeszcze własnych jednostek.</p>';
+        r.units.forEach(function (x) {
+            var who = x.owner ? 'Dodał(a): ' + escH(x.owner) + ' · ' + dateTxt(x.created_at) : 'Od autora produktu / z bazy';
+            var dec = x.status === 'pending' ? 'czeka na decyzję' : x.reviewer ? (x.status === 'approved' ? 'zaakceptował(a) ' : 'odrzucił(a) ') + escH(x.reviewer) + ' · ' + dateTxt(x.reviewed_at) : '';
+            html += '<div class="rounded-2xl ring-1 ring-black/5 dark:ring-white/10 p-3" data-unit="' + x.id + '" data-status="' + x.status + '">'
+                + '<div class="flex flex-wrap items-center gap-2">'
+                + '<input data-ulabel class="' + field + ' min-w-0 flex-1" maxlength="30" value="' + escH(x.label) + '" aria-label="Nazwa jednostki">'
+                + '<span class="text-sm text-gray-400">=</span>'
+                + '<label class="flex items-center gap-1"><input data-ugrams inputmode="decimal" class="' + field + ' w-20 text-right" value="' + numPl(x.grams) + '" aria-label="Waga"><span class="text-xs text-gray-500">' + u + '</span></label>'
+                + '<span class="fa-badge"></span></div>'
+                + '<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">' + who + (dec ? ' · ' + dec : '') + '</p>'
+                + '<div class="mt-2 flex flex-wrap gap-1.5">'
+                + '<button type="button" data-uact="save" class="hl-btn hl-btn-soft hl-btn-sm" hidden>Zapisz zmianę</button>'
+                + (x.status !== 'approved' ? '<button type="button" data-uact="approve" class="hl-btn hl-btn-green hl-btn-sm">Akceptuj</button>' : '')
+                + (x.status !== 'rejected' && x.owner ? '<button type="button" data-uact="reject" class="hl-btn hl-btn-ghost hl-btn-sm">Odrzuć</button>' : '')
+                + (r.can_delete ? '<button type="button" data-uact="delete" class="hl-btn hl-btn-danger hl-btn-sm">Usuń</button>' : '')
+                + '</div></div>';
+        });
+        html += '</div>';
+        if (r.label_units.length) {
+            html += '<p class="hl-eyebrow mt-5">Z etykiety produktu</p><div class="mt-2 flex flex-wrap gap-1.5">'
+                + r.label_units.map(function (x) { return '<span class="rounded-full bg-gray-100 dark:bg-white/[.06] px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300">' + escH(x.label) + ' = ' + numPl(x.grams) + ' ' + u + '</span>'; }).join('')
+                + '</div><p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">' + (p.source === 'off' ? 'Z Open Food Facts – zmienia je import.' : 'Opakowanie zmienisz w „Popraw” produktu.') + '</p>';
+        }
+        html += '<p class="hl-eyebrow mt-5">Nowa jednostka</p>'
+            + '<div class="mt-2 flex flex-wrap gap-1.5">' + ['opakowanie', 'sztuka', 'plaster', 'kromka', 'łyżka', 'szklanka', 'porcja'].map(function (l) {
+                return '<button type="button" data-upreset class="rounded-full bg-gray-100 dark:bg-white/[.06] px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">' + l + '</button>';
+            }).join('') + '</div>'
+            + '<div class="mt-2 flex items-center gap-2"><input id="fa_unew_label" class="' + field + ' min-w-0 flex-1" maxlength="30" placeholder="np. opakowanie" aria-label="Nazwa nowej jednostki">'
+            + '<label class="flex items-center gap-1"><input id="fa_unew_grams" inputmode="decimal" class="' + field + ' w-20 text-right" placeholder="150" aria-label="Waga nowej jednostki"><span class="text-xs text-gray-500">' + u + '</span></label>'
+            + '<button type="button" id="fa_unew_add" class="hl-btn hl-btn-primary hl-btn-sm">Dodaj</button></div>'
+            + '<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Dodana tutaj jest od razu widoczna dla wszystkich.</p>';
+        body.innerHTML = html;
+
+        body.querySelectorAll('[data-unit]').forEach(function (row) {
+            var id = +row.dataset.unit, x = r.units.filter(function (y) { return y.id === id; })[0];
+            var lab = row.querySelector('[data-ulabel]'), gr = row.querySelector('[data-ugrams]'), save = row.querySelector('[data-uact="save"]');
+            var changed = function () { save.hidden = lab.value.trim().toLowerCase() === x.label && parseFloat(gr.value.replace(',', '.')) === x.grams; };
+            lab.addEventListener('input', changed);
+            gr.addEventListener('input', changed);
+            [lab, gr].forEach(function (i) { i.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && !save.hidden) save.click(); }); });
+            row.querySelectorAll('[data-uact]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var act = b.dataset.uact;
+                    if (act === 'delete' && !confirm('Usunąć jednostkę „' + x.label + '”? Wpisy w dziennikach zostaną bez zmian.')) return;
+                    unitsPost({ action: act, id: id, label: lab.value, grams: gr.value.replace(',', '.') }, b);
+                });
+            });
+        });
+        var nl = document.getElementById('fa_unew_label'), ng = document.getElementById('fa_unew_grams');
+        body.querySelectorAll('[data-upreset]').forEach(function (b) { b.addEventListener('click', function () { nl.value = b.textContent; ng.focus(); }); });
+        var add = function () { unitsPost({ action: 'save', label: nl.value, grams: ng.value.replace(',', '.') }, document.getElementById('fa_unew_add')); };
+        document.getElementById('fa_unew_add').addEventListener('click', add);
+        ng.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') add(); });
+    }
+
+    function unitsPost(data, btn) {
+        var fd = new FormData();
+        fd.append('product_id', unitsPid);
+        Object.keys(data).forEach(function (k) { fd.append(k, data[k]); });
+        if (btn) btn.disabled = true;
+        hlJson('scripts/food/units_admin.php', fd).then(function (r) {
+            if (btn) btn.disabled = false;
+            showAlert(r.status || 'error', r.message || 'Nieznany status odpowiedzi');
+            if (r.status !== 'success') return;
+            unitsDirty = true;
+            var top = document.getElementById('fa_units_body').scrollTop;
+            unitsRender(r);
+            document.getElementById('fa_units_body').scrollTop = top;
+        });
+    }
+
+    window.foodUnits = function (productId) {
+        fetch('scripts/food/units_admin.php?product_id=' + productId, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (r) {
+            if (r.status !== 'success') return showAlert(r.status || 'error', r.message || 'Nie udało się wczytać jednostek');
+            unitsPid = productId;
+            unitsRender(r);
+            if (!unitsDlg.open) unitsDlg.showModal();
+            document.getElementById('fa_units_body').scrollTop = 0;
+        });
+    };
 })();
 </script>

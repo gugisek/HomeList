@@ -477,7 +477,8 @@
         var box = el('bl_step'), sc = box.querySelector('.fd-scroll'), top = sc ? sc.scrollTop : 0;
         fn(box);
         sc = box.querySelector('.fd-scroll');
-        if (sc) sc.scrollTop = top;
+        // global.css ma * { scroll-behavior: smooth } – bez tego przewijanie leci od góry z animacją
+        if (sc) { sc.style.scrollBehavior = 'auto'; sc.scrollTop = top; }
     }
     function headHTML(title, opts) {
         opts = opts || {};

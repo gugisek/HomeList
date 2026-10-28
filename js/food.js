@@ -487,6 +487,8 @@
         document.documentElement.style.overflow = 'hidden';
     }
     F.openAdd = function () { openSheet({ step: 'search' }); };
+    // skan tylko do podglądu produktu (przycisk obok plusa); dodanie do posiłku to jeden krok dalej
+    F.openScan = function () { openSheet({ step: 'scan', scanFor: 'info' }); };
 
     function closeSheet(skipRefresh) {
         if (!S.sheet) return;
@@ -519,6 +521,7 @@
         else if (step === 'stats') renderStats(box);
         else if (step === 'day') renderDay(box);
         else if (step === 'scan') renderScan(box);
+        else if (step === 'info') renderInfo(box);
         else if (step === 'own') renderOwn(box);
         else if (step === 'dish') renderDish(box);
         else if (step === 'dishes') renderDishes(box);
@@ -963,7 +966,7 @@
         box.querySelector('[data-back]').addEventListener('click', function () {
             if (pp.entry) return closeSheet();
             sh.p = null;
-            setStep('search', true);
+            setStep(sh.info ? 'info' : 'search', true);
         });
         bindMealChips(box, updatePortion);
         box.querySelectorAll('[data-step]').forEach(function (b) {
@@ -1220,7 +1223,7 @@
 
     function bindQuality() {
         var e = document.querySelector('#fd_q_box [data-editown]');
-        if (e) e.addEventListener('click', function () { editOwn(S.sheet.p.product.id, 'portion'); });
+        if (e) e.addEventListener('click', function () { editOwn((S.sheet.p || S.sheet.info).product.id, 'portion'); });
         var b = document.querySelector('#fd_q_box [data-qtoggle]');
         if (!b) return;
         b.addEventListener('click', function () {
@@ -1763,7 +1766,7 @@
     }
 
     function renderScan(box) {
-        box.innerHTML = headHTML(S.sheet.scanFor === 'dish' ? 'Skanuj składnik' : 'Skanuj kod kreskowy', true)
+        box.innerHTML = headHTML(S.sheet.scanFor === 'dish' ? 'Skanuj składnik' : S.sheet.scanFor === 'info' ? 'Sprawdź produkt' : 'Skanuj kod kreskowy', S.sheet.scanFor !== 'info')
             + '<div class="fd-scroll" style="padding:8px 20px 12px">'
             + '<div class="fd-viewfinder"><video id="fd_video" playsinline muted autoplay></video>'
             + '<span class="fd-corner tl"></span><span class="fd-corner tr"></span><span class="fd-corner bl"></span><span class="fd-corner br"></span>'
@@ -1815,12 +1818,59 @@
             if (res.status === 'success' && res.found) {
                 // skan składnika dania – wracamy do edytora z dodanym produktem
                 if (sh.scanFor === 'dish' && sh.dish) { sh.scanFor = null; dishAdd(sh.dish, res.product); toast('Dodano: ' + res.product.name); return setStep('dish', true); }
+                if (sh.scanFor === 'info') return openInfo(res.product.id, code);
                 return openPortion(res.product, null, false, 'barcode');
             }
             if (res.status !== 'success' && res.status !== 'error') { fail(res); return setStep('scan', true); }
             sh.own = { code: code, name: res.name || '', notFound: true, offError: res.status === 'error', forDish: sh.scanFor === 'dish' };
             setStep('own');
         }).catch(function () { sh.own = { code: code, notFound: true, offError: true, forDish: sh.scanFor === 'dish' }; setStep('own'); });
+    }
+
+    // ---------- podgląd zeskanowanego produktu ----------
+    // pełne dane z product.php (skład, jakość, składniki dania); „Dodaj do posiłku” otwiera porcję bez ponownego pobierania
+    function openInfo(id, code) {
+        var sh = S.sheet;
+        getJSON('scripts/food/product.php?id=' + id).then(function (res) {
+            if (S.sheet !== sh) return;
+            if (res.status !== 'success') { fail(res); return setStep('scan', true); }
+            sh.info = { product: res.product, quality: res.product.quality, code: code };
+            setStep('info');
+        }).catch(function () { if (S.sheet === sh) { toast('Nie udało się pobrać produktu'); setStep('scan', true); } });
+    }
+
+    function renderInfo(box) {
+        var sh = S.sheet, pp = sh.info, p = pp.product, q = pp.quality || {}, u = p.per_ml ? 'ml' : 'g';
+        var sub = [p.brand, p.quantity].filter(Boolean).join(' · ');
+        var img = p.photo || q.image_url;
+        var units = (p.units || []).filter(function (x) { return !x.base; });
+        var macro = function (v, label, color) { return '<div><b class="fd-num"' + (color ? ' style="color:' + color + '"' : '') + '>' + (color ? dec(v) : fmt(v)) + '</b><span>' + label + '</span></div>'; };
+        box.innerHTML = headHTML('Produkt', true)
+            + '<div class="fd-scroll" style="padding:8px 20px 12px">'
+            + '<div style="display:flex;align-items:center;gap:12px">'
+            + (img ? '<img class="fd-thumb is-lg" src="' + esc(img) + '" alt="">' : '')
+            + '<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:600;line-height:1.3">' + esc(p.name) + '</div>'
+            + '<div class="text-xs fd-mut" style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">' + tagHTML(p) + esc(sub) + '</div></div>'
+            + '<span id="fd_ns_top" style="display:contents">' + nsMiniHTML(pp.quality) + '</span></div>'
+            + '<span class="fd-eyebrow" style="margin-top:18px">Na 100 ' + u + '</span>'
+            + '<div class="fd-mini" style="margin-top:8px">' + macro(p.kcal, 'kcal') + macro(p.protein, 'białko g', 'var(--fd-p)')
+            + macro(p.fat, 'tłuszcz g', 'var(--fd-f)') + macro(p.carbs, 'węgle g', 'var(--fd-c)') + '</div>'
+            + (units.length ? '<span class="fd-eyebrow" style="margin-top:16px">Porcje</span><table class="fd-table" style="margin-top:4px"><tbody>'
+                + units.map(function (x) {
+                    return '<tr><td>1 ' + esc(x.label) + ' <span class="fd-mut">· ' + dec(x.grams) + ' ' + u + '</span></td><td class="fd-num">' + fmt(p.kcal * x.grams / 100) + ' kcal</td></tr>';
+                }).join('') + '</tbody></table>' : '')
+            + '<div id="fd_quality">' + qualityHTML({ product: p, quality: pp.quality }) + '</div>'
+            + '</div>'
+            + '<div class="fd-foot"><button type="button" class="fd-round fd-press" data-rescan aria-label="Skanuj kolejny" title="Skanuj kolejny" style="width:54px;height:54px">' + I.scan + '</button>'
+            + '<button type="button" class="fd-cta fd-press" data-commit>' + I.plus + 'Dodaj do posiłku</button></div>';
+        bindHead(box, function () { sh.info = null; setStep('scan', true); });
+        // w podglądzie skład i jakość od razu rozwinięte
+        var qb = el('fd_q_box');
+        if (qb) { qb.classList.add('is-open'); qb.querySelector('[data-qtoggle]').setAttribute('aria-expanded', 'true'); }
+        bindQuality();
+        bindNsMini();
+        box.querySelector('[data-rescan]').addEventListener('click', function () { sh.info = null; setStep('scan', true); });
+        box.querySelector('[data-commit]').addEventListener('click', function () { openPortion(p, null, true, 'barcode'); });
     }
 
     // ---------- własny produkt ----------

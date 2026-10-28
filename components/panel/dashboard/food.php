@@ -61,6 +61,9 @@ function hlFoodEnable(btn) {
         </div>
         <div class="flex items-center gap-1 flex-none" data-vt="actions">
             <button type="button" id="fd_today_btn" onclick="hlFood.go(hlFood.today())" class="hidden text-xs font-medium px-3 py-1.5 rounded-full text-green-500 ring-1 ring-green-400/60 hover:bg-green-400 hover:text-white active:scale-95 duration-150">Dziś</button>
+            <button type="button" onclick="hlFood.openScan()" title="Sprawdź produkt po kodzie" aria-label="Sprawdź produkt po kodzie" class="hl-icon-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5V5.25a1.5 1.5 0 0 1 1.5-1.5H7.5M16.5 3.75h2.25a1.5 1.5 0 0 1 1.5 1.5V7.5M20.25 16.5v2.25a1.5 1.5 0 0 1-1.5 1.5H16.5M7.5 20.25H5.25a1.5 1.5 0 0 1-1.5-1.5V16.5M8 8.5v7M11 8.5v7M13.5 8.5v7M16 8.5v7" /></svg>
+            </button>
             <button type="button" onclick="hlFood.openAdd()" title="Dodaj jedzenie" aria-label="Dodaj jedzenie" class="hl-icon-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             </button>
