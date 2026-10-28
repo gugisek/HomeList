@@ -115,6 +115,9 @@
 .bl-f input:not([type=date]) { flex: 1.2; }
 .bl-f input[type=date] { color-scheme: light dark; }
 .bl-f input::placeholder { color: var(--bl-mut); font-weight: 400; }
+/* zaokrąglenie skrajnych wierszy, żeby ramka focusa nie była ucinana przez rogi grupy */
+.bl-form-group > .bl-f:first-child { border-top-left-radius: 20px; border-top-right-radius: 20px; }
+.bl-form-group > .bl-f:last-child { border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
 .bl-f:focus-within { box-shadow: inset 0 0 0 2px var(--bl-ok); }
 .bl-f + .bl-f:focus-within { box-shadow: inset 0 0 0 2px var(--bl-ok); }
 .bl-hint { margin: 8px 4px 0; font-size: 12px; line-height: 1.5; color: var(--bl-mut); }
