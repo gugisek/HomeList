@@ -865,20 +865,62 @@
 
     // ---------- własna jednostka (np. opakowanie, którego nie zna OFF) ----------
     var UNIT_PRESETS = ['opakowanie', 'sztuka', 'plaster', 'kromka', 'łyżka', 'szklanka'];
+    // jednostki, których nie liczy się „ile w opakowaniu” – od razu waga jednej
+    var UNIT_BY_WEIGHT = ['opakowanie', 'całe opakowanie', 'łyżka', 'łyżeczka', 'szklanka', 'kubek', 'porcja'];
+
+    function unitMode(label) { return UNIT_BY_WEIGHT.indexOf(String(label || '').trim().toLowerCase()) >= 0 ? 'grams' : 'count'; }
+    function isPackLabel(label) { var l = String(label || '').trim().toLowerCase(); return l === 'opakowanie' || l === 'całe opakowanie'; }
+    function toNum(v) { var n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? NaN : n; }
+
+    // wielkość opakowania znana z OFF albo z jednostek (żeby liczyć „8 plastrów w opakowaniu” zamiast ważyć jeden)
+    function packOf(p) {
+        var x = (p.units || []).filter(function (u) { return !u.base && isPackLabel(u.label); })[0];
+        return x ? x.grams : null;
+    }
+
+    // waga jednej jednostki z formularza: w trybie „ile w opakowaniu” = opakowanie / liczba sztuk
+    function addUnitGrams(pp) {
+        var a = pp.add;
+        if (a.mode !== 'count' || isPackLabel(a.label)) return toNum(a.grams);
+        var pkg = packOf(pp.product) || toNum(a.pkg), n = toNum(a.n);
+        return pkg > 0 && n > 0 ? Math.round(pkg / n * 10) / 10 : NaN;
+    }
+
+    function renderAddUnitCalc(pp) {
+        var c = el('fd_ucalc'), a = pp.add;
+        if (!c) return;
+        var u = pp.product.per_ml ? 'ml' : 'g', g = addUnitGrams(pp), l = a.label.trim() || 'sztuka';
+        c.innerHTML = g > 0 ? '1 × ' + esc(l) + ' = <b class="fd-num">' + dec(g) + ' ' + u + '</b> · ' + fmt(pp.p100.kcal * g / 100) + ' kcal'
+            : a.mode === 'count' ? 'Policz sztuki na opakowaniu – wagę jednej wyliczymy sami' : 'Waga jednej jednostki, np. z etykiety';
+    }
 
     function renderAddUnit() {
         var pp = S.sheet && S.sheet.p, box = el('fd_addunit');
         if (!pp || !box) return;
         if (!pp.add) { box.innerHTML = ''; return; }
-        var u = pp.product.per_ml ? 'ml' : 'g', a = pp.add;
+        var u = pp.product.per_ml ? 'ml' : 'g', a = pp.add, pack = isPackLabel(a.label), pkg = packOf(pp.product);
+        if (!a.mode) a.mode = unitMode(a.label);
+        var count = a.mode === 'count' && !pack;
         var mine = (pp.product.units || []).filter(function (x) { return x.mine; });
+        var field = function (id, k, lbl, ph, suffix) {
+            return '<label class="fd-field" style="padding-right:12px;margin-top:8px"><span class="text-xs fd-mut" style="white-space:nowrap">' + lbl + '</span>'
+                + '<input id="' + id + '" data-uk="' + k + '" type="text" inputmode="decimal" placeholder="' + ph + '" value="' + esc(a[k]) + '" style="text-align:right">'
+                + '<span class="text-xs fd-mut">' + suffix + '</span></label>';
+        };
         box.innerHTML = '<div class="fd-box" style="margin-top:12px"><span class="fd-eyebrow">Nowa jednostka</span>'
             + '<div class="fd-chips" style="margin-top:10px">' + UNIT_PRESETS.map(function (l) {
                 return '<button type="button" class="fd-chip fd-press' + (a.label === l ? ' is-on' : '') + '" data-ulabel="' + esc(l) + '">' + esc(l) + '</button>';
             }).join('') + '</div>'
-            + '<div style="display:flex;gap:8px;margin-top:10px"><div class="fd-field" style="flex:1"><input id="fd_ul" type="text" maxlength="30" placeholder="np. opakowanie" aria-label="Nazwa jednostki" value="' + esc(a.label) + '"></div>'
-            + '<label class="fd-field" style="width:110px;padding-right:12px"><input id="fd_ug" type="text" inputmode="decimal" placeholder="' + (u === 'ml' ? '500' : '150') + '" aria-label="Waga jednostki" value="' + esc(a.grams) + '"><span class="text-xs fd-mut">' + u + '</span></label></div>'
-            + '<p class="fd-mut" style="font-size:12px;margin-top:8px">Waga całej jednostki, np. opakowania z etykiety. U Ciebie od razu, dla innych po akceptacji administratora.</p>'
+            + '<div class="fd-field" style="margin-top:10px"><input id="fd_ul" type="text" maxlength="30" placeholder="np. plaster" aria-label="Nazwa jednostki" value="' + esc(a.label) + '"></div>'
+            + (pack ? '' : '<div class="fd-chips fd-unitbox" role="group" aria-label="Jak podać wagę">'
+                + '<button type="button" class="fd-chip fd-press' + (count ? ' is-on' : '') + '" data-umode="count" aria-pressed="' + count + '">Ile w opakowaniu</button>'
+                + '<button type="button" class="fd-chip fd-press' + (count ? '' : ' is-on') + '" data-umode="grams" aria-pressed="' + !count + '">Waga jednej</button></div>')
+            + (count
+                ? (pkg ? '' : field('fd_upkg', 'pkg', 'Całe opakowanie', u === 'ml' ? '500' : '250', u))
+                    + field('fd_un', 'n', pkg ? 'W opakowaniu (' + dec(pkg) + ' ' + u + ') jest' : 'Ile sztuk w opakowaniu', '8', '×')
+                : field('fd_ug', 'grams', pack ? 'Całe opakowanie' : 'Jedna waży', u === 'ml' ? '250' : '20', u))
+            + '<p id="fd_ucalc" class="fd-mut fd-unitcalc"></p>'
+            + '<p class="fd-mut" style="font-size:12px;margin-top:6px">U Ciebie od razu, dla innych po akceptacji administratora.</p>'
             + mine.map(function (x) {
                 return '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px"><span style="flex:1;min-width:0">' + esc(x.label) + ' · ' + dec(x.grams) + ' ' + u
                     + ' <span class="fd-mut">– ' + (x.status === 'rejected' ? 'odrzucona, tylko u Ciebie' : 'czeka na akceptację') + '</span></span>'
@@ -886,11 +928,36 @@
             }).join('')
             + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" class="fd-ghost-btn fd-press" data-ucancel>Anuluj</button>'
             + '<button type="button" class="fd-ghost-btn fd-press" data-usave>' + I.check + 'Zapisz</button></div></div>';
-        el('fd_ul').addEventListener('input', function () { a.label = this.value; box.querySelectorAll('[data-ulabel]').forEach(function (b) { b.classList.toggle('is-on', b.dataset.ulabel === a.label.trim()); }); });
-        el('fd_ug').addEventListener('input', function () { a.grams = this.value; });
-        box.querySelectorAll('[data-ulabel]').forEach(function (b) {
-            b.addEventListener('click', function () { a.label = b.dataset.ulabel; renderAddUnit(); el('fd_ug').focus(); });
+        el('fd_ul').addEventListener('input', function () {
+            var was = pack + '|' + a.mode;
+            a.label = this.value;
+            if (!a.modeSet) a.mode = unitMode(a.label);
+            // inny układ pól (opakowanie ↔ sztuki) – przerysowanie z zachowaniem kursora w nazwie
+            if (was !== isPackLabel(a.label) + '|' + a.mode) {
+                renderAddUnit();
+                var i = el('fd_ul');
+                i.focus();
+                i.setSelectionRange(i.value.length, i.value.length);
+                return;
+            }
+            box.querySelectorAll('[data-ulabel]').forEach(function (b) { b.classList.toggle('is-on', b.dataset.ulabel === a.label.trim()); });
+            renderAddUnitCalc(pp);
         });
+        box.querySelectorAll('[data-uk]').forEach(function (i) {
+            i.addEventListener('input', function () { a[i.dataset.uk] = i.value; renderAddUnitCalc(pp); });
+        });
+        box.querySelectorAll('[data-ulabel]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                a.label = b.dataset.ulabel;
+                if (!a.modeSet) a.mode = unitMode(a.label);
+                renderAddUnit();
+                focusAddUnit();
+            });
+        });
+        box.querySelectorAll('[data-umode]').forEach(function (b) {
+            b.addEventListener('click', function () { a.mode = b.dataset.umode; a.modeSet = true; renderAddUnit(); focusAddUnit(); });
+        });
+        renderAddUnitCalc(pp);
         box.querySelector('[data-ucancel]').addEventListener('click', function () { pp.add = null; renderAddUnit(); });
         box.querySelector('[data-usave]').addEventListener('click', function () { saveUnit(pp, this); });
         box.querySelectorAll('[data-udel]').forEach(function (b) {
@@ -908,10 +975,26 @@
         });
     }
 
+    // pierwsze puste pole wagi / liczby sztuk
+    function focusAddUnit() {
+        var f = ['fd_upkg', 'fd_un', 'fd_ug'].map(el).filter(function (i) { return i && !i.value; })[0] || el('fd_un') || el('fd_ug');
+        if (f) f.focus();
+    }
+
     function saveUnit(pp, btn) {
-        var label = pp.add.label.trim().toLowerCase(), grams = parseFloat(String(pp.add.grams).replace(',', '.'));
+        var a = pp.add, label = a.label.trim().toLowerCase(), grams = addUnitGrams(pp);
+        var u = pp.product.per_ml ? 'ml' : 'g', count = a.mode === 'count' && !isPackLabel(label);
+        if (count && !(grams > 0)) return fail({ status: 'warning', message: packOf(pp.product) || toNum(a.pkg) > 0 ? 'Podaj, ile sztuk jest w opakowaniu' : 'Podaj wagę całego opakowania i liczbę sztuk' });
+        if (count && grams < 1) return fail({ status: 'warning', message: 'Wychodzi mniej niż 1 ' + u + ' na sztukę – podaj wagę jednej' });
+        // nowe opakowanie wpisane przy liczeniu sztuk zapisujemy też jako jednostkę – przyda się następnym razem
+        var pkg = count && !packOf(pp.product) ? toNum(a.pkg) : NaN;
+        var first = pkg > 0 ? post('scripts/food/unit_save.php', { product_id: pp.product.id, label: 'opakowanie', grams: pkg }) : Promise.resolve(null);
         btn.disabled = true;
-        post('scripts/food/unit_save.php', { product_id: pp.product.id, label: label, grams: isNaN(grams) ? '' : grams }).then(function (res) {
+        first.then(function (r) {
+            if (r && r.status !== 'success') return r;
+            if (r) setUnits(pp, r.product.units);
+            return post('scripts/food/unit_save.php', { product_id: pp.product.id, label: label, grams: isNaN(grams) ? '' : grams });
+        }).then(function (res) {
             btn.disabled = false;
             if (res.status !== 'success') return fail(res);
             setUnits(pp, res.product.units);
@@ -983,12 +1066,17 @@
         });
         input.addEventListener('focus', function () { input.select(); });
         input.addEventListener('blur', function () { input.value = dec(pp.grams); fitGrams(input); });
-        // licznik sztuk: kolejna cała jednostka w górę / w dół (poniżej jednej – pół)
+        // licznik sztuk: poniżej jednej co ćwiartkę (¼ ½ ¾ 1), powyżej co całą jednostkę z zachowaniem ułamka;
+        // +¼ +½ +¾ obok ustawiają samą część ułamkową (2 → 2,5), ponowne dotknięcie ją zdejmuje
         el('fd_unitline').addEventListener('click', function (ev) {
-            var b = ev.target.closest('[data-cnt]'), ref = portionRef(pp);
+            var b = ev.target.closest('[data-cnt],[data-frac]'), ref = portionRef(pp);
             if (!b || !ref) return;
-            var n = pp.grams / ref.grams, eps = 0.02;
-            n = +b.dataset.cnt > 0 ? Math.floor(n + eps) + 1 : n > 1 + eps ? Math.ceil(n - eps) - 1 : 0.5;
+            var n = pp.grams / ref.grams, eps = 0.02, q = 4;
+            if (b.dataset.frac) {
+                var f = +b.dataset.frac, whole = Math.floor(n + eps);
+                n = pp.unit && Math.abs(n - whole - f) < eps ? Math.max(1, whole) : whole + f;
+            } else if (+b.dataset.cnt > 0) n = n < 1 - eps ? Math.floor((n + eps) * q) / q + 1 / q : Math.round(n * q) / q + 1;
+            else n = n > 1 + eps ? Math.round(n * q) / q - 1 : Math.max(1 / q, Math.ceil((n - eps) * q) / q - 1 / q);
             pp.unit = ref;
             vib();
             setGrams(n * ref.grams);
@@ -1035,10 +1123,10 @@
         var pp = S.sheet && S.sheet.p;
         if (!pp) return;
         pp.grams = Math.max(0, Math.min(5000, Math.round(g * 10) / 10));
-        // jednostka zostaje, póki ilość to wielokrotność połówek (1,5 × kubek); inaczej wpis w samych gramach
+        // jednostka zostaje, póki ilość to wielokrotność ćwiartek (1,75 × kubek); inaczej wpis w samych gramach
         if (pp.unit) {
             var n = pp.grams / pp.unit.grams;
-            if (Math.abs(n * 2 - Math.round(n * 2)) > 0.02 || n <= 0) pp.unit = null;
+            if (Math.abs(n * 4 - Math.round(n * 4)) > 0.04 || n <= 0) pp.unit = null;
         }
         updatePortion(typing);
     }
@@ -1050,11 +1138,15 @@
         var input = el('fd_grams');
         if (input && !typing && document.activeElement !== input) input.value = dec(pp.grams);
         if (input) fitGrams(input);
-        var ref = portionRef(pp);
+        var ref = portionRef(pp), rn = ref ? pp.grams / ref.grams : 0, rf = rn - Math.floor(rn + 0.02);
         el('fd_unitline').innerHTML = ref
-            ? '<button type="button" class="fd-cnt fd-press" data-cnt="-1" aria-label="Odejmij: ' + esc(ref.label) + '">' + I.minus + '</button>'
-                + '<span><b class="fd-num">' + qty(pp.grams / ref.grams) + '</b> × ' + esc(ref.label) + ' (' + dec(ref.grams) + ' ' + u + ')</span>'
-                + '<button type="button" class="fd-cnt fd-press" data-cnt="1" aria-label="Dodaj: ' + esc(ref.label) + '">' + I.plus + '</button>'
+            ? '<div class="fd-unitrow"><button type="button" class="fd-cnt fd-press" data-cnt="-1" aria-label="Odejmij: ' + esc(ref.label) + '"' + (rn <= 0.27 ? ' disabled' : '') + '>' + I.minus + '</button>'
+                + '<span><b class="fd-num">' + qty(rn) + '</b> × ' + esc(ref.label) + ' (' + dec(ref.grams) + ' ' + u + ')</span>'
+                + '<button type="button" class="fd-cnt fd-press" data-cnt="1" aria-label="Dodaj: ' + esc(ref.label) + '">' + I.plus + '</button></div>'
+                + '<div class="fd-frac" role="group" aria-label="Część jednostki">' + [[0.25, '¼'], [0.5, '½'], [0.75, '¾']].map(function (f) {
+                    var on = !!pp.unit && Math.abs(rf - f[0]) < 0.02;
+                    return '<button type="button" class="fd-press' + (on ? ' is-on' : '') + '" data-frac="' + f[0] + '" aria-pressed="' + on + '" aria-label="' + (on ? 'Usuń ' : 'Dodaj ') + f[1] + ' × ' + esc(ref.label) + '">+' + f[1] + '</button>';
+                }).join('') + '</div>'
             : 'na 100 ' + u + ': ' + fmt(pp.p100.kcal) + ' kcal';
         // linijka
         var sc = pp.scale, W = el('fd_ruler').clientWidth || 350, C = W / 2, span = C / sc.ppg + sc.step, html = '';
@@ -1071,10 +1163,10 @@
         }).join('') + (p.missing ? '' : '<button type="button" class="fd-chip fd-chip-add fd-press" data-addunit aria-label="Dodaj jednostkę, np. opakowanie">' + I.plus + 'Jednostka</button>');
         var add = el('fd_units').querySelector('[data-addunit]');
         if (add) add.addEventListener('click', function () {
-            var has = (p.units || []).some(function (x) { return x.label === 'opakowanie'; });
-            pp.add = pp.add ? null : { label: has ? 'sztuka' : 'opakowanie', grams: '' };
+            var has = !!packOf(p);
+            pp.add = pp.add ? null : { label: has ? 'sztuka' : 'opakowanie', grams: '', n: '', pkg: '' };
             renderAddUnit();
-            if (pp.add) el('fd_ug').focus();
+            if (pp.add) focusAddUnit();
         });
         el('fd_units').querySelectorAll('[data-unit]').forEach(function (b) {
             b.addEventListener('click', function () {
@@ -1916,6 +2008,14 @@
         };
         var hasQuality = !!(o.ingredients || o.allergens.length || o.traces.length || o.nutriscore || o.nova || o.palm_oil != null || o.diet);
         var editing = !!o.id;
+        // porcja: domyślnie „ile sztuk w opakowaniu” (łatwiej policzyć niż zważyć jedną); przy edycji – jeśli opakowanie dzieli się równo
+        if (!o.unit_mode) {
+            var pg0 = toNum(o.package_g), ug0 = toNum(o.unit_g), n0 = pg0 / ug0;
+            if (ug0 > 0) o.unit_mode = pg0 > 0 && Math.abs(n0 - Math.round(n0)) < 0.05 && n0 >= 1.5 ? 'count' : 'grams';
+            else o.unit_mode = unitMode(o.unit_label);
+            if (o.unit_mode === 'count' && ug0 > 0) o.unit_n = String(Math.round(n0));
+        }
+        var uCount = o.unit_mode === 'count';
         box.innerHTML = headHTML(editing ? 'Popraw produkt' : 'Własny produkt', true)
             + '<div class="fd-scroll" style="padding:8px 20px 12px">'
             + (o.notFound ? '<p class="fd-pill" style="margin:0 0 12px;border-radius:14px;padding:8px 12px;display:flex">' + (o.offError ? 'Open Food Facts nie odpowiada – dodaj produkt ręcznie' : 'Nie znaleźliśmy kodu ' + esc(o.code) + (o.name ? ' („' + esc(o.name) + '” bez wartości odżywczych)' : '')) + '</p>' : '')
@@ -1936,8 +2036,14 @@
             + num('sat_fat', 'nasycone g', '', 1) + num('sugars', 'cukry g', '', 1) + num('fiber', 'błonnik g', '', 1) + num('salt', 'sól g', '', 1) + '</div></details>'
             + '<span class="fd-eyebrow" style="margin:18px 0 8px">Opakowanie i porcja (opcjonalnie)</span>'
             + '<label class="fd-field" style="padding-right:12px"><span class="text-xs fd-mut" style="white-space:nowrap">Całe opakowanie</span><input data-o="package_g" type="text" inputmode="decimal" placeholder="np. ' + (u === 'ml' ? '500' : '250') + '" aria-label="Wielkość opakowania" value="' + esc(o.package_g || '') + '" style="text-align:right"><span class="text-xs fd-mut">' + u + '</span></label>'
+            + '<div class="fd-chips fd-unitbox" role="group" aria-label="Jak podać porcję">'
+            + '<button type="button" class="fd-chip fd-press' + (uCount ? ' is-on' : '') + '" data-oumode="count" aria-pressed="' + uCount + '">Ile w opakowaniu</button>'
+            + '<button type="button" class="fd-chip fd-press' + (uCount ? '' : ' is-on') + '" data-oumode="grams" aria-pressed="' + !uCount + '">Waga jednej</button></div>'
             + '<div style="display:flex;gap:8px;margin-top:8px"><div class="fd-field" style="flex:1"><input data-o="unit_label" type="text" placeholder="Porcja, np. plaster, sztuka" aria-label="Nazwa porcji" value="' + esc(o.unit_label || '') + '"></div>'
-            + '<label class="fd-field" style="width:110px;padding-right:12px"><input data-o="unit_g" type="text" inputmode="decimal" placeholder="20" aria-label="Waga porcji" value="' + esc(o.unit_g || '') + '"><span class="text-xs fd-mut">' + u + '</span></label></div>'
+            + (uCount
+                ? '<label class="fd-field" style="width:110px;padding-right:12px"><input data-o="unit_n" type="text" inputmode="decimal" placeholder="8" aria-label="Ile sztuk w opakowaniu" value="' + esc(o.unit_n || '') + '"><span class="text-xs fd-mut">×</span></label></div>'
+                : '<label class="fd-field" style="width:110px;padding-right:12px"><input data-o="unit_g" type="text" inputmode="decimal" placeholder="20" aria-label="Waga porcji" value="' + esc(o.unit_g || '') + '"><span class="text-xs fd-mut">' + u + '</span></label></div>')
+            + '<p id="fd_oucalc" class="fd-mut fd-unitcalc"></p>'
             + '<details class="fd-more" style="margin-top:18px"' + (hasQuality ? ' open' : '') + '><summary class="fd-eyebrow">Skład i jakość (opcjonalnie)</summary>'
             + '<label class="hl-label" for="fd_oingr" style="margin-top:10px">Skład</label>'
             + '<textarea id="fd_oingr" data-o="ingredients" class="fd-area" rows="4" maxlength="5000" placeholder="Przepisz skład z opakowania, np. mąka pszenna, cukier, olej rzepakowy, emulgator (E322)…">' + esc(o.ingredients || '') + '</textarea>'
@@ -1991,7 +2097,32 @@
             }).catch(function () { fail({ status: 'warning', message: 'Nie udało się wczytać zdjęcia – spróbuj innego pliku' }); });
         });
         renderOwnLabel();
+        // waga jednej porcji: w trybie „ile w opakowaniu” = opakowanie / liczba sztuk
+        var ownUnitG = function () {
+            if (!uCount) return toNum(o.unit_g);
+            var pg = toNum(o.package_g), n = toNum(o.unit_n);
+            return pg > 0 && n > 0 ? Math.round(pg / n * 10) / 10 : NaN;
+        };
+        var unitCalc = function () {
+            var c = el('fd_oucalc'), g = ownUnitG(), l = String(o.unit_label || '').trim() || 'porcja', k = toNum(o.kcal);
+            if (!c) return;
+            c.innerHTML = g > 0 ? '1 × ' + esc(l) + ' = <b class="fd-num">' + dec(g) + ' ' + u + '</b>' + (k >= 0 ? ' · ' + fmt(k * g / 100) + ' kcal' : '')
+                : uCount ? (toNum(o.package_g) > 0 ? 'Policz sztuki na opakowaniu – wagę jednej wyliczymy sami' : 'Wpisz wagę całego opakowania i ile w nim sztuk') : '';
+        };
+        box.querySelectorAll('[data-oumode]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var top = box.querySelector('.fd-scroll').scrollTop;
+                // przy przełączeniu przenosimy wyliczoną wagę, żeby nic nie zginęło
+                var g = ownUnitG();
+                o.unit_mode = b.dataset.oumode;
+                if (o.unit_mode === 'grams' && g > 0) o.unit_g = String(g).replace('.', ',');
+                if (o.unit_mode === 'count' && g > 0 && toNum(o.package_g) > 0) o.unit_n = String(Math.round(toNum(o.package_g) / g));
+                renderOwn(box);
+                box.querySelector('.fd-scroll').scrollTop = top;
+            });
+        });
         var check = function () {
+            unitCalc();
             var v = function (k) { return parseFloat(String(o[k] || '').replace(',', '.')); };
             var filled = ['kcal', 'protein', 'fat', 'carbs'].every(function (k) { return !isNaN(v(k)); });
             var c = el('fd_ocheck'), btn = box.querySelector('[data-commit]');
@@ -2018,6 +2149,12 @@
             btn.disabled = true;
             var data = {};
             OWN_FIELDS.forEach(function (k) { data[k] = String(o[k] || '').trim(); if (k !== 'ingredients' && k !== 'name' && k !== 'brand' && k !== 'unit_label') data[k] = data[k].replace(',', '.'); });
+            if (uCount) {
+                var ug = ownUnitG();
+                if (String(o.unit_n || '').trim() && !(ug > 0)) { btn.disabled = false; return fail({ status: 'warning', message: 'Podaj wagę całego opakowania – z niej wyliczymy wagę jednej sztuki' }); }
+                data.unit_g = ug > 0 ? String(ug) : '';
+                if (data.unit_g && !data.unit_label) data.unit_label = 'sztuka';
+            }
             data.per_ml = o.per_ml ? 1 : 0;
             data.allergens = o.allergens.join(',');
             data.traces = o.traces.join(',');

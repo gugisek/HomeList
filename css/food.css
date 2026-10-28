@@ -225,6 +225,15 @@
 .fd-round svg { width: 20px; height: 20px; }
 .fd-unitline { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 30px; margin-top: 6px; font-size: 13px; }
 .fd-unitline b { color: var(--hl-ink); font-weight: 600; }
+.fd-unitline:has(.fd-frac) { flex-direction: column; gap: 6px; }
+.fd-unitrow { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.fd-frac { display: flex; justify-content: center; gap: 4px; }
+.fd-frac button { min-width: 40px; height: 26px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--fd-mut); box-shadow: inset 0 0 0 1px var(--fd-track); cursor: pointer; transition: background-color .2s ease, color .2s ease; }
+.fd-frac button:hover { color: var(--hl-ink); background: var(--hl-chip); }
+.fd-frac button.is-on { background: var(--hl-sel-bg); color: var(--hl-sel-ink); box-shadow: none; }
+.fd-unitbox { margin-top: 10px; }
+.fd-unitcalc { margin-top: 8px; font-size: 12px; }
+.fd-unitcalc b { color: var(--hl-ink); font-weight: 600; }
 .fd-cnt { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 999px; background: var(--hl-chip); color: var(--hl-ink); cursor: pointer; }
 .fd-cnt:hover { background: var(--hl-sel-bg); color: var(--hl-sel-ink); }
 .fd-cnt:disabled { opacity: .4; pointer-events: none; }
