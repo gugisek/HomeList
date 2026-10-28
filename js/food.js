@@ -1862,7 +1862,7 @@
             + '<div id="fd_quality">' + qualityHTML({ product: p, quality: pp.quality }) + '</div>'
             + '</div>'
             + '<div class="fd-foot"><button type="button" class="fd-round fd-press" data-rescan aria-label="Skanuj kolejny" title="Skanuj kolejny" style="width:54px;height:54px">' + I.scan + '</button>'
-            + '<button type="button" class="fd-cta fd-press" data-commit>' + I.plus + 'Dodaj do posiłku</button></div>';
+            + '<button type="button" class="fd-cta fd-press" data-commit>' + I.plus.replace('<svg', '<svg width="20" height="20"') + 'Dodaj do posiłku</button></div>';
         bindHead(box, function () { sh.info = null; setStep('scan', true); });
         // w podglądzie skład i jakość od razu rozwinięte
         var qb = el('fd_q_box');
