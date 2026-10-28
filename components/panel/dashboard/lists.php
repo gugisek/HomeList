@@ -27,8 +27,9 @@ $more_admin = array_filter([
     'settings' => ['Ustawienia aplikacji', 'M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75'],
 ], fn($k) => hl_can($k, 'read'), ARRAY_FILTER_USE_KEY);
 ?>
-<section data-toast-dock class="md:hidden font-[poppins] z-[49] xs:scale-100 scale-90 text-white fixed sm:bottom-8 bottom-4 flex items-center justify-center gap-2">
-    <section id="more_menu" class="hl-pop absolute bottom-[4.25rem] z-[49] max-h-[calc(100dvh-7.5rem)] rounded-[26px] origin-bottom flex flex-col gap-2">
+<section data-toast-dock class="md:hidden font-[poppins] z-[49] text-white fixed sm:bottom-8 bottom-4 flex items-center justify-center">
+    <!-- menu poza pomniejszonym paskiem – animowana treść pod scale-90 była rozmyta i na końcu przeskakiwała -->
+    <section id="more_menu" class="hl-pop absolute bottom-[4rem] z-[49] max-h-[calc(100dvh-7.5rem)] rounded-[26px] origin-bottom flex flex-col gap-2">
         <!-- ramka (::before) na nieprzewijanym kafelku, scroll w środku – inaczej dolna krawędź jedzie z treścią -->
         <div class="<?=count($nav_lists) > $nav_max ? "" : "hidden "?>hl-menu flex-initial <?=$more_admin ? 'min-h-[7.5rem] max-h-[50vh]' : 'min-h-[5.5rem] max-h-[45vh]'?> overflow-hidden flex flex-col">
         <div id="more_nav_body" class="hl-menu-scroll flex-1 min-h-0 rounded-[20px] overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-col gap-0.5">
@@ -60,6 +61,7 @@ $more_admin = array_filter([
             <a onclick="moreMenuClose();hlInstallApp()" class="hl-install-btn hl-menu-item hl-menu-cta"><?=$more_icon('M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3')?>Zainstaluj aplikację<span class="hl-install-shine pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 skew-x-[-20deg] bg-white/25 blur-sm"></span></a>
         </div>
     </section>
+    <div class="scale-90 flex items-center justify-center gap-2">
     <div class="liquid-glass liquid-glass-pill rounded-full p-1.5 flex items-center gap-0.5">
     <a onclick="moreMenuClose();openDetailTab(`today`,`list=today`)" title="Plan dnia" class="lists_main_nav list_today flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-3.5 sm:pl-4 sm:pr-5 py-2.5 hover:bg-white/10 text-white/75 hover:text-white rounded-full text-sm font-medium">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
@@ -93,4 +95,5 @@ $more_admin = array_filter([
             <svg class="is-x" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
         </span>
     </a>
+    </div>
 </section>

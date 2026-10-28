@@ -198,10 +198,13 @@ input[type="checkbox"]:disabled { opacity: .5; cursor: not-allowed; }
 .hl-menu-cta { color: #fff; background: linear-gradient(90deg, #22c55e, #10b981); box-shadow: 0 10px 24px -12px rgba(34, 197, 94, .8), inset 0 1px 0 rgba(255, 255, 255, .25); position: relative; overflow: hidden; }
 .hl-menu-cta:hover { background: linear-gradient(90deg, #4ade80, #34d399); }
 
-/* rozwijanie menu: sprężyste wejście, kolejne pozycje z lekkim opóźnieniem */
-.hl-pop { opacity: 0; transform: translateY(10px) scale(.96); pointer-events: none; transition: opacity .2s ease, transform .35s var(--hl-ease); }
+/* rozwijanie menu: sprężyste wejście, kolejne pozycje z lekkim opóźnieniem.
+   Bez scale – przeskalowana treść jest w trakcie animacji rozmyta i na końcu „wskakuje” na ostro.
+   will-change trzyma warstwy na stałe: bez tego przeglądarka tworzy je na czas animacji i po jej końcu
+   rysuje tekst od nowa (inne wygładzanie / zaokrąglenie do pikseli), co na telefonie widać jako przeskok. */
+.hl-pop { opacity: 0; transform: translateY(10px); pointer-events: none; will-change: transform, opacity; transition: opacity .2s ease, transform .35s var(--hl-ease); }
 .hl-pop.is-open { opacity: 1; transform: none; pointer-events: auto; }
-.hl-pop .hl-menu-item, .hl-pop .hl-menu-label { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .35s var(--hl-ease), background-color .15s ease, color .15s ease; }
+.hl-pop .hl-menu-item, .hl-pop .hl-menu-label { opacity: 0; transform: translateY(6px); will-change: transform, opacity; transition: opacity .25s ease, transform .35s var(--hl-ease), background-color .15s ease, color .15s ease; }
 .hl-pop.is-open .hl-menu-item, .hl-pop.is-open .hl-menu-label { opacity: 1; transform: none; }
 .hl-pop.is-open > * > :nth-child(2), .hl-pop.is-open .hl-menu-scroll > :nth-child(2) { transition-delay: .02s; }
 .hl-pop.is-open > * > :nth-child(3), .hl-pop.is-open .hl-menu-scroll > :nth-child(3) { transition-delay: .04s; }
@@ -210,7 +213,7 @@ input[type="checkbox"]:disabled { opacity: .5; cursor: not-allowed; }
 .hl-pop.is-open > * > :nth-child(6), .hl-pop.is-open .hl-menu-scroll > :nth-child(6) { transition-delay: .1s; }
 .hl-pop.is-open > * > :nth-child(n+7), .hl-pop.is-open .hl-menu-scroll > :nth-child(n+7) { transition-delay: .12s; }
 .hl-pop.is-open .hl-menu-item:hover, .hl-pop.is-open .hl-menu-item:active { transition-delay: 0s; }
-.hl-pop-side { transform: translateX(-10px) scale(.96); transform-origin: left bottom; }
+.hl-pop-side { transform: translateX(-10px); }
 
 /* tło pod rozwiniętym menu */
 .hl-scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .28); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .25s ease; }
@@ -226,12 +229,15 @@ input[type="checkbox"]:disabled { opacity: .5; cursor: not-allowed; }
 /* ---------- boczna pigułka (tablet / komputer) ---------- */
 .hl-rail { display: none; }
 @media (min-width: 768px) {
+  /* wyśrodkowanie flexem zamiast top: 50% + translateY(-50%) – przy nieparzystej wysokości okna transform dawał
+     pół piksela, przez co ikony rozmywały się przy animacjach w pigułce i wskakiwały na miejsce po ich końcu */
   .hl-rail {
-    position: fixed; left: 16px; top: 50%; z-index: 45; transform: translateY(-50%);
-    display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+    position: fixed; left: 16px; top: 0; bottom: 0; z-index: 45; pointer-events: none;
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px;
     font-family: 'Poppins', system-ui, sans-serif;
     animation: hl-rail-in .9s var(--hl-ease) both;
   }
+  .hl-rail > * { pointer-events: auto; }
 }
 .hl-rail-pill {
   width: 60px; max-height: calc(100vh - 180px); padding: 6px; border-radius: 30px;
@@ -289,7 +295,7 @@ input[type="checkbox"]:disabled { opacity: .5; cursor: not-allowed; }
 .hl-rail-more { position: relative; }
 .hl-rail-menu { position: absolute; left: calc(100% + 12px); bottom: 0; min-width: 230px; z-index: 46; }
 
-@keyframes hl-rail-in { from { opacity: 0; transform: translate(-24px, -50%); } to { opacity: 1; transform: translate(0, -50%); } }
+@keyframes hl-rail-in { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
 
 /* tła popupów mają naraz h-0 i h-full (h-0 przełączane w JS) – o wyniku decydowała kolejność reguł z Tailwind CDN,
    która zależy od treści strony; zamknięte tło nie może przykrywać ekranu i łapać kliknięć */

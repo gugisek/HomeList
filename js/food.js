@@ -1,4 +1,4 @@
-// HomeList – Jedzenie: ekran dnia + arkusz (wyszukiwarka, porcja, szybkie kcal, cel).
+// HomeList – Jedzenie: ekran dnia + arkusz (wyszukiwarka z zakładkami, porcja, szybkie kcal, cel, „Policz ze zdjęcia” przez czat AI).
 // Ładowany raz (hlLoadScript) przez components/panel/dashboard/food.php, który przy każdym otwarciu woła hlFood.init(dane).
 // Endpointy: scripts/food/*.php (JSON). Arkusz i toast żyją w <body>, więc przetrwają odświeżenie zakładki.
 (function () {
@@ -33,6 +33,12 @@
         pot: svg('M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-6ZM2.5 10h19M9 6.5c0-1 .8-1.5.8-2.5M12.5 6.5c0-1 .8-1.5.8-2.5', 1.8),
         target: svg('M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z', 1.8),
         list: svg('M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z', 1.8),
+        sparkles: svg('M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z', 1.8),
+        copy: svg('M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75', 1.8),
+        paste: svg('M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z', 1.8),
+        out: svg('M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25', 1.8),
+        chat: svg('M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z', 1.8),
+        swap: svg('M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H4.5', 1.8),
         camera: svg('M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316ZM16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z', 1.8)
     };
 
@@ -247,6 +253,8 @@
         if (sh && sh.step === 'portion' && sh.p && sh.date === S.date) {
             if (sh.p.entry) ['kcal', 'protein', 'fat', 'carbs'].forEach(function (k) { base[k] -= sh.p.entry[k]; });
             ghost = per(sh.p.grams, sh.p.p100);
+        } else if (sh && sh.step === 'aireview' && sh.date === S.date) {
+            ghost = aiTotals(sh.ai);
         }
         return { base: base, ghost: ghost };
     }
@@ -512,6 +520,10 @@
         else if (step === 'own') renderOwn(box);
         else if (step === 'dish') renderDish(box);
         else if (step === 'dishes') renderDishes(box);
+        else if (step === 'ai') renderAi(box);
+        else if (step === 'aipaste') renderAiPaste(box);
+        else if (step === 'aimatch') renderAiWait(box);
+        else if (step === 'aireview') renderAiReview(box);
         else if (step === 'loading') box.innerHTML = '<div style="padding:24px 20px">' + '<div class="fd-skel"></div>'.repeat(4) + '</div>';
         // wybrany posiłek widoczny także, gdy chipy się nie mieszczą
         var on = box.querySelector('.fd-chips .is-on');
@@ -553,36 +565,106 @@
     }
 
     // ---------- wyszukiwarka ----------
+    // Bez zapytania: zakładki Ostatnio / Twoje dania / Dania innych (przesunięcie palcem też przełącza),
+    // z zapytaniem: wyniki z całej bazy + Open Food Facts, własny produkt, same kalorie.
+    var TABS = [['recent', 'Ostatnio'], ['dishes', 'Twoje dania'], ['community', 'Dania innych']];
+    var TAB_KEY = 'hl_food_tab';
+
+    function tabIndex(tab) {
+        for (var i = 0; i < TABS.length; i++) if (TABS[i][0] === tab) return i;
+        return 0;
+    }
+
     function renderSearch(box) {
         var sh = S.sheet;
+        if (!sh.tab) {
+            try { sh.tab = localStorage.getItem(TAB_KEY); } catch (e) {}
+            sh.tab = TABS[tabIndex(sh.tab)][0];
+        }
+        // dane zakładek z poprzedniego wejścia mogą być nieaktualne (nowe danie, dodany wpis) – zostaje tylko bieżący widok
+        sh.tabs = {};
+        var hasQ = !!(sh.q || '').trim();
         box.innerHTML = headHTML('Dodaj ' + MEAL_TO[sh.meal], false)
             + '<div style="padding:8px 20px 0;flex:none">' + mealChips()
             + '<div style="display:flex;gap:8px;margin-top:12px"><label class="fd-field" style="flex:1">' + I.search + '<input type="search" id="fd_q" placeholder="Szukaj: skyr, jajko, ryż…" aria-label="Szukaj produktu" autocomplete="off" enterkeyhint="search" value="' + esc(sh.q || '') + '"></label>'
-            + '<button type="button" class="fd-round fd-press" data-scanbtn style="width:46px;height:46px;border-radius:16px" aria-label="Skanuj kod kreskowy">' + I.scan + '</button></div></div>'
-            + '<div class="fd-scroll" id="fd_results" style="padding:12px 14px 24px"></div>';
+            + '<button type="button" class="fd-round fd-sq fd-ai-btn fd-press" data-aibtn aria-label="Policz ze zdjęcia (AI)" title="Policz ze zdjęcia">' + I.sparkles + '</button>'
+            + '<button type="button" class="fd-round fd-sq fd-press" data-scanbtn aria-label="Skanuj kod kreskowy" title="Skanuj kod kreskowy">' + I.scan + '</button></div>'
+            + '<div class="fd-seg-wrap' + (hasQ ? ' is-hidden' : '') + '" id="fd_segwrap"><div class="fd-seg" role="tablist" aria-label="Pokaż" style="--i:' + tabIndex(sh.tab) + '">'
+            + '<span class="fd-seg-ind" aria-hidden="true"></span>'
+            + TABS.map(function (t, i) {
+                var on = t[0] === sh.tab;
+                return '<button type="button" role="tab" aria-selected="' + on + '" aria-controls="fd_results" class="fd-seg-btn' + (on ? ' is-on' : '') + '" data-tab="' + i + '">' + t[1] + '</button>';
+            }).join('') + '</div></div></div>'
+            + '<div class="fd-scroll" id="fd_results" role="tabpanel" style="padding:12px 14px 24px"></div>';
         bindHead(box);
-        bindMealChips(box, function () { box.querySelector('h2').textContent = 'Dodaj ' + MEAL_TO[sh.meal]; if (!sh.q) runSearch(); });
+        bindMealChips(box, function () { box.querySelector('h2').textContent = 'Dodaj ' + MEAL_TO[sh.meal]; sh.tabs = {}; if (!(sh.q || '').trim()) runSearch(); });
         box.querySelector('[data-scanbtn]').addEventListener('click', function () { setStep('scan'); });
+        box.querySelector('[data-aibtn]').addEventListener('click', function () { setStep('ai'); });
+        box.querySelectorAll('[data-tab]').forEach(function (b) {
+            b.addEventListener('click', function () { setTab(+b.dataset.tab); });
+        });
         var input = el('fd_q');
         input.addEventListener('input', function () {
             sh.q = input.value;
             sh.off = null;
+            el('fd_segwrap').classList.toggle('is-hidden', !!sh.q.trim());
             clearTimeout(S.qTimer);
             S.qTimer = setTimeout(runSearch, 220);
         });
-        if (sh.results) drawResults(); else runSearch();
+        // przesunięcie w bok po liście = sąsiednia zakładka
+        var res = el('fd_results'), sw = null;
+        res.addEventListener('touchstart', function (ev) { var t = ev.touches[0]; sw = { x: t.clientX, y: t.clientY }; }, { passive: true });
+        res.addEventListener('touchend', function (ev) {
+            if (!sw || (sh.q || '').trim()) return;
+            var t = ev.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+            sw = null;
+            if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) setTab(tabIndex(sh.tab) + (dx < 0 ? 1 : -1));
+        }, { passive: true });
+        if (sh.results && sh.rkey === searchKey()) drawResults(); else runSearch();
         if (window.matchMedia('(hover: hover)').matches) setTimeout(function () { input.focus(); }, 350);
+    }
+
+    function searchKey() {
+        var sh = S.sheet, q = (sh.q || '').trim();
+        return q ? 'q:' + q : 'tab:' + sh.tab;
+    }
+
+    function setTab(i) {
+        var sh = S.sheet;
+        if (i < 0 || i >= TABS.length || TABS[i][0] === sh.tab) return;
+        var dir = i > tabIndex(sh.tab) ? 'is-next' : 'is-prev';
+        sh.tab = TABS[i][0];
+        try { localStorage.setItem(TAB_KEY, sh.tab); } catch (e) {}
+        var seg = el('fd_step').querySelector('.fd-seg');
+        seg.style.setProperty('--i', i);
+        seg.querySelectorAll('[data-tab]').forEach(function (b) {
+            var on = +b.dataset.tab === i;
+            b.classList.toggle('is-on', on);
+            b.setAttribute('aria-selected', on);
+        });
+        vib();
+        sh.slide = dir;
+        el('fd_results').scrollTop = 0;
+        runSearch();
     }
 
     function runSearch() {
         var sh = S.sheet;
         if (!sh || sh.step !== 'search') return;
-        var q = (sh.q || '').trim(), seq = sh.seq = (sh.seq || 0) + 1;
-        if (!sh.results) el('fd_results').innerHTML = '<div class="fd-skel"></div>'.repeat(3);
-        getJSON('scripts/food/search.php?meal=' + sh.meal + '&q=' + encodeURIComponent(q)).then(function (res) {
+        var q = (sh.q || '').trim(), key = searchKey(), seq = sh.seq = (sh.seq || 0) + 1;
+        if (!q && sh.tabs[key]) {
+            sh.results = sh.tabs[key];
+            sh.rq = '';
+            sh.rkey = key;
+            return drawResults();
+        }
+        if (!sh.results || sh.rkey !== key) el('fd_results').innerHTML = '<div class="fd-skel"></div>'.repeat(3);
+        getJSON('scripts/food/search.php?meal=' + sh.meal + '&tab=' + sh.tab + '&q=' + encodeURIComponent(q)).then(function (res) {
             if (!S.sheet || sh.seq !== seq || sh.step !== 'search') return;
             sh.results = res.groups || [];
             sh.rq = q;
+            sh.rkey = key;
+            if (!q) sh.tabs[key] = sh.results;
             drawResults();
         });
     }
@@ -610,65 +692,73 @@
             + '<button type="button" class="fd-plus fd-press" data-quick="' + gi + ':' + ii + '" title="Dodaj od razu: ' + esc(du) + '" aria-label="Dodaj od razu: ' + esc(p.name + ', ' + du) + '">' + I.plus + '</button></div>';
     }
 
+    // kafelek akcji (stopka zakładek i wyników)
+    function tileHTML(attr, ico, tint, title, sub) {
+        return '<button type="button" class="fd-tile fd-press" ' + attr + '><span class="fd-row-ico" style="' + tint + '">' + ico + '</span>'
+            + '<b>' + title + '</b><span>' + sub + '</span></button>';
+    }
+
+    function emptyHTML(ico, title, text) {
+        return '<div class="hl-empty" style="padding:22px 0 10px"><div class="hl-empty-ico">' + ico + '</div><h3>' + title + '</h3><p>' + text + '</p></div>';
+    }
+
     function drawResults() {
         var sh = S.sheet, box = el('fd_results');
         if (!box) return;
         // produkty z OFF zapisane przy wcześniejszych wyszukiwaniach są już w wynikach lokalnych – bez duplikatów
         var seen = {};
         (sh.results || []).forEach(function (g) { g.items.forEach(function (p) { seen[p.id] = 1; }); });
-        var offGroups = (sh.off && sh.off.groups ? sh.off.groups : []).map(function (g) {
+        var offGroups = (sh.rq && sh.off && sh.off.groups ? sh.off.groups : []).map(function (g) {
             return Object.assign({}, g, { items: g.items.filter(function (p) { return !seen[p.id]; }) });
         }).filter(function (g) { return g.items.length; });
         var groups = (sh.results || []).concat(offGroups);
-        var q = (sh.rq || '').trim();
-        var html = groups.map(function (g, gi) {
-            return '<div style="margin-bottom:10px"><span class="fd-eyebrow" style="padding:6px 8px">' + esc(g.title) + '</span>'
+        var q = (sh.rq || '').trim(), tab = q ? 'query' : sh.tab;
+        var titled = tab !== 'dishes'; // w „Twoich daniach” nagłówek powtarzałby nazwę zakładki
+        var list = groups.map(function (g, gi) {
+            return '<div style="margin-bottom:10px">' + (titled ? '<span class="fd-eyebrow" style="padding:6px 8px">' + esc(g.title) + '</span>' : '')
                 + g.items.map(function (p, ii) { return rowHTML(p, gi, ii); }).join('') + '</div>';
         }).join('');
-        if (!groups.length && !q) {
-            html = '<div class="hl-empty" style="padding:28px 0"><div class="hl-empty-ico">' + I.search + '</div><h3>Czego szukasz?</h3><p>Tu pojawią się produkty, które jadasz najczęściej.</p></div>';
-        } else if (!groups.length) {
-            html = '<p class="fd-mut" style="margin:8px;font-size:13px">W bazie HomeList nie ma „' + esc(q) + '”.</p>';
+        var quickTiles = '<div class="fd-tiles">'
+            + tileHTML('data-quickkcal', I.bolt, 'background:rgba(74,222,128,.14);color:#16a34a', 'Same kalorie', 'np. z menu restauracji')
+            + tileHTML('data-own', I.plus, 'background:rgba(56,189,248,.14);color:#0284c7', 'Własny produkt', 'wartości z etykiety') + '</div>';
+        var html = '';
+
+        if (tab === 'query') {
+            html = list || '<p class="fd-mut" style="margin:8px;font-size:13px">W bazie HomeList nie ma „' + esc(q) + '”.</p>';
+            if (!sh.off) {
+                // lokalna baza ma tylko część OFF – przy niewielu wynikach mocniej zachęcamy do szukania dalej
+                html += '<button type="button" class="fd-row fd-press fd-offbtn" data-off>'
+                    + '<span class="fd-row-ico">' + I.search + '</span>'
+                    + '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">'
+                    + (groups.length ? 'Nie widzisz swojego produktu? Szukaj dalej' : 'Szukaj „' + esc(q) + '” w Open Food Facts') + '</div>'
+                    + '<div class="text-xs fd-mut">Miliony produktów z kodami – znalezione zapiszą się w HomeList</div></div>'
+                    + '<span class="fd-offbtn-go">' + I.chev + '</span></button>';
+            } else if (sh.off === 'loading') {
+                html += '<div class="fd-skel"></div><div class="fd-skel"></div>';
+            } else if (sh.off.message) {
+                html += '<p class="fd-mut" style="margin:8px;font-size:13px">' + esc(sh.off.message) + '</p>';
+            } else if (!(sh.off.groups || []).length) {
+                html += '<p class="fd-mut" style="margin:8px;font-size:13px">Open Food Facts też tego nie zna.</p>';
+            }
+            html += '<span class="fd-eyebrow" style="padding:14px 8px 6px">Nie ma tego, czego szukasz?</span>' + quickTiles;
+        } else if (tab === 'recent') {
+            html = (list || emptyHTML(I.search, 'Czego szukasz?', 'Tu pojawią się produkty, które jadasz najczęściej – najpierw te z tego posiłku.'))
+                + '<span class="fd-eyebrow" style="padding:14px 8px 6px">Inaczej</span>' + quickTiles;
+        } else if (tab === 'dishes') {
+            html = '<button type="button" class="fd-new fd-press" data-dish>' + I.plus + '<span><b>Nowe danie domowe</b><small>Z kilku składników – zjedzą je też domownicy</small></span></button>'
+                + (list || emptyHTML(I.pot, 'Nie masz jeszcze dań', 'Zupa, sałatka, ciasto – zapisz przepis raz i dodawaj go jednym kliknięciem.'))
+                + (list ? '<button type="button" class="fd-link fd-press" data-mydishes>' + I.list + 'Zarządzaj daniami</button>' : '');
+        } else {
+            html = list || emptyHTML(I.pot, 'Na razie pusto', 'Tu zobaczysz dania domowników i przepisy udostępnione przez innych w HomeList.');
         }
-        if (q && !sh.off) {
-            // lokalna baza ma tylko część OFF – przy niewielu wynikach mocniej zachęcamy do szukania dalej
-            var found = groups.reduce(function (n, g) { return n + g.items.length; }, 0);
-            html += '<button type="button" class="fd-row fd-press fd-offbtn" data-off>'
-                + '<span class="fd-row-ico">' + I.search + '</span>'
-                + '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">'
-                + (found ? 'Nie widzisz swojego produktu? Szukaj dalej' : 'Szukaj „' + esc(q) + '” w Open Food Facts') + '</div>'
-                + '<div class="text-xs fd-mut">Miliony produktów z kodami – znalezione zapiszą się w HomeList</div></div>'
-                + '<span class="fd-offbtn-go">' + I.chev + '</span></button>';
-        } else if (sh.off === 'loading') {
-            html += '<div class="fd-skel"></div><div class="fd-skel"></div>';
-        } else if (sh.off && sh.off.message) {
-            html += '<p class="fd-mut" style="margin:8px;font-size:13px">' + esc(sh.off.message) + '</p>';
-        } else if (sh.off && !(sh.off.groups || []).length) {
-            html += '<p class="fd-mut" style="margin:8px;font-size:13px">Open Food Facts też tego nie zna.</p>';
-        }
-        if (q) {
-            html += '<button type="button" class="fd-row fd-press" data-own style="margin-top:6px">'
-                + '<span class="fd-row-ico" style="background:rgba(56,189,248,.14);color:#0284c7">' + I.plus + '</span>'
-                + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Nie ma? Dodaj własny produkt</div><div class="text-xs fd-mut">Przepisz wartości z etykiety – zajmie to chwilę</div></div></button>';
-        }
-        html += '<button type="button" class="fd-row fd-press" data-scan style="margin-top:6px">'
-            + '<span class="fd-row-ico" style="background:var(--hl-chip);color:var(--hl-ink)">' + I.scan + '</span>'
-            + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Skanuj kod kreskowy</div><div class="text-xs fd-mut">Najszybciej dla produktów w opakowaniu</div></div></button>';
-        html += '<button type="button" class="fd-row fd-press" data-dish style="margin-top:6px">'
-            + '<span class="fd-row-ico" style="background:rgba(99,102,241,.14);color:#4f46e5">' + I.pot + '</span>'
-            + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Nowe danie domowe</div><div class="text-xs fd-mut">Z kilku składników – zjedzą je też domownicy</div></div></button>'
-            + '<button type="button" class="fd-row fd-press" data-mydishes style="margin-top:6px">'
-            + '<span class="fd-row-ico" style="background:var(--hl-chip);color:var(--hl-ink)">' + I.pot + '</span>'
-            + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Twoje dania</div><div class="text-xs fd-mut">Wszystkie przepisy – zdjęcia, edycja, udostępnianie</div></div></button>';
-        html += '<button type="button" class="fd-row fd-press" data-quickkcal style="margin-top:6px">'
-            + '<span class="fd-row-ico" style="background:rgba(74,222,128,.14);color:#16a34a">' + I.bolt + '</span>'
-            + '<div style="flex:1"><div style="font-size:14px;font-weight:500">Dodaj same kalorie</div><div class="text-xs fd-mut">Gdy znasz tylko wartość, np. z menu restauracji</div></div></button>';
-        box.innerHTML = html;
+        box.innerHTML = '<div class="fd-res' + (sh.slide ? ' ' + sh.slide : '') + '">' + html + '</div>';
+        sh.slide = null;
 
         var pick = function (attr) {
             var a = attr.split(':');
             return groups[+a[0]].items[+a[1]];
         };
+        var on = function (sel, fn) { var b = box.querySelector(sel); if (b) b.addEventListener('click', fn); };
         box.querySelectorAll('[data-open]').forEach(function (b) {
             b.addEventListener('click', function () { openPortion(pick(b.dataset.open), null); });
         });
@@ -679,8 +769,7 @@
                 addProduct(p, d.grams, d.label ? { label: d.label, grams: d.unit_g } : null, sh.meal).then(function () { b.disabled = false; });
             });
         });
-        var off = box.querySelector('[data-off]');
-        if (off) off.addEventListener('click', function () {
+        on('[data-off]', function () {
             sh.off = 'loading';
             drawResults();
             getJSON('scripts/food/off_search.php?q=' + encodeURIComponent(q)).then(function (res) {
@@ -692,15 +781,11 @@
                 drawResults();
             });
         });
-        var own = box.querySelector('[data-own]');
-        if (own) own.addEventListener('click', function () { S.sheet.own = { name: q.charAt(0).toUpperCase() + q.slice(1) }; setStep('own'); });
-        box.querySelector('[data-scan]').addEventListener('click', function () { setStep('scan'); });
-        box.querySelector('[data-dish]').addEventListener('click', function () { S.sheet.dish = newDish(); setStep('dish'); });
-        box.querySelector('[data-mydishes]').addEventListener('click', function () { setStep('dishes'); });
-        box.querySelector('[data-quickkcal]').addEventListener('click', function () {
-            S.sheet.quick = { name: q ? q.charAt(0).toUpperCase() + q.slice(1) : '' };
-            setStep('quick');
-        });
+        var cap = q ? q.charAt(0).toUpperCase() + q.slice(1) : '';
+        on('[data-own]', function () { S.sheet.own = { name: cap }; setStep('own'); });
+        on('[data-quickkcal]', function () { S.sheet.quick = { name: cap }; setStep('quick'); });
+        on('[data-dish]', function () { S.sheet.dish = newDish(); setStep('dish'); });
+        on('[data-mydishes]', function () { setStep('dishes'); });
     }
 
     // ---------- porcja ----------
@@ -1173,6 +1258,451 @@
         if (!e && window.matchMedia('(hover: hover)').matches) setTimeout(function () { (q.name ? box.querySelector('[data-k="kcal"]') : el('fd_qname')).focus(); }, 350);
     }
 
+    // ---------- policz ze zdjęcia (AI przez czat) ----------
+    // Bez płatnego API: polecenie (scripts/food/ai_prompt.php) trafia do schowka, użytkownik wkleja je w ChatGPT razem ze zdjęciem,
+    // a odpowiedź (JSON) wraca przez schowek. ai_match.php dopasowuje składniki do bazy HomeList, ai_log.php zapisuje je jako osobne wpisy.
+    var AI_CHAT = 'https://chatgpt.com/';
+    var AI_KEY = 'hl_food_ai'; // czas skopiowania polecenia – po powrocie z czatu (także po przeładowaniu PWA) kreator zaczyna od wklejania
+
+    function aiState() {
+        var sh = S.sheet;
+        if (!sh.ai) {
+            var t = 0;
+            try { t = +sessionStorage.getItem(AI_KEY) || 0; } catch (e) {}
+            sh.ai = { note: '', prompt: null, copied: Date.now() - t < 30 * 60 * 1000, raw: '', err: '', items: null };
+        }
+        return sh.ai;
+    }
+
+    function aiStepsHTML(n) {
+        return '<ol class="fd-ai-steps" aria-label="Krok ' + n + ' z 3">' + ['Polecenie', 'Odpowiedź', 'Sprawdź'].map(function (t, i) {
+            return '<li class="' + (i + 1 < n ? 'is-done' : i + 1 === n ? 'is-on' : '') + '"' + (i + 1 === n ? ' aria-current="step"' : '') + '><i></i>' + t + '</li>';
+        }).join('') + '</ol>';
+    }
+
+    function aiPrompt(a) {
+        var lines = ['Ten posiłek to ' + MEALS[S.sheet.meal].toLowerCase() + '.'];
+        if (a.note.trim()) lines.push('Czego nie widać na zdjęciu: ' + a.note.trim());
+        return a.prompt.replace('{{NOTE}}', '\n' + lines.join('\n') + '\n');
+    }
+
+    function renderAi(box) {
+        var sh = S.sheet, a = aiState();
+        var li = function (n, title, sub, act) {
+            return '<li class="fd-ai-li' + (n === 1 && a.copied ? ' is-done' : '') + '"><span class="fd-ai-n">' + (n === 1 && a.copied ? I.check : n) + '</span>'
+                + '<div style="flex:1;min-width:0"><b>' + title + '</b><span>' + sub + '</span></div>' + (act || '') + '</li>';
+        };
+        box.innerHTML = headHTML('Policz ze zdjęcia', true)
+            + '<div class="fd-scroll" style="padding:8px 20px 16px">' + aiStepsHTML(1)
+            + '<div class="fd-ai-hero"><div class="fd-ai-flow" aria-hidden="true"><span>' + I.camera + '</span><i></i><span class="is-ai">' + I.chat + '</span><i></i><span class="is-hl">' + I.check + '</span></div>'
+            + '<p><b>Zdjęcie → czat AI → HomeList.</b> Czat rozpozna składniki i oszacuje gramy, a HomeList dopasuje je do swojej bazy produktów. Za darmo, w dowolnym czacie.</p></div>'
+            + '<ol class="fd-ai-list">'
+            + li(1, 'Skopiuj polecenie', 'Mówi czatowi, jak liczyć i w jakim formacie odpowiedzieć.',
+                '<button type="button" class="fd-ai-act fd-press" data-aicopy' + (a.prompt ? '' : ' disabled') + '>' + I.copy + '<span>' + (a.copied ? 'Jeszcze raz' : 'Kopiuj') + '</span></button>')
+            + li(2, 'Wklej je w czacie i dodaj zdjęcie', 'Działa w darmowym ChatGPT, także w aplikacji na telefonie.',
+                '<a class="fd-ai-act fd-press" href="' + AI_CHAT + '" target="_blank" rel="noopener">' + I.out + '<span>ChatGPT</span></a>')
+            + li(3, 'Skopiuj odpowiedź i wróć tutaj', 'Przycisk „Kopiuj” jest w rogu bloku z kodem.')
+            + '</ol>'
+            + '<label class="hl-label" for="fd_ainote" style="margin-top:18px">Czego nie widać na zdjęciu? <span class="fd-mut" style="font-weight:400">(opcjonalnie)</span></label>'
+            + '<textarea id="fd_ainote" class="fd-area" rows="2" placeholder="np. smażone na oliwie, kawa z 2 łyżeczkami cukru, zjadłem połowę">' + esc(a.note) + '</textarea>'
+            + '<p class="hl-hint">Trafi do polecenia – skopiuj je po wpisaniu.</p>'
+            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-aigo></button></div>';
+        bindHead(box, function () { setStep('search', true); });
+        var cta = box.querySelector('[data-aigo]'), copyBtn = box.querySelector('[data-aicopy]');
+        var paint = function () {
+            cta.innerHTML = a.copied ? I.paste.replace('<svg', '<svg width="20" height="20"') + 'Mam odpowiedź – wklej' : I.copy.replace('<svg', '<svg width="20" height="20"') + 'Skopiuj polecenie';
+            cta.disabled = !a.copied && !a.prompt;
+        };
+        var copy = function () {
+            if (!a.prompt) return;
+            var text = aiPrompt(a);
+            (typeof hlCopy === 'function' ? hlCopy(text) : navigator.clipboard.writeText(text)).then(function () {
+                a.copied = true;
+                try { sessionStorage.setItem(AI_KEY, String(Date.now())); } catch (e) {}
+                vib();
+                if (S.sheet === sh && sh.step === 'ai') renderAi(box);
+            }).catch(function () { fail({ status: 'warning', message: 'Nie udało się skopiować – spróbuj jeszcze raz' }); });
+        };
+        copyBtn.addEventListener('click', copy);
+        cta.addEventListener('click', function () { if (a.copied) aiFromClipboard(); else copy(); });
+        el('fd_ainote').addEventListener('input', function () { a.note = this.value; });
+        paint();
+        if (!a.prompt) getJSON('scripts/food/ai_prompt.php').then(function (res) {
+            if (res.status !== 'success') return fail(res);
+            a.prompt = res.prompt;
+            if (S.sheet === sh && sh.step === 'ai') { copyBtn.disabled = false; paint(); }
+        });
+    }
+
+    // „Mam odpowiedź”: najpierw schowek (Chrome/Safari zapytają o zgodę), gdy się nie da – pole do wklejenia
+    function aiFromClipboard() {
+        var a = S.sheet.ai;
+        if (!navigator.clipboard || !navigator.clipboard.readText) return setStep('aipaste');
+        navigator.clipboard.readText().then(function (text) {
+            var parsed = aiParse(text);
+            if (parsed) return aiMatch(parsed);
+            // w schowku zostało nasze polecenie – nie wklejamy go do pola, tylko mówimy, co poszło nie tak
+            a.raw = text && text.length < 20000 && !aiIsPrompt(text) ? text : '';
+            a.err = text && text.trim() ? aiError(text, 'W schowku nie ma odpowiedzi z czatu – skopiuj ją przyciskiem „Kopiuj” nad blokiem kodu.') : '';
+            setStep('aipaste');
+        }).catch(function () { setStep('aipaste'); });
+    }
+
+    // wklejone z powrotem polecenie (np. „Kopiuj” w czacie nie zadziałało) – jego przykładowy JSON nie może przejść jako posiłek
+    function aiIsPrompt(text) {
+        var t = String(text || '');
+        return t.indexOf('SŁOWNIK HOMELIST') >= 0 || t.indexOf('Jesteś dietetykiem') >= 0 || t.indexOf('Krótka nazwa posiłku') >= 0;
+    }
+
+    function aiError(text, fallback) {
+        return aiIsPrompt(text)
+            ? 'To jest polecenie z HomeList, a nie odpowiedź czatu. Wklej je w czacie razem ze zdjęciem, a potem skopiuj to, co odpisze czat – przyciskiem „Kopiuj” nad blokiem kodu.'
+            : fallback;
+    }
+
+    // JSON z odpowiedzi czatu: blok ```json``` albo od pierwszej { do ostatniej }; wybaczamy typograficzne cudzysłowy i przecinki na końcu
+    function aiParse(text) {
+        if (aiIsPrompt(text)) return null;
+        var t = String(text || '').trim(), m = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+        if (m) t = m[1];
+        var i = t.indexOf('{'), j = t.lastIndexOf('}');
+        if (i < 0 || j <= i) return null;
+        t = t.slice(i, j + 1).replace(/[“”„″]/g, '"').replace(/,\s*([}\]])/g, '$1');
+        var data;
+        try { data = JSON.parse(t); } catch (e) { return null; }
+        if (!data || !Array.isArray(data.items) || !data.items.length) return null;
+        return { meal: data.meal ? String(data.meal).slice(0, 120) : '', note: data.note ? String(data.note).slice(0, 300) : '', items: data.items };
+    }
+
+    function renderAiPaste(box) {
+        var a = aiState(), canRead = !!(navigator.clipboard && navigator.clipboard.readText);
+        box.innerHTML = headHTML('Wklej odpowiedź', true)
+            + '<div class="fd-scroll" style="padding:8px 20px 16px">' + aiStepsHTML(2)
+            + '<p class="fd-mut" style="margin:16px 4px 10px;font-size:13px;line-height:1.5">Wklej całą odpowiedź czatu – HomeList sam znajdzie w niej dane. Nie musisz niczego poprawiać.</p>'
+            + '<textarea id="fd_airaw" class="fd-area is-code" rows="9" spellcheck="false" autocomplete="off" placeholder="{ &quot;homelist&quot;: 1, &quot;items&quot;: [ … ] }">' + esc(a.raw) + '</textarea>'
+            + '<p id="fd_aierr" class="fd-check is-warn" style="margin-top:10px"' + (a.err ? '' : ' hidden') + '>' + esc(a.err) + '</p>'
+            + (canRead ? '<button type="button" class="fd-ghost-btn fd-press" data-airead style="margin-top:12px">' + I.paste + 'Wklej ze schowka</button>' : '')
+            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-aigo>' + I.sparkles.replace('<svg', '<svg width="20" height="20"') + 'Dopasuj składniki</button></div>';
+        bindHead(box, function () { a.err = ''; setStep('ai', true); });
+        var area = el('fd_airaw'), cta = box.querySelector('[data-aigo]'), err = el('fd_aierr');
+        var sync = function () { cta.disabled = !area.value.trim(); };
+        var go = function () {
+            var parsed = aiParse(area.value);
+            if (parsed) return aiMatch(parsed);
+            a.err = aiError(area.value, 'Nie widzę tu danych z HomeList. Upewnij się, że czat dostał całe polecenie, i skopiuj jego odpowiedź przyciskiem „Kopiuj” nad blokiem kodu.');
+            err.textContent = a.err;
+            err.hidden = false;
+        };
+        area.addEventListener('input', function () { a.raw = area.value; a.err = ''; err.hidden = true; sync(); });
+        // wklejenie poprawnej odpowiedzi od razu przechodzi dalej, wklejone polecenie od razu pokazuje ostrzeżenie
+        area.addEventListener('paste', function () { setTimeout(function () { a.raw = area.value; sync(); if (aiParse(area.value) || aiIsPrompt(area.value)) go(); }, 0); });
+        cta.addEventListener('click', go);
+        var rd = box.querySelector('[data-airead]');
+        if (rd) rd.addEventListener('click', function () {
+            navigator.clipboard.readText().then(function (text) { area.value = a.raw = text || ''; sync(); go(); }).catch(function () { area.focus(); });
+        });
+        sync();
+        if (!a.raw && window.matchMedia('(hover: hover)').matches) setTimeout(function () { area.focus(); }, 350);
+    }
+
+    function renderAiWait(box) {
+        var n = S.sheet.ai.parsed.items.length;
+        box.innerHTML = headHTML('Sprawdź posiłek', false)
+            + '<div style="padding:8px 20px 0">' + aiStepsHTML(3) + '</div>'
+            + '<div class="fd-ai-wait"><span class="fd-ai-orb">' + I.sparkles + '</span>'
+            + '<b>Dopasowuję ' + n + ' ' + plural(n, 'składnik', 'składniki', 'składników') + '</b><span class="fd-mut">do bazy produktów HomeList…</span></div>';
+        bindHead(box);
+    }
+
+    function aiMatch(parsed) {
+        var sh = S.sheet, a = sh.ai;
+        a.parsed = parsed;
+        a.err = '';
+        setStep('aimatch');
+        var started = Date.now();
+        post('scripts/food/ai_match.php', { items: JSON.stringify(parsed.items) }).then(function (res) {
+            if (S.sheet !== sh || sh.step !== 'aimatch') return;
+            if (res.status !== 'success') { a.err = res.message || 'Nie udało się odczytać odpowiedzi'; return setStep('aipaste', true); }
+            a.meal = parsed.meal;
+            a.aiNote = parsed.note;
+            a.items = res.items.map(aiItem);
+            try { sessionStorage.removeItem(AI_KEY); } catch (e) {}
+            // krótka chwila na animację – natychmiastowy przeskok wygląda jak błąd
+            setTimeout(function () { if (S.sheet === sh && sh.step === 'aimatch') setStep('aireview'); }, Math.max(0, 450 - (Date.now() - started)));
+        }).catch(function () {
+            if (S.sheet !== sh) return;
+            a.err = 'Brak połączenia – spróbuj jeszcze raz';
+            setStep('aipaste', true);
+        });
+    }
+
+    function normLabel(s) {
+        return String(s || '').toLowerCase().replace(/ł/g, 'l').normalize('NFD').replace(/[̀-ͯ]/g, '');
+    }
+
+    // składnik w kreatorze: produkt z bazy (mode db) albo wartości z AI (mode ai)
+    function aiItem(r) {
+        var it = { ai: r.ai, sure: r.sure, on: true, cands: (r.match ? [r.match] : []).concat(r.alts || []) };
+        if (r.match) aiUse(it, r.match); else aiUseAi(it);
+        it.grams = it.unitFromAi ? it.grams : r.ai.grams;
+        return it;
+    }
+
+    function aiUse(it, p) {
+        var units = (p.units || []).filter(function (u) { return !u.base; });
+        it.mode = 'db';
+        it.p = p;
+        it.name = p.name;
+        it.per_ml = !!p.per_ml;
+        it.units = units;
+        it.p100 = { kcal: p.kcal, protein: p.protein, fat: p.fat, carbs: p.carbs };
+        // „2 × sztuka” z AI + ta sama jednostka w HomeList = waga z bazy (spójnie z resztą dziennika), chyba że użytkownik już zmieniał ilość
+        var want = normLabel(it.ai.unit), u = null;
+        if (want && it.ai.count) u = units.filter(function (x) { var l = normLabel(x.label); return l.indexOf(want) === 0 || want.indexOf(l) === 0; })[0] || null;
+        it.unit = u;
+        it.unitFromAi = !!u && !it.touched;
+        if (it.unitFromAi) it.grams = Math.round(it.ai.count * u.grams * 10) / 10;
+    }
+
+    function aiUseAi(it) {
+        it.mode = 'ai';
+        it.p = null;
+        it.name = it.ai.name;
+        it.per_ml = false;
+        it.p100 = it.ai.per100;
+        // liczba sztuk z AI jako jednostka – licznik działa w sztukach, nawet bez produktu w bazie
+        it.units = it.ai.count && it.ai.unit ? [{ label: it.ai.unit, grams: Math.round(it.ai.grams / it.ai.count * 10) / 10 }] : [];
+        it.unit = it.units[0] && !it.touched ? it.units[0] : null;
+        it.unitFromAi = false;
+    }
+
+    function aiTotals(a) {
+        var t = { kcal: 0, protein: 0, fat: 0, carbs: 0 };
+        (a && a.items || []).forEach(function (it) {
+            if (!it.on) return;
+            Object.keys(t).forEach(function (k) { t[k] += (it.p100[k] || 0) * it.grams / 100; });
+        });
+        return t;
+    }
+
+    function renderAiReview(box) {
+        var sh = S.sheet, a = sh.ai;
+        box.innerHTML = headHTML('Sprawdź posiłek', true)
+            + '<div class="fd-scroll" id="fd_aiscroll" style="padding:8px 20px 16px">' + aiStepsHTML(3)
+            + '<div style="margin-top:14px">' + mealChips() + '</div>'
+            + '<div class="fd-ai-sum" id="fd_aisum"></div>'
+            + (a.aiNote ? '<p class="fd-ai-note">' + I.sparkles + '<span>' + esc(a.aiNote) + '</span></p>' : '')
+            + '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:20px 4px 4px"><span class="fd-eyebrow" id="fd_aicount"></span>'
+            + '<span class="fd-ai-legend"><i class="is-db"></i>z bazy <i class="is-ai"></i>szacunek AI</span></div>'
+            + '<div id="fd_aiitems"></div>'
+            + '<div style="position:relative;display:flex;gap:8px;margin-top:10px"><label class="fd-field" style="flex:1">' + I.plus
+            + '<input id="fd_aiadd" type="search" placeholder="Dodaj składnik, którego brakuje" autocomplete="off"></label>'
+            + '<div id="fd_aiaddres" class="fd-dres"></div></div>'
+            + '<div class="fd-box" style="margin-top:18px"><span class="fd-eyebrow">Twój dzień po dodaniu</span>'
+            + '<div id="fd_preview" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div></div>'
+            + '<p class="fd-mut" style="margin:14px 4px 0;font-size:12px;line-height:1.5">Każdy składnik trafi do dziennika jako osobny wpis – później zmienisz go jak każdy inny.</p>'
+            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-commit></button></div>';
+        bindHead(box, function () { setStep('aipaste', true); });
+        bindMealChips(box, aiSum);
+        productSearch(el('fd_aiadd'), el('fd_aiaddres'), function (p) {
+            var d = p.default;
+            var it = { ai: { name: p.name, grams: d.grams, count: null, unit: null, per100: { kcal: p.kcal, protein: p.protein, fat: p.fat, carbs: p.carbs }, confidence: 'high' },
+                       sure: true, on: true, cands: [p], touched: true, fresh: true };
+            aiUse(it, p);
+            it.grams = d.grams;
+            it.unit = d.label ? it.units.filter(function (u) { return u.label === d.label && Math.abs(u.grams - d.unit_g) < 0.05; })[0] || null : null;
+            a.items.push(it);
+            aiItems();
+        });
+        box.querySelector('[data-commit]').addEventListener('click', aiCommit);
+        aiItems();
+    }
+
+    function aiItemHTML(it, i) {
+        var u = it.per_ml ? 'ml' : 'g', warn = it.mode === 'ai' || !it.sure;
+        var tag = it.mode === 'db' ? tagHTML(it.p) : '<span class="fd-tag ai">Szacunek AI</span>';
+        var from = it.mode === 'db' && normLabel(it.ai.name) !== normLabel(it.name) ? '<span class="fd-ai-from">z „' + esc(it.ai.name) + '”</span>' : '';
+        var low = it.ai.confidence === 'low' ? '<span class="fd-ai-low" title="Czat zgadywał – np. tłuszcz do smażenia albo sos">niepewne</span>' : '';
+        var html = '<div class="fd-ai-item' + (it.on ? '' : ' is-off') + (warn ? ' is-warn' : '') + (it.fresh ? ' is-fresh' : '') + '">'
+            + '<div class="fd-ai-top"><input type="checkbox" data-aion="' + i + '"' + (it.on ? ' checked' : '') + ' aria-label="Uwzględnij: ' + esc(it.name) + '">'
+            + '<div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(it.name) + '</div>'
+            + '<div class="fd-ai-meta">' + tag + low + from + '</div></div>'
+            + '<div class="fd-ai-kcal"><b class="fd-num" data-aikcal="' + i + '">' + fmt(ingKcal(it)) + '</b><span>kcal</span></div></div>'
+            + '<div class="fd-ing-ctl">'
+            + '<button type="button" class="fd-ai-swap fd-press' + (it.open ? ' is-on' : '') + '" data-aiswap="' + i + '" aria-expanded="' + !!it.open + '">' + I.swap + (warn ? 'Sprawdź' : 'Zmień') + '</button>'
+            + amountCtlHTML(it, i, 'a') + '</div>';
+        if (it.open) {
+            var cands = it.cands.filter(function (p) { return !it.p || p.id !== it.p.id; });
+            html += '<div class="fd-ai-pick">'
+                + (it.mode === 'ai' ? '<p class="fd-mut" style="margin:0 4px 8px;font-size:12px;line-height:1.5">Nie znalazłem pewnego odpowiednika w bazie. Wybierz produkt albo zostaw wartości z czatu: '
+                    + fmt(it.ai.per100.kcal) + ' kcal / 100 g.</p>' : '')
+                + (cands.length ? '<span class="fd-eyebrow" style="padding:2px 4px 4px">Podobne w HomeList</span>' + cands.map(function (p) {
+                    var k = it.cands.indexOf(p);
+                    return '<button type="button" class="fd-row fd-press" data-aialt="' + i + ':' + k + '"><div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(p.name) + '</div>'
+                        + '<div class="text-xs fd-mut" style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden">' + tagHTML(p) + esc(p.brand || '') + '</div></div>'
+                        + '<span class="fd-num fd-mut" style="font-size:12px;flex:none">' + fmt(p.kcal) + ' kcal/100 ' + (p.per_ml ? 'ml' : 'g') + '</span></button>';
+                }).join('') : '')
+                + (it.mode === 'db' ? '<button type="button" class="fd-row fd-press" data-aiself="' + i + '"><span class="fd-row-ico" style="width:30px;height:30px;background:rgba(245,158,11,.14);color:#d97706">' + I.sparkles + '</span>'
+                    + '<div style="flex:1;min-width:0"><div class="fd-entry-name">Zostaw wartości z czatu</div><div class="text-xs fd-mut">' + esc(it.ai.name) + ' · ' + fmt(it.ai.per100.kcal) + ' kcal / 100 g</div></div></button>' : '')
+                + '<div style="position:relative;margin-top:6px"><label class="fd-field">' + I.search + '<input type="search" data-aiq="' + i + '" placeholder="Szukaj innego produktu" autocomplete="off"></label>'
+                + '<div class="fd-dres" data-aires="' + i + '"></div></div>'
+                + '<div style="display:flex;gap:8px;margin-top:10px">'
+                + (it.mode === 'ai' ? '<button type="button" class="fd-ghost-btn fd-press" data-aiok="' + i + '">' + I.check + 'Wartości z czatu są OK</button>' : '')
+                + '<button type="button" class="fd-ghost-btn fd-press" data-airm="' + i + '" style="color:#e11d48">' + I.trash + 'Usuń</button></div>'
+                + '</div>';
+        }
+        return html + '</div>';
+    }
+
+    function aiItems() {
+        var a = S.sheet.ai, box = el('fd_aiitems');
+        if (!box) return;
+        box.innerHTML = a.items.length ? a.items.map(aiItemHTML).join('')
+            : '<p class="fd-mut" style="margin:8px 4px;font-size:13px">Nie ma składników – dodaj je wyszukiwarką poniżej.</p>';
+        a.items.forEach(function (it) { delete it.fresh; });
+        var rerender = function () { aiItems(); };
+        var at = function (attr) { return a.items[+attr]; };
+
+        box.querySelectorAll('[data-aion]').forEach(function (c) {
+            c.addEventListener('change', function () { at(c.dataset.aion).on = c.checked; c.closest('.fd-ai-item').classList.toggle('is-off', !c.checked); aiSum(); });
+        });
+        // ilość (wspólny licznik z edytora dania)
+        box.querySelectorAll('[data-aq]').forEach(function (inp) {
+            inp.addEventListener('focus', function () { inp.select(); });
+            inp.addEventListener('input', function () {
+                var it = at(inp.dataset.aq), v = parseFloat(inp.value.replace(',', '.'));
+                if (isNaN(v) || v < 0) return;
+                it.grams = it.unit ? Math.round(v * it.unit.grams * 10) / 10 : v;
+                it.touched = true;
+                box.querySelector('[data-aikcal="' + inp.dataset.aq + '"]').textContent = fmt(ingKcal(it));
+                aiSum();
+            });
+            inp.addEventListener('blur', function () { var it = at(inp.dataset.aq); if (it) inp.value = it.unit ? qty(it.grams / it.unit.grams) : dec(it.grams); });
+        });
+        box.querySelectorAll('[data-as]').forEach(function (b) {
+            b.addEventListener('click', function () { var it = at(b.dataset.i); stepAmount(it, +b.dataset.as > 0); it.touched = true; vib(); rerender(); });
+        });
+        box.querySelectorAll('[data-au]').forEach(function (s) {
+            s.addEventListener('change', function () {
+                var it = at(s.dataset.au), k = +s.value;
+                it.unit = k < 0 ? null : it.units[k];
+                if (it.unit) it.grams = Math.max(1, Math.round(it.grams / it.unit.grams)) * it.unit.grams;
+                it.touched = true;
+                rerender();
+            });
+        });
+        box.querySelectorAll('[data-aiswap]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var it = at(b.dataset.aiswap);
+                it.open = !it.open;
+                rerender();
+                if (it.open) { var q = box.querySelector('[data-aiq="' + b.dataset.aiswap + '"]'); if (q && window.matchMedia('(hover: hover)').matches) q.focus(); }
+            });
+        });
+        box.querySelectorAll('[data-aialt]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var x = b.dataset.aialt.split(':'), it = at(x[0]);
+                aiUse(it, it.cands[+x[1]]);
+                it.sure = true;
+                it.open = false;
+                it.fresh = true;
+                rerender();
+            });
+        });
+        box.querySelectorAll('[data-aiself]').forEach(function (b) {
+            b.addEventListener('click', function () { var it = at(b.dataset.aiself); aiUseAi(it); it.sure = true; it.open = false; it.fresh = true; rerender(); });
+        });
+        box.querySelectorAll('[data-aiok]').forEach(function (b) {
+            b.addEventListener('click', function () { var it = at(b.dataset.aiok); it.sure = true; it.open = false; rerender(); });
+        });
+        box.querySelectorAll('[data-airm]').forEach(function (b) {
+            b.addEventListener('click', function () { a.items.splice(+b.dataset.airm, 1); rerender(); });
+        });
+        box.querySelectorAll('[data-aiq]').forEach(function (inp) {
+            var i = +inp.dataset.aiq;
+            productSearch(inp, box.querySelector('[data-aires="' + i + '"]'), function (p) {
+                var it = a.items[i];
+                if (it.cands.every(function (c) { return c.id !== p.id; })) it.cands.push(p);
+                aiUse(it, p);
+                it.sure = true;
+                it.open = false;
+                it.fresh = true;
+                rerender();
+            });
+        });
+        aiSum();
+    }
+
+    function aiSum() {
+        var sh = S.sheet, a = sh && sh.ai, box = el('fd_aisum');
+        if (!a || !box) return;
+        var t = aiTotals(a), on = a.items.filter(function (it) { return it.on; }), check = on.filter(function (it) { return it.mode === 'ai' || !it.sure; }).length;
+        box.innerHTML = '<div style="display:flex;align-items:flex-start;gap:12px"><div style="flex:1;min-width:0">'
+            + '<div class="fd-ai-title">' + esc(a.meal || 'Twój posiłek') + '</div>'
+            + '<div class="text-xs fd-mut" style="margin-top:2px">' + (check ? 'Sprawdź ' + check + ' ' + plural(check, 'pozycję', 'pozycje', 'pozycji') + ' oznaczone na bursztynowo' : 'Wszystko dopasowane do bazy HomeList') + '</div></div>'
+            + '<div style="text-align:right;flex:none"><b class="fd-ai-big fd-num">' + fmt(t.kcal) + '</b><span class="fd-mut" style="font-size:12px"> kcal</span></div></div>'
+            + '<div class="fd-stack" style="margin-top:12px" aria-hidden="true">' + MACROS.map(function (m) {
+                var kc = t[m[0]] * (m[0] === 'fat' ? 9 : 4);
+                return kc > 0 ? '<span style="flex:' + kc.toFixed(1) + ';background:' + m[2] + '"></span>' : '';
+            }).join('') + '</div>'
+            + '<div class="fd-ai-macros">' + MACROS.map(function (m) {
+                return '<span><i style="background:' + m[2] + '"></i>' + m[1] + ' <b class="fd-num">' + dec(t[m[0]]) + ' g</b></span>';
+            }).join('') + '</div>';
+        el('fd_aicount').textContent = 'Składniki · ' + on.length + (on.length !== a.items.length ? ' z ' + a.items.length : '');
+        var pv = preview();
+        el('fd_preview').innerHTML = barsHTML(pv.base, pv.ghost, S.data.day.goal, [['kcal', 'Kalorie', 'var(--fd-k)']].concat(MACROS), true);
+        var cta = el('fd_step').querySelector('[data-commit]');
+        cta.disabled = !on.length;
+        cta.textContent = on.length ? 'Dodaj ' + MEAL_TO[sh.meal] + ' · ' + fmt(t.kcal) + ' kcal' : 'Zaznacz co najmniej jeden składnik';
+    }
+
+    function aiCommit(ev) {
+        var sh = S.sheet, a = sh.ai, btn = ev.currentTarget;
+        var on = a.items.filter(function (it) { return it.on && it.grams > 0; });
+        if (!on.length) return;
+        btn.disabled = true;
+        post('scripts/food/ai_log.php', {
+            date: S.date, meal: sh.meal,
+            items: JSON.stringify(on.map(function (it) {
+                return it.mode === 'db'
+                    ? { product_id: it.p.id, grams: Math.round(it.grams * 10) / 10, unit_label: it.unit ? it.unit.label : '', unit_g: it.unit ? it.unit.grams : '' }
+                    : { name: it.name, grams: Math.round(it.grams * 10) / 10, per100: it.p100 };
+            }))
+        }).then(function (res) {
+            if (res.status !== 'success') { btn.disabled = false; return fail(res); }
+            var meal = sh.meal, n = res.ids.length;
+            closeSheet(true);
+            afterChange(res.ids[0]);
+            toast('Dodano ' + MEAL_TO[meal] + ': ' + n + ' ' + plural(n, 'składnik', 'składniki', 'składników') + ', ' + fmt(res.kcal) + ' kcal', function () {
+                post('scripts/food/log_delete.php', { ids: res.ids.join(',') }).then(function () { afterChange(); });
+            });
+        }).catch(function () { btn.disabled = false; fail(); });
+    }
+
+    // podpowiedzi produktów pod polem (składnik dania, posiłek z AI); bez dań – składnik ma być produktem
+    function productSearch(input, res, onPick) {
+        input.addEventListener('input', function () {
+            clearTimeout(input._t);
+            var term = input.value.trim();
+            if (!term) { res.innerHTML = ''; return; }
+            input._t = setTimeout(function () {
+                getJSON('scripts/food/search.php?q=' + encodeURIComponent(term)).then(function (r) {
+                    if (input.value.trim() !== term) return;
+                    var items = (r.groups || []).reduce(function (acc, g) { return acc.concat(g.items); }, []).filter(function (p) { return p.source !== 'dish'; }).slice(0, 8);
+                    res.innerHTML = items.length ? items.map(function (p, i) {
+                        var u = (p.units || []).filter(function (x) { return !x.base; })[0];
+                        return '<button type="button" class="fd-row" data-pick="' + i + '"><div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(p.name) + '</div>'
+                            + '<div class="text-xs fd-mut">' + esc([p.brand, fmt(p.kcal) + ' kcal / 100 ' + (p.per_ml ? 'ml' : 'g'), u ? '1 ' + u.label + ' = ' + dec(u.grams) + ' ' + (p.per_ml ? 'ml' : 'g') : ''].filter(Boolean).join(' · ')) + '</div></div>'
+                            + I.plus.replace('<svg', '<svg width="18" height="18"') + '</button>';
+                    }).join('') : '<p class="fd-mut" style="margin:12px 14px;font-size:13px">Brak w bazie HomeList.</p>';
+                    res.querySelectorAll('[data-pick]').forEach(function (b) {
+                        b.addEventListener('click', function () { input.value = ''; res.innerHTML = ''; onPick(items[+b.dataset.pick]); });
+                    });
+                });
+            }, 220);
+        });
+    }
+
     // ---------- skaner kodów ----------
     // BarcodeDetector (Chrome / Android), w pozostałych przeglądarkach ZXing (EAN-13/8, UPC); obok zawsze ręczne wpisanie kodu
     function stopCamera() {
@@ -1619,6 +2149,33 @@
 
     function ingKcal(it) { return it.p100.kcal * it.grams / 100; }
 
+    // −/+ składnika (danie, posiłek z AI): w jednostkach o całą sztukę (poniżej jednej – pół), w gramach o krok zależny od wagi
+    function stepAmount(it, up) {
+        var eps = 0.02;
+        if (it.unit) {
+            var n = it.grams / it.unit.grams;
+            n = up ? Math.floor(n + eps) + 1 : n > 1 + eps ? Math.ceil(n - eps) - 1 : 0.5;
+            it.grams = Math.round(n * it.unit.grams * 10) / 10;
+        } else {
+            var s = it.grams >= 100 ? 10 : it.grams >= 20 ? 5 : 1;
+            it.grams = up ? Math.floor(it.grams / s) * s + s : Math.max(s, Math.ceil(it.grams / s) * s - s);
+        }
+    }
+
+    // wybór jednostki + licznik (wspólny wygląd składnika dania i posiłku z AI); attr = prefiks atrybutów data-
+    function amountCtlHTML(it, i, attr) {
+        var u = it.per_ml ? 'ml' : 'g';
+        var sel = it.units.length
+            ? '<select class="fd-sel" data-' + attr + 'u="' + i + '" aria-label="Jednostka: ' + esc(it.name) + '">' + it.units.map(function (x, k) {
+                return '<option value="' + k + '"' + (it.unit === x ? ' selected' : '') + '>' + esc(x.label) + ' · ' + dec(x.grams) + ' ' + u + '</option>';
+            }).join('') + '<option value="-1"' + (it.unit ? '' : ' selected') + '>' + (it.per_ml ? 'mililitry' : 'gramy') + '</option></select>'
+            : '';
+        return sel + '<div class="fd-stepper"><button type="button" class="fd-cnt fd-press" data-' + attr + 's="-1" data-i="' + i + '" aria-label="Mniej">' + I.minus + '</button>'
+            + '<input type="text" inputmode="decimal" data-' + attr + 'q="' + i + '" value="' + (it.unit ? qty(it.grams / it.unit.grams) : dec(it.grams)) + '" aria-label="Ilość: ' + esc(it.name) + '">'
+            + '<span class="fd-mut">' + (it.unit ? '×' : u) + '</span>'
+            + '<button type="button" class="fd-cnt fd-press" data-' + attr + 's="1" data-i="' + i + '" aria-label="Więcej">' + I.plus + '</button></div>';
+    }
+
     function ingAmount(it) {
         var u = it.per_ml ? 'ml' : 'g';
         return (it.unit ? dec(it.grams) + ' ' + u + ' · ' : '') + fmt(ingKcal(it)) + ' kcal';
@@ -1627,21 +2184,11 @@
     function dishItems() {
         var d = S.sheet.dish, box = el('fd_ditems');
         box.innerHTML = d.items.length ? d.items.map(function (it, i) {
-            var u = it.per_ml ? 'ml' : 'g';
-            var sel = it.units.length
-                ? '<select class="fd-sel" data-iu="' + i + '" aria-label="Jednostka: ' + esc(it.name) + '">' + it.units.map(function (x, k) {
-                    return '<option value="' + k + '"' + (it.unit === x ? ' selected' : '') + '>' + esc(x.label) + ' · ' + dec(x.grams) + ' ' + u + '</option>';
-                }).join('') + '<option value="-1"' + (it.unit ? '' : ' selected') + '>' + (it.per_ml ? 'mililitry' : 'gramy') + '</option></select>'
-                : '';
             return '<div class="fd-ing' + (it.fresh ? ' is-fresh' : '') + '">'
                 + '<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div class="fd-entry-name">' + esc(it.name) + '</div>'
                 + '<div class="text-xs fd-mut fd-num" data-ikcal="' + i + '">' + ingAmount(it) + '</div></div>'
                 + '<button type="button" class="fd-icon-btn fd-press fd-mut" data-irm="' + i + '" aria-label="Usuń składnik">' + I.x.replace('<svg', '<svg width="18" height="18"') + '</button></div>'
-                + '<div class="fd-ing-ctl">' + sel
-                + '<div class="fd-stepper"><button type="button" class="fd-cnt fd-press" data-is="-1" data-i="' + i + '" aria-label="Mniej">' + I.minus + '</button>'
-                + '<input type="text" inputmode="decimal" data-iq="' + i + '" value="' + (it.unit ? qty(it.grams / it.unit.grams) : dec(it.grams)) + '" aria-label="Ilość: ' + esc(it.name) + '">'
-                + '<span class="fd-mut">' + (it.unit ? '×' : u) + '</span>'
-                + '<button type="button" class="fd-cnt fd-press" data-is="1" data-i="' + i + '" aria-label="Więcej">' + I.plus + '</button></div></div></div>';
+                + '<div class="fd-ing-ctl">' + amountCtlHTML(it, i, 'i') + '</div></div>';
         }).join('') : '<p class="fd-mut" style="margin:4px;font-size:13px">Wyszukaj albo zeskanuj składniki. Jajka, kromki czy opakowania wpiszesz w sztukach.</p>';
         d.items.forEach(function (it) { delete it.fresh; });
 
@@ -1658,15 +2205,7 @@
         });
         box.querySelectorAll('[data-is]').forEach(function (b) {
             b.addEventListener('click', function () {
-                var it = d.items[+b.dataset.i], up = +b.dataset.is > 0, eps = 0.02;
-                if (it.unit) {
-                    var n = it.grams / it.unit.grams;
-                    n = up ? Math.floor(n + eps) + 1 : n > 1 + eps ? Math.ceil(n - eps) - 1 : 0.5;
-                    it.grams = Math.round(n * it.unit.grams * 10) / 10;
-                } else {
-                    var s = it.grams >= 100 ? 10 : it.grams >= 20 ? 5 : 1;
-                    it.grams = up ? Math.floor(it.grams / s) * s + s : Math.max(s, Math.ceil(it.grams / s) * s - s);
-                }
+                stepAmount(d.items[+b.dataset.i], +b.dataset.is > 0);
                 vib();
                 dishItems();
             });

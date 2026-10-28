@@ -222,6 +222,37 @@ if (!function_exists('hl_food_norm')) {
         return $rows;
     }
 
+    // wyszukiwanie w bazie lokalnej (search.php, dopasowanie składników z AI) – surowe wiersze food_products
+    // ranking = Twoja historia > historia domowników > początek nazwy > produkty podstawowe > popularność w OFF
+    function hl_food_find(mysqli $conn, int $userId, string $q, int $limit = 30, bool $dishes = true): array
+    {
+        $tokens = array_slice(array_filter(explode(' ', hl_food_norm($q)), fn($t) => $t !== ''), 0, 6);
+        if (!$tokens) return [];
+        $vis = hl_food_visible_sql($conn, $userId);
+        $home = implode(',', hl_food_household($conn, $userId));
+        $where = [];
+        foreach ($tokens as $t) {
+            // odmiana: „jajko” ma znaleźć też „jajka”, „kurczak” – „kurczaka” (ucinamy końcówkę dłuższych słów)
+            $len = strlen($t);
+            $stem = $len >= 7 ? substr($t, 0, -2) : ($len >= 5 && !ctype_digit($t) ? substr($t, 0, -1) : $t);
+            $where[] = "p.name_search LIKE '%" . $conn->real_escape_string(addcslashes($stem, '%_\\')) . "%'";
+        }
+        $first = $conn->real_escape_string(addcslashes($tokens[0], '%_\\'));
+        $exact = $conn->real_escape_string(implode(' ', $tokens));
+        $res = $conn->query("SELECT p.* FROM food_products p
+                 LEFT JOIN (SELECT product_id, COUNT(*) AS cnt FROM food_log WHERE user_id = $userId AND product_id IS NOT NULL GROUP BY product_id) mine ON mine.product_id = p.id
+                 LEFT JOIN (SELECT product_id, COUNT(*) AS cnt FROM food_log WHERE user_id IN ($home) AND user_id <> $userId AND product_id IS NOT NULL
+                            AND created_at > NOW() - INTERVAL 180 DAY GROUP BY product_id) home ON home.product_id = p.id
+                 WHERE $vis AND (p.status <> 'rejected' OR p.source = 'dish')" . ($dishes ? '' : " AND p.source <> 'dish'") . "
+                   AND NOT EXISTS (SELECT 1 FROM food_dishes ad WHERE ad.product_id = p.id AND ad.archived = 1) AND " . implode(' AND ', $where) . "
+                 ORDER BY LEAST(COALESCE(mine.cnt, 0), 20) * 1000 + LEAST(COALESCE(home.cnt, 0), 20) * 200
+                        + (p.name_search = '$exact') * 600
+                        + (p.name_search LIKE '$first%') * 400 + (p.name_search LIKE '% $first%') * 150
+                        + (p.source = 'base') * 300 + (p.source = 'dish') * 350 + LOG(p.popularity + 1) * 25 - CHAR_LENGTH(p.name) DESC
+                 LIMIT " . max(1, $limit));
+        return $res->fetch_all(MYSQLI_ASSOC);
+    }
+
     // ---------- zdjęcia dań ----------
     // pliki w uploads/food/ (cały uploads/ ma Require all denied) – wydaje je scripts/food/photo.php po sprawdzeniu widoczności
 
