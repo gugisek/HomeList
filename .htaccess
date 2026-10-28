@@ -1,0 +1,6 @@
+# Adresy stron bez rozszerzenia: /login -> login.php (pliki .php nadal działają bezpośrednio)
+Options -MultiViews
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([A-Za-z0-9_-]+)$ $1.php [L]

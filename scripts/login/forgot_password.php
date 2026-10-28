@@ -72,7 +72,7 @@ $stmt->execute();
 $stmt->close();
 
 $recipient = filter_var($user['mail'], FILTER_VALIDATE_EMAIL) ? $user['mail'] : $user['login'];
-$resetUrl = appBaseUrl() . 'reset_password.php?token=' . urlencode($token);
+$resetUrl = appBaseUrl() . 'reset_password?token=' . urlencode($token);
 $content = '<p>Otrzymaliśmy prośbę o ustawienie nowego hasła do Twojego konta HomeList.</p>'
     . hl_mail_button($resetUrl, 'Ustaw nowe hasło')
     . '<p>Link jest ważny przez 45 minut i działa tylko raz.</p>'

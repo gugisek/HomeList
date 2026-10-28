@@ -20,5 +20,5 @@ $auth_visual = 'lock';
 $auth_note = $reset_valid ? ['HomeList', 'Nowe hasło, ten sam plan dnia'] : ['Poczta · HomeList', 'Link wygasł – poproś o nowy'];
 // link z maila ma działać także w przeglądarce, w której ktoś jest zalogowany
 $auth_allow_logged = true;
-$auth_footer = '<a href="login.php" class="lp-link">Wróć do logowania</a>';
+$auth_footer = '<a href="login" class="lp-link">Wróć do logowania</a>';
 include 'components/login/auth_layout.php';

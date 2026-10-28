@@ -82,4 +82,4 @@ hl_log($conn, $userId, 'users', '', 'Hasło zresetowane linkiem z maila', 1, 'Re
 
 $_SESSION['alert'] = 'Hasło zostało zmienione. Zaloguj się nowym hasłem.';
 $_SESSION['alert_type'] = 'success';
-hl_reset_json('success', 'Hasło zostało zmienione.', ['redirect' => 'login.php']);
+hl_reset_json('success', 'Hasło zostało zmienione.', ['redirect' => 'login']);

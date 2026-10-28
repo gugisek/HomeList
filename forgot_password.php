@@ -5,5 +5,5 @@ $auth_subheading = 'Zdarza się. Podaj email konta, a wyślemy link do ustawieni
 $auth_form = 'forgot_form.php';
 $auth_visual = 'lock';
 $auth_note = ['Poczta · HomeList', 'Ustaw nowe hasło – link ważny 45 minut'];
-$auth_footer = 'Pamiętasz hasło? <a href="login.php" class="lp-link">Zaloguj się</a>';
+$auth_footer = 'Pamiętasz hasło? <a href="login" class="lp-link">Zaloguj się</a>';
 include 'components/login/auth_layout.php';

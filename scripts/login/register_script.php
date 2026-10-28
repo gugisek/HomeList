@@ -64,7 +64,7 @@ $stmt->close();
 
 if ($existing) {
     if ((int)$existing['status_id'] === 2) {
-        hl_reg_json('info', 'Konto już istnieje, ale nie zostało aktywowane. Przechodzę do aktywacji...', ['redirect' => 'activate.php?email=' . urlencode($email)]);
+        hl_reg_json('info', 'Konto już istnieje, ale nie zostało aktywowane. Przechodzę do aktywacji...', ['redirect' => 'activate?email=' . urlencode($email)]);
     }
     hl_reg_json('error', 'Konto z tym adresem email już istnieje. Zaloguj się albo zresetuj hasło.');
 }
@@ -95,12 +95,12 @@ hl_log($conn, $userId, 'users', '', 'Email: ' . $email . '<br/>Rola: ' . $roleId
 if (!$needsActivation) {
     $_SESSION['alert'] = 'Rejestracja przebiegła pomyślnie. Możesz się teraz zalogować.';
     $_SESSION['alert_type'] = 'success';
-    hl_reg_json('success', 'Rejestracja przebiegła pomyślnie.', ['redirect' => 'login.php']);
+    hl_reg_json('success', 'Rejestracja przebiegła pomyślnie.', ['redirect' => 'login']);
 }
 
 $mail = hl_send_activation_code($conn, $userId, $email);
 if ($mail['status'] !== 'success') {
     error_log('register mail error: ' . $mail['message']);
-    hl_reg_json('warning', 'Konto utworzone, ale nie udało się wysłać maila z kodem. Spróbuj „Wyślij kod ponownie”.', ['redirect' => 'activate.php?email=' . urlencode($email)]);
+    hl_reg_json('warning', 'Konto utworzone, ale nie udało się wysłać maila z kodem. Spróbuj „Wyślij kod ponownie”.', ['redirect' => 'activate?email=' . urlencode($email)]);
 }
-hl_reg_json('success', 'Konto utworzone! Sprawdź skrzynkę i wpisz kod aktywacyjny.', ['redirect' => 'activate.php?email=' . urlencode($email)]);
+hl_reg_json('success', 'Konto utworzone! Sprawdź skrzynkę i wpisz kod aktywacyjny.', ['redirect' => 'activate?email=' . urlencode($email)]);

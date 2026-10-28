@@ -19,7 +19,7 @@
         <a data-aos="fade-down" data-aos-delay="500" href="#kontakt" class="flex items-center justify-center"><span class="text-sm font-semibold leading-6 text-gray-800 hover:bg-green-400/30 px-4 py-1 rounded-lg hover:text-green-600 duration-150 active:scale-95 transition-all">Kontakt</span></a>
       </div>
       <div data-aos="fade-down" data-aos-delay="600" class="hidden lg:flex lg:flex-1 lg:justify-end">
-        <a href="login.php" class="text-sm font-semibold leading-6 text-gray-800 hover:bg-green-400/30 px-4 py-1 rounded-lg hover:text-green-600 duration-150 active:scale-95 transition-all">Zaloguj się <span aria-hidden="true">&rarr;</span></a>
+        <a href="login" class="text-sm font-semibold leading-6 text-gray-800 hover:bg-green-400/30 px-4 py-1 rounded-lg hover:text-green-600 duration-150 active:scale-95 transition-all">Zaloguj się <span aria-hidden="true">&rarr;</span></a>
       </div>
     </nav>
     <!-- Mobile menu, show/hide based on menu open state. -->
@@ -47,7 +47,7 @@
               <a onclick="openNavToggle()" href="#kontakt" class="-mx-3 block rounded-2xl px-3 py-2 text-base font-semibold leading-7 text-gray-800 hover:bg-green-300/30 active:scale-95 transition-all duration-150">Kontakt</a>
             </div>
             <div class="py-6">
-              <a href="login.php" class="-mx-3 block rounded-2xl active:scale-95 duration-150 px-3 py-2.5 text-base font-semibold leading-7 text-gray-800 hover:bg-green-300/30">Zaloguj się</a>
+              <a href="login" class="-mx-3 block rounded-2xl active:scale-95 duration-150 px-3 py-2.5 text-base font-semibold leading-7 text-gray-800 hover:bg-green-300/30">Zaloguj się</a>
             </div>
           </div>
           <img src="img/logo2.png" alt="" class="mb-14">

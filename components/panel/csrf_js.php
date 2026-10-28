@@ -42,7 +42,7 @@
         }).then(function (response) {
             if (sameOrigin && response.headers.get('X-Session-Expired') === '1' && !window.__hlRedirecting) {
                 window.__hlRedirecting = true;
-                setTimeout(function () { window.location.href = 'login.php'; }, 1500);
+                setTimeout(function () { window.location.href = 'login'; }, 1500);
             }
             return response;
         });

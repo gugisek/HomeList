@@ -3,7 +3,7 @@
       <div class="lp-auth-state">
         <span class="lp-auth-state-ico is-amber"><?=lp_icon('clock', 'lp-i')?></span>
         <p>Link jest nieprawidłowy, został już użyty albo wygasł.</p>
-        <a href="forgot_password.php" class="<?=$hl_btn_cls?>">Wyślij nowy link</a>
+        <a href="forgot_password" class="<?=$hl_btn_cls?>">Wyślij nowy link</a>
       </div>
 <?php else: ?>
       <form id="reset_form" class="lp-auth-form" onsubmit="event.preventDefault(); resetSubmit(this);">

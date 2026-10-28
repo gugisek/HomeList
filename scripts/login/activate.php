@@ -63,4 +63,4 @@ hl_log($conn, $userId, 'users', 'Status: nieaktywne', 'Status: aktywne', 1, 'Akt
 
 $_SESSION['alert'] = 'Konto zostało aktywowane! Możesz się teraz zalogować.';
 $_SESSION['alert_type'] = 'success';
-hl_act_json('success', 'Konto zostało aktywowane!', ['redirect' => 'login.php']);
+hl_act_json('success', 'Konto zostało aktywowane!', ['redirect' => 'login']);

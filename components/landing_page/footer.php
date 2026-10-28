@@ -14,10 +14,10 @@
         <a href="#kontakt" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Kontakt</a>
       </div>
       <div data-aos="fade-up" data-aos-delay="500" class="pb-6">
-        <a href="login.php" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Zaloguj</a>
+        <a href="login" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Zaloguj</a>
       </div>
       <div data-aos="fade-up" data-aos-delay="600" class="pb-6">
-        <a href="register.php" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Zarejestruj</a>
+        <a href="register" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Zarejestruj</a>
       </div>
     </nav>
     <p data-aos="fade-up" data-aos-delay="700" data-aos-anchor-placement="top-bottom" class="mt-10 text-center text-xs leading-5 text-gray-500"><?php echo date('Y'); ?> HomeList - designed by <a href="https://ui.gugisek.pl" target="_blank" class="text-green-500 hover:text-green-200 duration-150">gugisek</a>. Wszelkie prawa zastrzeżone.</p>
@@ -39,10 +39,10 @@
         <a href="#kontakt" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Kontakt</a>
       </div>
       <div class="pb-6">
-        <a href="login.php" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Zaloguj</a>
+        <a href="login" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Zaloguj</a>
       </div>
       <div class="pb-6">
-        <a href="register.php" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Zarejestruj</a>
+        <a href="register" class="text-sm leading-6 text-gray-500 theme-text-hover duration-150 transition-all">Zarejestruj</a>
       </div>
     </nav>
     <p data-aos="fade-up" data-aos-delay="200" data-aos-anchor-placement="top-bottom" class="mt-10 text-center text-xs leading-5 text-gray-500"><?php echo date('Y'); ?> HomeList - designed by <a href="https://ui.gugisek.pl" target="_blank" class="text-green-500 hover:text-green-200 duration-150">gugisek</a>. Wszelkie prawa zastrzeżone.</p>

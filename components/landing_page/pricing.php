@@ -30,7 +30,7 @@
                   <p id="rozliczanie" class="text-gray-400">Rozliczane rocznie</p>
                 </div>
               </div>
-              <a href="register.php" aria-describedby="tier-starter" class="rounded-xl hover:scale-[1.02] active:scale-95 duration-150 py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-white/10 theme-bg-hover transition-all duration-150 focus-visible:outline-white">Przejdź do GitHub</a>
+              <a href="register" aria-describedby="tier-starter" class="rounded-xl hover:scale-[1.02] active:scale-95 duration-150 py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-white/10 theme-bg-hover transition-all duration-150 focus-visible:outline-white">Przejdź do GitHub</a>
             </div>
             <div class="mt-8 flow-root sm:mt-10">
               <ul role="list" class="-my-2 divide-y border-t text-sm leading-6 lg:border-t-0 divide-white/5 border-white/5 text-white">
@@ -75,7 +75,7 @@
                   <p id="rozliczanie" class="text-gray-500">Rozliczane rocznie</p>
                 </div>
               </div>
-              <a href="register.php" aria-describedby="tier-scale" class="rounded-xl hover:scale-[1.02] active:scale-95 duration-150 py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 theme-bg theme-bg-hover transition-all duration-150 shadow-sm focus-visible:outline-indigo-600">Zarejestruj się</a>
+              <a href="register" aria-describedby="tier-scale" class="rounded-xl hover:scale-[1.02] active:scale-95 duration-150 py-2 px-3 text-center text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 theme-bg theme-bg-hover transition-all duration-150 shadow-sm focus-visible:outline-indigo-600">Zarejestruj się</a>
             </div>
             <div class="mt-8 flow-root sm:mt-10">
               <ul role="list" class="-my-2 divide-y border-t text-sm leading-6 lg:border-t-0 divide-gray-900/5 border-gray-900/5 text-gray-600">

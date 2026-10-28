@@ -24,7 +24,7 @@
 
         <div class="lp-auth-row">
           <label class="lp-checkbox"><input id="remember-me" name="remember-me" type="checkbox" checked><span>Zapamiętaj mnie</span></label>
-          <a href="forgot_password.php" class="lp-link-muted">Nie pamiętam hasła</a>
+          <a href="forgot_password" class="lp-link-muted">Nie pamiętam hasła</a>
         </div>
 
         <button type="submit" class="<?=$hl_btn_cls?>">Zaloguj się <?=lp_icon('arrow', 'lp-i-sm', '2')?></button>

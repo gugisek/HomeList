@@ -2,7 +2,7 @@
 // zalogowany (także przez remember-me) od razu trafia do panelu
 require_once "scripts/session_restore.php";
 if (hl_session_start()) {
-    header("Location: panel.php");
+    header("Location: panel");
     exit();
 }
 include 'components/landing/ui.php';

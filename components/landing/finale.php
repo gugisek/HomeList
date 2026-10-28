@@ -4,8 +4,8 @@
         <h2 class="lp-h2 lp-final-h" data-reveal="up">Jutro rano będziesz<br>wiedzieć, od czego zacząć.</h2>
         <p class="lp-p lp-final-p" data-reveal="up">Załóż konto, wrzuć kilka rzeczy do planu i zobacz, jak wygląda dzień, który się domyka.</p>
         <div class="lp-hero-cta" data-reveal="up">
-            <a href="register.php" class="lp-btn lp-btn-main">Załóż konto <?=lp_icon('arrow', 'lp-i-sm', '2')?></a>
-            <a href="login.php" class="lp-btn lp-btn-ghost">Zaloguj się</a>
+            <a href="register" class="lp-btn lp-btn-main">Załóż konto <?=lp_icon('arrow', 'lp-i-sm', '2')?></a>
+            <a href="login" class="lp-btn lp-btn-ghost">Zaloguj się</a>
         </div>
     </div>
 </section>
@@ -28,5 +28,5 @@
         <a href="#wszedzie" data-nav="wszedzie"><?=lp_icon('cloud', 'lp-i-sm', '1.8')?><em>Wszędzie</em></a>
         <a href="#reszta" data-nav="reszta"><?=lp_icon('inbox', 'lp-i-sm', '1.8')?><em>Reszta</em></a>
     </div>
-    <a href="login.php" class="lp-glass lp-dock-more" title="Zaloguj się"><?=lp_icon('login', 'lp-i', '1.6')?></a>
+    <a href="login" class="lp-glass lp-dock-more" title="Zaloguj się"><?=lp_icon('login', 'lp-i', '1.6')?></a>
 </nav>

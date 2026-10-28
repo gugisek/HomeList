@@ -6,7 +6,7 @@ require_once __DIR__ . '/../password_helper.php';
 require_once __DIR__ . '/../csrf.php';
 include __DIR__ . '/../conn_db.php';
 
-function hl_login_fail(string $message, string $type = 'error', string $to = '../../login.php'): void
+function hl_login_fail(string $message, string $type = 'error', string $to = '../../login'): void
 {
     $_SESSION['alert'] = $message;
     $_SESSION['alert_type'] = $type;
@@ -15,7 +15,7 @@ function hl_login_fail(string $message, string $type = 'error', string $to = '..
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    header('Location: ../../login.php');
+    header('Location: ../../login');
     exit();
 }
 if (!csrf_verify()) {
@@ -83,7 +83,7 @@ if ((int)$user['status_id'] === 2) {
     $stmt->close();
     if ($pendingActivation) {
         record_login_attempt($conn, $userId, $login, false, 'password', 'account_inactive');
-        hl_login_fail('Twoje konto nie zostało jeszcze aktywowane. Wpisz kod z maila.', 'warning', '../../activate.php?email=' . urlencode($user['login']));
+        hl_login_fail('Twoje konto nie zostało jeszcze aktywowane. Wpisz kod z maila.', 'warning', '../../activate?email=' . urlencode($user['login']));
     }
 }
 
@@ -109,4 +109,4 @@ if (hl_user_has_2fa($conn, $userId)) {
 hl_login_user($conn, $user, 'password', $remember);
 $_SESSION['alert'] = 'Zalogowano pomyślnie.';
 $_SESSION['alert_type'] = 'success';
-header('Location: ../../panel.php');
+header('Location: ../../panel');

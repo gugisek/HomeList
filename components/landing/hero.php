@@ -4,7 +4,7 @@ $lp_long = hl_long_date($lp_today);
 ?>
 <header class="lp-top">
     <a href="./" class="lp-brand"><img src="img/icon.svg" alt="" width="28" height="28"><span>HomeList</span></a>
-    <a href="login.php" class="lp-top-login">Zaloguj się</a>
+    <a href="login" class="lp-top-login">Zaloguj się</a>
 </header>
 
 <section class="lp-hero" id="dzis" data-sky="green">
@@ -17,8 +17,8 @@ $lp_long = hl_long_date($lp_today);
         </h1>
         <p class="lp-lead">Listy zadań dla domu i dla siebie. Plan dnia ułożony w porach, rutyny z seriami, wspólne listy z domownikami i przypomnienia, które nie zasypują telefonu.</p>
         <div class="lp-hero-cta">
-            <a href="register.php" class="lp-btn lp-btn-main">Załóż konto <?=lp_icon('arrow', 'lp-i-sm', '2')?></a>
-            <a href="login.php" class="lp-btn lp-btn-ghost">Mam już konto</a>
+            <a href="register" class="lp-btn lp-btn-main">Załóż konto <?=lp_icon('arrow', 'lp-i-sm', '2')?></a>
+            <a href="login" class="lp-btn lp-btn-ghost">Mam już konto</a>
         </div>
     </div>
 

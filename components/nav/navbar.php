@@ -34,7 +34,7 @@ include 'flyout_menu_sklep.php'; ?>
                             
                             if($_SESSION['dashboard']!=5){
                               echo '
-                              <a href="panel.php" class="w-full py-1"><span class="text-xl font-semibold leading-6 text-white hover:bg-white/40 px-4 py-1 rounded-lg hover:text-violet-500 druation-150 active:scale-95 transition-all">Panel WSZM</span></a>
+                              <a href="panel" class="w-full py-1"><span class="text-xl font-semibold leading-6 text-white hover:bg-white/40 px-4 py-1 rounded-lg hover:text-violet-500 druation-150 active:scale-95 transition-all">Panel WSZM</span></a>
                               ';
                             }
 
@@ -108,7 +108,7 @@ include 'flyout_menu_sklep.php'; ?>
                         
                         if($_SESSION['dashboard']!=5){
                           echo '
-                          <a id="nav_button" href="panel.php" class="my_account active:scale-95 rounded-xl text-gray-700 group cursor-pointer duration-150 hover:bg-gray-100 hover:text-violet-500 flex items-center px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-0">
+                          <a id="nav_button" href="panel" class="my_account active:scale-95 rounded-xl text-gray-700 group cursor-pointer duration-150 hover:bg-gray-100 hover:text-violet-500 flex items-center px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-0">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-gray-400 group-hover:text-violet-500 duration-150">
                               <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
                             </svg>
@@ -138,7 +138,7 @@ include 'flyout_menu_sklep.php'; ?>
             ';
           } else {
             echo '
-            <a href="login.php" class="text-sm font-semibold leading-6 text-black hover:bg-violet-600/30 px-4 py-1 rounded-lg hover:text-violet-500 druation-150 active:scale-95 transition-all">
+            <a href="login" class="text-sm font-semibold leading-6 text-black hover:bg-violet-600/30 px-4 py-1 rounded-lg hover:text-violet-500 druation-150 active:scale-95 transition-all">
               Zaloguj się <span aria-hidden="true">&rarr;</span>
             </a>';
           }

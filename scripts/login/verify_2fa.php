@@ -10,7 +10,7 @@ function hl_2fa_back(string $message, string $type = 'error', bool $abort = fals
     if ($abort) unset($_SESSION['pending_2fa']);
     $_SESSION['alert'] = $message;
     $_SESSION['alert_type'] = $type;
-    header('Location: ../../login.php');
+    header('Location: ../../login');
     exit();
 }
 
@@ -95,4 +95,4 @@ $stmt->close();
 hl_login_user($conn, $user, $usedBackup ? 'backup_code' : '2fa', (int)($pending['remember'] ?? 0) === 1);
 $_SESSION['alert'] = $usedBackup ? 'Zalogowano kodem zapasowym – został on zużyty.' : 'Zalogowano pomyślnie.';
 $_SESSION['alert_type'] = 'success';
-header('Location: ../../panel.php');
+header('Location: ../../panel');

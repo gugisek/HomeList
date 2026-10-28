@@ -3,7 +3,7 @@
       <div class="lp-auth-state">
         <span class="lp-auth-state-ico"><?=lp_icon('shield', 'lp-i')?></span>
         <p>Rejestracja nowych kont jest obecnie wyłączona.<br>Poproś administratora o założenie konta.</p>
-        <a href="login.php" class="<?=$hl_btn_cls?>">Mam już konto</a>
+        <a href="login" class="<?=$hl_btn_cls?>">Mam już konto</a>
       </div>
 <?php else: ?>
       <form id="register_form" class="lp-auth-form" onsubmit="event.preventDefault(); registerSubmit(this);">

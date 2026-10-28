@@ -6,7 +6,7 @@
 require_once __DIR__ . '/../../scripts/session_restore.php';
 require_once __DIR__ . '/../../scripts/csrf.php';
 if (empty($auth_allow_logged) && hl_session_start()) {
-    header('Location: panel.php');
+    header('Location: panel');
     exit();
 }
 csrf_token();
@@ -79,9 +79,9 @@ $auth_is_login = $auth_form === 'login_form.php';
     <header class="lp-top lp-auth-top">
         <a href="./" class="lp-brand"><img src="img/icon.svg" alt="" width="28" height="28"><span>HomeList</span></a>
         <?php if ($auth_is_login && empty($_SESSION['pending_2fa'])): ?>
-        <a href="register.php" class="lp-top-login">Załóż konto</a>
+        <a href="register" class="lp-top-login">Załóż konto</a>
         <?php elseif (!$auth_is_login): ?>
-        <a href="login.php" class="lp-top-login">Zaloguj się</a>
+        <a href="login" class="lp-top-login">Zaloguj się</a>
         <?php endif; ?>
     </header>
 
