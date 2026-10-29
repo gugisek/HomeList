@@ -42,9 +42,9 @@ $muted = hl_push_list_muted($conn, $user_id, $list_id);
     <div id="info_list_loading"></div>
 
     <!-- nagłówek -->
-    <div class="flex items-center gap-4 pr-10">
+    <div class="flex items-center gap-4 sm:pr-10">
         <span class="hl-mono-lg" style="--mono: <?=hl_list_tone($list_id)?>"><?=hl_e(hl_list_mono($row['full_name']))?></span>
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
             <h1 class="hl-popup-title !pr-0 truncate"><?=hl_e($row['full_name'])?></h1>
             <div class="mt-1 flex flex-wrap items-center gap-1.5">
                 <?php if ($is_routine): ?>
@@ -60,6 +60,10 @@ $muted = hl_push_list_muted($conn, $user_id, $list_id);
                 <?php endif; ?>
             </div>
         </div>
+        <!-- X na mobilce – popup.php pokazuje swój tylko od sm -->
+        <button type="button" onclick="popupInfoListsOpenClose()" aria-label="Zamknij" class="sm:hidden flex-none self-start -mr-2 grid place-items-center size-10 rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white transition-colors">
+            <svg class="size-[22px]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
     </div>
 
     <!-- liczby -->
