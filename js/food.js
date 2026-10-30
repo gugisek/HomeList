@@ -38,6 +38,7 @@
         paste: svg('M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z', 1.8),
         out: svg('M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25', 1.8),
         chat: svg('M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z', 1.8),
+        pencil: svg('m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10', 1.8),
         swap: svg('M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H4.5', 1.8),
         camera: svg('M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316ZM16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z', 1.8)
     };
@@ -1294,6 +1295,10 @@
         if (foot.length) body += '<p class="fd-mut" style="margin:14px 0 0;font-size:11px">' + foot.join(' · ') + '</p>';
         if (p.source === 'user' && p.mine && p.status !== 'approved' && !pp.entry) {
             body += '<button type="button" class="fd-ghost-btn fd-press" data-editown style="margin-top:12px">' + I.list + 'Popraw dane produktu</button>';
+        } else if (p.id && !p.missing && ['off', 'base', 'user'].indexOf(p.source) >= 0) {
+            // każdy produkt z bazy: poprawka trafia do administratora (moderator zapisuje od razu)
+            body += '<div class="fd-suggest"><button type="button" class="fd-ghost-btn fd-press" data-suggest>' + I.pencil + 'Zaproponuj zmianę</button>'
+                + '<span class="fd-mut">Coś nie zgadza się z etykietą albo czegoś brakuje? Popraw – zmiana pojawi się u wszystkich po akceptacji.</span></div>';
         }
 
         return '<div class="fd-q" id="fd_q_box" style="margin-top:16px">'
@@ -1316,6 +1321,11 @@
     function bindQuality() {
         var e = document.querySelector('#fd_q_box [data-editown]');
         if (e) e.addEventListener('click', function () { editOwn((S.sheet.p || S.sheet.info).product.id, 'portion'); });
+        var sg = document.querySelector('#fd_q_box [data-suggest]');
+        if (sg) sg.addEventListener('click', function () {
+            var pp = S.sheet.p || S.sheet.info;
+            editOwn(pp.product.id, S.sheet.p ? 'portion' : 'info', true);
+        });
         var b = document.querySelector('#fd_q_box [data-qtoggle]');
         if (!b) return;
         b.addEventListener('click', function () {
@@ -1972,13 +1982,18 @@
         ['sulphur-dioxide-and-sulphites', 'siarczyny'], ['lupin', 'łubin']];
     var OWN_FIELDS = ['name', 'brand', 'code', 'kcal', 'protein', 'fat', 'carbs', 'sat_fat', 'sugars', 'fiber', 'salt', 'unit_label', 'unit_g', 'package_g', 'ingredients'];
 
-    // edycja własnego produktu (oczekujący / odrzucony) albo z profilu („Twój wkład”); back: portion | close
-    function editOwn(id, back) {
+    // edycja własnego produktu (oczekujący / odrzucony) albo z profilu („Twój wkład”); back: portion | info | close
+    // suggest = propozycja zmiany dowolnego produktu (product_suggest.php) – ten sam formularz, zapis do akceptacji
+    function editOwn(id, back, suggest) {
         var sh = S.sheet, prev = sh.p;
         setStep('loading');
-        getJSON('scripts/food/product_edit.php?id=' + id).then(function (res) {
+        getJSON('scripts/food/' + (suggest ? 'product_suggest' : 'product_edit') + '.php?id=' + id).then(function (res) {
             if (S.sheet !== sh) return;
-            if (res.status !== 'success') { fail(res); return back === 'portion' && prev ? (sh.p = prev, setStep('portion', true)) : closeSheet(true); }
+            if (res.status !== 'success') {
+                fail(res);
+                if (back === 'portion' && prev) { sh.p = prev; return setStep('portion', true); }
+                return back === 'info' && sh.info ? setStep('info', true) : closeSheet(true);
+            }
             var o = res.product;
             // liczby jako tekst – pola formularza i walidacja pracują na tekście (0 nie może zniknąć)
             OWN_FIELDS.forEach(function (k) { if (typeof o[k] === 'number') o[k] = String(o[k]); else if (o[k] === null) delete o[k]; });
@@ -2016,11 +2031,15 @@
             if (o.unit_mode === 'count' && ug0 > 0) o.unit_n = String(Math.round(n0));
         }
         var uCount = o.unit_mode === 'count';
-        box.innerHTML = headHTML(editing ? 'Popraw produkt' : 'Własny produkt', true)
+        var sug = !!o.suggest;
+        box.innerHTML = headHTML(sug ? (o.direct ? 'Popraw produkt' : 'Zaproponuj zmianę') : editing ? 'Popraw produkt' : 'Własny produkt', true)
             + '<div class="fd-scroll" style="padding:8px 20px 12px">'
             + (o.notFound ? '<p class="fd-pill" style="margin:0 0 12px;border-radius:14px;padding:8px 12px;display:flex">' + (o.offError ? 'Open Food Facts nie odpowiada – dodaj produkt ręcznie' : 'Nie znaleźliśmy kodu ' + esc(o.code) + (o.name ? ' („' + esc(o.name) + '” bez wartości odżywczych)' : '')) + '</p>' : '')
-            + (editing && o.status === 'rejected' ? '<div class="fd-note is-warn"><b>Administrator odrzucił produkt</b>' + (o.review_note ? '<span>„' + esc(o.review_note) + '”</span>' : '') + '<span>Popraw dane i zapisz – produkt wróci do sprawdzenia.</span></div>' : '')
-            + '<div id="fd_olabel" style="margin-bottom:16px"></div><input type="file" id="fd_ofile" accept="image/*" capture="environment" hidden>'
+            + (editing && !sug && o.status === 'rejected' ? '<div class="fd-note is-warn"><b>Administrator odrzucił produkt</b>' + (o.review_note ? '<span>„' + esc(o.review_note) + '”</span>' : '') + '<span>Popraw dane i zapisz – produkt wróci do sprawdzenia.</span></div>' : '')
+            + (sug && o.pending ? '<div class="fd-note"><b>Twoja propozycja czeka na sprawdzenie</b><span>Widzisz ją poniżej – możesz ją jeszcze poprawić. Przywróć wartości z produktu, żeby ją wycofać.</span></div>' : '')
+            + (sug && !o.pending && o.rejected_note != null ? '<div class="fd-note is-warn"><b>Administrator odrzucił Twoją poprzednią propozycję</b>' + (o.rejected_note ? '<span>„' + esc(o.rejected_note) + '”</span>' : '') + '</div>' : '')
+            + (sug ? '<p class="fd-mut" style="font-size:13px;margin:0 0 14px;line-height:1.5">Popraw to, co nie zgadza się z opakowaniem, albo uzupełnij brakujące dane. Wpisy w dziennikach zostają bez zmian.</p>' : '')
+            + (sug && o.direct ? '' : '<div id="fd_olabel" style="margin-bottom:16px"></div>') + '<input type="file" id="fd_ofile" accept="image/*" capture="environment" hidden>'
             + '<label class="hl-label" for="fd_oname">Nazwa</label>'
             + '<div class="fd-field"><input id="fd_oname" data-o="name" type="text" placeholder="np. Pasztet babci" value="' + esc(o.name || '') + '"></div>'
             + '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px">'
@@ -2057,10 +2076,17 @@
             + '<span class="hl-label" style="margin-top:14px">Olej palmowy</span>' + chips('palm_oil', [[1, 'zawiera'], [0, 'bez oleju palmowego']])
             + '<span class="hl-label" style="margin-top:14px">Dieta</span>' + chips('diet', [['vegan', 'wegańskie'], ['vegetarian', 'wegetariańskie'], ['none', 'z mięsem / rybą']])
             + '</details>'
-            + '<p class="fd-pill" style="margin:16px 0 0;border-radius:14px;padding:10px 12px;display:flex;line-height:1.5">Od razu widzisz go Ty i domownicy. Dla pozostałych pojawi się po akceptacji administratora – wtedy dostanie znaczek HomeList.</p>'
-            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-commit>' + (editing ? 'Zapisz poprawki' : o.forDish ? 'Zapisz i dodaj do dania' : 'Zapisz i wybierz porcję') + '</button></div>';
+            + (sug ? '<label class="hl-label" for="fd_onote" style="margin-top:18px">Co poprawiasz? <span class="fd-mut" style="font-weight:400">(opcjonalnie)</span></label>'
+                + '<textarea id="fd_onote" data-o="note" class="fd-area" rows="2" maxlength="300" placeholder="np. nowa receptura – inne wartości na opakowaniu">' + esc(o.note || '') + '</textarea>' : '')
+            + '<p class="fd-pill" style="margin:16px 0 0;border-radius:14px;padding:10px 12px;display:flex;line-height:1.5">'
+            + (!sug ? 'Od razu widzisz go Ty i domownicy. Dla pozostałych pojawi się po akceptacji administratora – wtedy dostanie znaczek HomeList.'
+                : o.direct ? 'Jesteś moderatorem bazy produktów – zmiana zapisze się od razu u wszystkich i trafi do historii.'
+                : 'Zmiana pojawi się u wszystkich po akceptacji administratora. Status zobaczysz w ustawieniach Jedzenia („Twój wkład”).') + '</p>'
+            + '</div><div class="fd-foot"><button type="button" class="fd-cta fd-press" data-commit>'
+            + (sug ? (o.direct ? 'Zapisz zmiany' : o.pending ? 'Zaktualizuj propozycję' : 'Wyślij propozycję') : editing ? 'Zapisz poprawki' : o.forDish ? 'Zapisz i dodaj do dania' : 'Zapisz i wybierz porcję') + '</button></div>';
         var goBack = function () {
             if (o.back === 'close') return closeSheet(true);
+            if (o.back === 'info' && sh.info) { sh.own = null; return setStep('info', true); }
             if (o.back === 'portion' && o.prevP) { sh.own = null; sh.p = o.prevP; return setStep('portion', true); }
             setStep(o.notFound ? 'scan' : o.forDish ? 'dish' : 'search', true);
         };
@@ -2162,8 +2188,20 @@
             if (o.id) data.id = o.id;
             if (o.labelBlob) data.label_photo = o.labelBlob;
             if (o.labelRemove) data.label_photo_remove = 1;
-            post('scripts/food/product_save.php', data).then(function (res) {
+            if (sug) data.note = String(o.note || '').trim();
+            post('scripts/food/' + (sug ? 'product_suggest' : 'product_save') + '.php', data).then(function (res) {
                 if (!S.sheet || S.sheet !== sh) return;
+                if (sug) {
+                    if (res.status !== 'success') { btn.disabled = false; return fail(res); }
+                    if (o.labelPreview) URL.revokeObjectURL(o.labelPreview);
+                    toast(res.message);
+                    if (!res.applied) return goBack();
+                    // moderator: produkt już zmieniony – pokazujemy nowe wartości (wpis z dziennika zostaje przy swojej kopii)
+                    sh.own = null;
+                    if (o.back === 'info' && sh.info) { setStep('loading'); return openInfo(o.id, sh.info.code); }
+                    if (o.back === 'portion' && o.prevP && !o.prevP.entry) return openPortion(res.product, null, false);
+                    return goBack();
+                }
                 var done = function (p) {
                     if (o.labelPreview) URL.revokeObjectURL(o.labelPreview);
                     sh.own = null;

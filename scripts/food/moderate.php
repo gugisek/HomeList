@@ -29,6 +29,54 @@ $need = ['approve' => 'edit', 'reject' => 'edit', 'delete' => 'full'][$action] ?
 if ($need === null) hl_food_json('error', 'Nieznana akcja');
 if (!hl_can('food', $need)) hl_food_json('error', 'Brak uprawnień');
 $me = (int)$_SESSION['login_id'];
+
+// propozycja zmiany produktu (type = edit): akceptacja zmienia produkt dla wszystkich (fields? = tylko wybrane pola),
+// odrzucenie zostawia autorowi powód; produkt bez zmian
+if (($_POST['type'] ?? '') === 'edit') {
+    $e = $conn->query("SELECT * FROM food_product_edits WHERE id = $id")->fetch_assoc();
+    if (!$e) hl_food_json('error', 'Nie znaleziono propozycji');
+    $p = $conn->query('SELECT * FROM food_products WHERE id = ' . (int)$e['product_id'])->fetch_assoc();
+    $title = ($p ? $p['name'] . ($p['brand'] ? ' · ' . $p['brand'] : '') : 'Usunięty produkt') . ' (#' . (int)$e['product_id'] . ')<br/>Autor: ' . (int)$e['user_id'] . '<br/>';
+    if ($action === 'delete') {
+        $conn->query("DELETE FROM food_product_edits WHERE id = $id");
+        hl_food_delete_photo($e['label_photo']);
+        hl_log($conn, $id, 'food_edit', $title . 'Status: ' . $e['status'], '', 3, 'Usunięto propozycję zmiany produktu');
+        hl_food_json('success', 'Usunięto propozycję');
+    }
+    if ($e['status'] === 'approved') hl_food_json('warning', 'Ta zmiana jest już w produkcie');
+    $note = null;
+    if ($action === 'approve') {
+        if (!$p) hl_food_json('error', 'Produkt został usunięty z bazy');
+        $proposed = json_decode($e['data'], true) ?: [];
+        if (isset($_POST['fields'])) $proposed = array_intersect_key($proposed, array_flip(explode(',', (string)$_POST['fields'])));
+        $cur = hl_food_edit_values(hl_food_edit_data($conn, $p));
+        // tylko to, co nadal różni się od produktu (ktoś mógł go w międzyczasie poprawić)
+        $ch = hl_food_edit_diff($cur, array_merge($cur, $proposed));
+        if (array_key_exists('code', $ch) && $ch['code'] !== null) {
+            $stmt = $conn->prepare('SELECT id FROM food_products WHERE code = ? AND id <> ?');
+            $pid = (int)$p['id'];
+            $stmt->bind_param('si', $ch['code'], $pid);
+            $stmt->execute();
+            $taken = $stmt->get_result()->fetch_row();
+            $stmt->close();
+            if ($taken) hl_food_json('warning', 'Ten kod kreskowy ma już inny produkt – odznacz kod i zaakceptuj resztę');
+        }
+        if ($ch) hl_food_edit_apply($conn, $p, $ch);
+        [$was, $now] = $ch ? hl_food_edit_log_text($cur, $ch, (bool)$p['per_ml']) : ['', 'Bez zmian – produkt miał już te wartości'];
+    } else {
+        $note = mb_substr(trim((string)($_POST['note'] ?? '')), 0, 300, 'UTF-8') ?: null;
+        $was = 'Status: ' . $e['status'];
+        $now = 'Status: rejected' . ($note !== null ? '<br/>Powód: ' . htmlspecialchars($note, ENT_QUOTES, 'UTF-8') : '');
+    }
+    $status = $action === 'approve' ? 'approved' : 'rejected';
+    $stmt = $conn->prepare('UPDATE food_product_edits SET status = ?, review_note = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?');
+    $stmt->bind_param('ssii', $status, $note, $me, $id);
+    $stmt->execute();
+    $stmt->close();
+    hl_log($conn, $id, 'food_edit', $title . $was, $title . $now, 1, $action === 'approve' ? 'Zaakceptowano zmianę produktu' : 'Odrzucono zmianę produktu');
+    hl_food_json('success', $action === 'approve' ? 'Zmiana jest już w produkcie' : 'Odrzucono propozycję');
+}
+
 $unit = ($_POST['type'] ?? '') === 'unit';
 
 // jednostka porcji zgłoszona przez użytkownika (type = unit); odrzucona zostaje tylko u autora

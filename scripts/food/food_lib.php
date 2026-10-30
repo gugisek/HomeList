@@ -275,6 +275,12 @@ if (!function_exists('hl_food_norm')) {
         return !empty($p['label_photo']) ? 'scripts/food/photo.php?id=' . (int)$p['id'] . '&label=1&v=' . substr(md5($p['label_photo']), 0, 8) : null;
     }
 
+    // zdjęcie etykiety dołączone do propozycji zmiany (wiersz food_product_edits) – autor propozycji i moderatorzy
+    function hl_food_edit_photo_url(array $e): ?string
+    {
+        return !empty($e['label_photo']) ? 'scripts/food/photo.php?edit=' . (int)$e['id'] . '&v=' . substr(md5($e['label_photo']), 0, 8) : null;
+    }
+
     // typ z zawartości pliku; zdjęcie zmniejsza przeglądarka (serwer nie ma GD) – tu tylko limit i walidacja
     // $prefix: dish (zdjęcie dania) albo label (zdjęcie etykiety produktu)
     function hl_food_save_photo(array $upload, int $userId, string $prefix = 'dish'): array
@@ -365,6 +371,187 @@ if (!function_exists('hl_food_norm')) {
             'diet' => $vegan === null && $vegetarian === null ? null : ((int)$vegan === 1 ? 'vegan' : ((int)$vegetarian === 1 ? 'vegetarian' : 'none')),
             'label_photo' => hl_food_label_photo_url($p), 'status' => $p['status'], 'review_note' => $p['review_note'] ?? null,
         ];
+    }
+
+    // ---------- propozycje zmian produktu (food_product_edits) ----------
+
+    // pola, które można zmienić; kolejność = kolejność w porównaniu u moderatora
+    function hl_food_edit_fields(): array
+    {
+        return ['name' => 'Nazwa', 'brand' => 'Marka', 'code' => 'Kod kreskowy', 'per_ml' => 'Wartości na', 'kcal' => 'Kalorie', 'protein' => 'Białko',
+                'fat' => 'Tłuszcz', 'carbs' => 'Węglowodany', 'sat_fat' => 'w tym nasycone', 'sugars' => 'w tym cukry', 'fiber' => 'Błonnik', 'salt' => 'Sól',
+                'package_g' => 'Opakowanie', 'unit_label' => 'Porcja – nazwa', 'unit_g' => 'Porcja – waga', 'ingredients' => 'Skład',
+                'allergens' => 'Alergeny', 'traces' => 'Może zawierać', 'nutriscore' => 'Nutri-Score', 'nova' => 'NOVA', 'palm_oil' => 'Olej palmowy', 'diet' => 'Dieta'];
+    }
+
+    // wartości produktu w jednej postaci – z formularza ($_POST) albo z hl_food_edit_data(); null = puste.
+    // Na nich liczymy różnice („co zmieniono”) i je zapisujemy.
+    function hl_food_edit_values(array $in): array
+    {
+        $names = hl_food_allergen_names();
+        $str = function ($k, $len) use ($in) {
+            $s = mb_substr(trim((string)($in[$k] ?? '')), 0, $len, 'UTF-8');
+            return $s !== '' ? $s : null;
+        };
+        $num = fn($k, $min = 0, $max = 100) => hl_food_float($in[$k] ?? '', $min, $max);
+        $tags = function ($v) use ($names) {
+            $list = is_array($v) ? $v : explode(',', (string)$v);
+            $list = array_values(array_unique(array_filter(array_map('trim', $list), fn($t) => isset($names[$t]))));
+            sort($list);
+            return $list ? implode(',', $list) : null;
+        };
+        $pick = fn($k, array $allowed) => in_array((string)($in[$k] ?? ''), $allowed, true) ? (string)$in[$k] : null;
+        $ingr = trim(preg_replace('/[ \t]+/', ' ', str_replace("\r", '', (string)($in['ingredients'] ?? ''))));
+        $code = preg_replace('/\D/', '', (string)($in['code'] ?? ''));
+        $nova = $pick('nova', ['1', '2', '3', '4']);
+        $palm = $pick('palm_oil', ['0', '1']);
+        return [
+            'name' => $str('name', 200), 'brand' => $str('brand', 120), 'code' => $code !== '' ? $code : null,
+            'per_ml' => !empty($in['per_ml']) ? 1 : 0,
+            'kcal' => $num('kcal', 0, 950), 'protein' => $num('protein'), 'fat' => $num('fat'), 'carbs' => $num('carbs'),
+            'sat_fat' => $num('sat_fat'), 'sugars' => $num('sugars'), 'fiber' => $num('fiber'), 'salt' => $num('salt'),
+            'package_g' => $num('package_g', 1, 5000), 'unit_label' => $str('unit_label', 60), 'unit_g' => $num('unit_g', 0.1, 5000),
+            'ingredients' => $ingr !== '' ? mb_substr($ingr, 0, 5000, 'UTF-8') : null,
+            'allergens' => $tags($in['allergens'] ?? ''), 'traces' => $tags($in['traces'] ?? ''),
+            'nutriscore' => $pick('nutriscore', ['a', 'b', 'c', 'd', 'e']),
+            'nova' => $nova !== null ? (int)$nova : null, 'palm_oil' => $palm !== null ? (int)$palm : null,
+            'diet' => $pick('diet', ['vegan', 'vegetarian', 'none']),
+        ];
+    }
+
+    // walidacja formularza produktu (własny produkt i propozycja zmiany); null = w porządku
+    function hl_food_product_check(array $in, array $v): ?string
+    {
+        $u = $v['per_ml'] ? 'ml' : 'g';
+        if ($v['name'] === null) return 'Podaj nazwę produktu';
+        if ($v['kcal'] === null || $v['protein'] === null || $v['fat'] === null || $v['carbs'] === null) return 'Uzupełnij kalorie i makro na 100 ' . $u;
+        if ($v['protein'] + $v['fat'] + $v['carbs'] > 105) return 'Suma białka, tłuszczu i węglowodanów nie może przekraczać 100 g';
+        if ($v['code'] !== null && (strlen($v['code']) < 6 || strlen($v['code']) > 32)) return 'Nieprawidłowy kod kreskowy';
+        if (trim((string)($in['package_g'] ?? '')) !== '' && $v['package_g'] === null) return 'Nieprawidłowa wielkość opakowania';
+        if ($v['sugars'] !== null && $v['sugars'] > $v['carbs'] + 0.5) return 'Cukry nie mogą przekraczać węglowodanów';
+        if ($v['sat_fat'] !== null && $v['sat_fat'] > $v['fat'] + 0.5) return 'Tłuszcze nasycone nie mogą przekraczać tłuszczu';
+        return null;
+    }
+
+    // zmienione pola: [pole => nowa wartość]
+    function hl_food_edit_diff(array $cur, array $new): array
+    {
+        $out = [];
+        foreach (array_keys(hl_food_edit_fields()) as $k) {
+            $a = $cur[$k] ?? null;
+            $b = $new[$k] ?? null;
+            $same = is_float($a) || is_float($b) ? $a !== null && $b !== null && abs((float)$a - (float)$b) < 0.005 : $a === $b;
+            if (!$same && !($a === null && $b === null)) $out[$k] = $b;
+        }
+        return $out;
+    }
+
+    // wartość pola do pokazania (porównanie u moderatora, archiwum zmian)
+    function hl_food_edit_text(string $k, $v, bool $perMl = false): string
+    {
+        if ($v === null || $v === '') return '–';
+        $fmt = fn($x) => rtrim(rtrim(number_format((float)$x, 2, ',', ''), '0'), ',');
+        $u = $perMl ? 'ml' : 'g';
+        switch ($k) {
+            case 'per_ml': return $v ? '100 ml' : '100 g';
+            case 'kcal': return $fmt($v) . ' kcal';
+            case 'package_g': case 'unit_g': return $fmt($v) . ' ' . $u;
+            case 'protein': case 'fat': case 'carbs': case 'sat_fat': case 'sugars': case 'fiber': case 'salt': return $fmt($v) . ' g';
+            case 'allergens': case 'traces':
+                $names = hl_food_allergen_names();
+                return implode(', ', array_map(fn($t) => $names[$t] ?? $t, explode(',', (string)$v)));
+            case 'nutriscore': return strtoupper((string)$v);
+            case 'palm_oil': return (int)$v === 1 ? 'zawiera' : ((int)$v === 2 ? 'może zawierać' : 'bez oleju palmowego');
+            case 'diet': return ['vegan' => 'wegańskie', 'vegetarian' => 'wegetariańskie', 'none' => 'z mięsem / rybą'][$v] ?? (string)$v;
+        }
+        return (string)$v;
+    }
+
+    // zastosowanie zmian (akceptacja albo zapis moderatora) – tylko zmienione pola, reszta (np. dane z OFF) zostaje.
+    // edited_at chroni poprawkę przed nadpisaniem przez import OFF / ponowny seed.
+    function hl_food_edit_apply(mysqli $conn, array $p, array $ch): void
+    {
+        $id = (int)$p['id'];
+        $cols = array_intersect_key($ch, array_flip(['name', 'brand', 'code', 'per_ml', 'kcal', 'protein', 'fat', 'carbs', 'sat_fat', 'sugars', 'fiber', 'salt', 'package_g']));
+        if (array_key_exists('name', $ch) || array_key_exists('brand', $ch)) {
+            $cols['name_search'] = mb_substr(hl_food_norm(($ch['name'] ?? $p['name']) . ' ' . (array_key_exists('brand', $ch) ? $ch['brand'] : $p['brand'])), 0, 400);
+        }
+        if (array_key_exists('package_g', $ch)) {
+            $cols['quantity'] = $ch['package_g'] !== null
+                ? rtrim(rtrim(number_format((float)$ch['package_g'], 1, ',', ''), '0'), ',') . ' ' . (($ch['per_ml'] ?? $p['per_ml']) ? 'ml' : 'g') : null;
+        }
+        $set = implode(', ', array_map(fn($c) => "`$c` = ?", array_keys($cols)));
+        $stmt = $conn->prepare('UPDATE food_products SET ' . ($set ? $set . ', ' : '') . 'edited_at = NOW() WHERE id = ?');
+        $vals = array_map(fn($v) => $v === null ? null : (string)$v, array_values($cols));
+        $vals[] = $id;
+        $stmt->bind_param(str_repeat('s', count($cols)) . 'i', ...$vals);
+        $stmt->execute();
+        $stmt->close();
+
+        // porcja = pierwsza jednostka produktu (bez autora); pozostałe jednostki zostają
+        if (array_key_exists('unit_label', $ch) || array_key_exists('unit_g', $ch)) {
+            $u = $conn->query("SELECT id, label, grams FROM food_product_units WHERE product_id = $id AND owner_id IS NULL ORDER BY sort, id LIMIT 1")->fetch_assoc();
+            $label = array_key_exists('unit_label', $ch) ? $ch['unit_label'] : ($u['label'] ?? null);
+            $grams = array_key_exists('unit_g', $ch) ? $ch['unit_g'] : (isset($u['grams']) ? (float)$u['grams'] : null);
+            if ($label === null || $grams === null) {
+                if ($u) $conn->query('DELETE FROM food_product_units WHERE id = ' . (int)$u['id']);
+            } else {
+                $stmt = $u ? $conn->prepare('UPDATE food_product_units SET label = ?, grams = ? WHERE id = ?')
+                           : $conn->prepare('INSERT INTO food_product_units (label, grams, product_id, sort) VALUES (?, ?, ?, 0)');
+                $ref = $u ? (int)$u['id'] : $id;
+                $stmt->bind_param('sdi', $label, $grams, $ref);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+
+        // skład i jakość: tylko zmienione kolumny; tagi spoza listy 14 alergenów (z OFF) zostają
+        $dk = array_intersect_key($ch, array_flip(['ingredients', 'allergens', 'traces', 'nutriscore', 'nova', 'palm_oil', 'diet']));
+        if (!$dk) return;
+        $old = $conn->query("SELECT * FROM food_product_details WHERE product_id = $id")->fetch_assoc() ?: [];
+        $names = hl_food_allergen_names();
+        $d = [];
+        if (array_key_exists('ingredients', $dk)) {
+            $d['ingredients'] = $dk['ingredients'];
+            $d['ingredients_lang'] = $dk['ingredients'] !== null ? 'pl' : null;
+            // dodatki E ze składu; gdy skład ich nie wymienia kodami (np. „kwas cytrynowy”), zostają dotychczasowe z OFF
+            if ($dk['ingredients'] === null) $d['additives'] = null;
+            elseif (preg_match_all('/\bE\s?-?(\d{3,4}[a-z]?)\b/iu', $dk['ingredients'], $m)) {
+                $d['additives'] = implode(',', array_slice(array_unique(array_map(fn($c) => 'e' . strtolower($c), $m[1])), 0, 40));
+            }
+        }
+        foreach (['allergens', 'traces'] as $k) {
+            if (!array_key_exists($k, $dk)) continue;
+            $keep = array_filter(explode(',', (string)($old[$k] ?? '')), fn($t) => $t !== '' && !isset($names[$t]));
+            $list = array_merge($dk[$k] !== null ? explode(',', $dk[$k]) : [], $keep);
+            $d[$k] = $list ? implode(',', $list) : null;
+        }
+        foreach (['nutriscore', 'nova', 'palm_oil'] as $k) if (array_key_exists($k, $dk)) $d[$k] = $dk[$k];
+        if (array_key_exists('diet', $dk)) {
+            $d['vegan'] = $dk['diet'] === null ? null : (int)($dk['diet'] === 'vegan');
+            $d['vegetarian'] = $dk['diet'] === null ? null : (int)($dk['diet'] !== 'none');
+        }
+        // fetched_at: produkt z OFF nie dociągnie już składu na żywo w miejsce poprawki
+        $cols = array_keys($d);
+        $stmt = $conn->prepare('INSERT INTO food_product_details (product_id, `' . implode('`, `', $cols) . '`, fetched_at) VALUES (?' . str_repeat(', ?', count($cols)) . ', NOW())
+                                ON DUPLICATE KEY UPDATE ' . implode(', ', array_map(fn($c) => "`$c` = VALUES(`$c`)", $cols)) . ', fetched_at = COALESCE(fetched_at, NOW())');
+        $vals = array_merge([$id], array_map(fn($v) => $v === null ? null : (string)$v, array_values($d)));
+        $stmt->bind_param('i' . str_repeat('s', count($cols)), ...$vals);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    // opis zmian do archiwum zmian (logs): „Pole: stare → nowe” w liniach
+    function hl_food_edit_log_text(array $cur, array $ch, bool $perMl): array
+    {
+        $labels = hl_food_edit_fields();
+        $short = fn($s) => mb_strlen($s) > 120 ? mb_substr($s, 0, 117) . '…' : $s;
+        $was = $now = [];
+        foreach ($ch as $k => $v) {
+            $was[] = $labels[$k] . ': ' . htmlspecialchars($short(hl_food_edit_text($k, $cur[$k] ?? null, $perMl)), ENT_QUOTES, 'UTF-8');
+            $now[] = $labels[$k] . ': ' . htmlspecialchars($short(hl_food_edit_text($k, $v, (bool)($ch['per_ml'] ?? $perMl))), ENT_QUOTES, 'UTF-8');
+        }
+        return [implode('<br/>', $was), implode('<br/>', $now)];
     }
 
     // ---------- Open Food Facts ----------
@@ -519,14 +706,18 @@ if (!function_exists('hl_food_norm')) {
         $codes = implode(',', array_map(fn($b) => $q($b['product']['code']), $batch));
 
         // indeks wyszukiwarki OFF bywa o lata starszy niż API produktu – starsza wersja nie nadpisuje nowszej
-        $known = [];
-        $res = $conn->query("SELECT code, off_modified FROM food_products WHERE source = 'off' AND code IN ($codes)");
-        while ($row = $res->fetch_row()) $known[$row[0]] = (int)$row[1];
+        // produkt poprawiony w HomeList (edited_at) – OFF go nie nadpisuje, skład dopisujemy tylko gdy go nie było
+        $known = $edited = [];
+        $res = $conn->query("SELECT code, off_modified, edited_at FROM food_products WHERE source = 'off' AND code IN ($codes)");
+        while ($row = $res->fetch_row()) {
+            $known[$row[0]] = (int)$row[1];
+            if ($row[2] !== null) $edited[$row[0]] = true;
+        }
         $fresh = array_values(array_filter($batch, fn($b) => $b['product']['off_modified'] >= ($known[$b['product']['code']] ?? 0)));
 
         if ($fresh) {
             $pcols = array_keys($fresh[0]['product']);
-            $update = implode(', ', array_map(fn($c) => "`$c` = IF(`source` = 'off', VALUES(`$c`), `$c`)", array_diff($pcols, ['source', 'code', 'status'])));
+            $update = implode(', ', array_map(fn($c) => "`$c` = IF(`source` = 'off' AND `edited_at` IS NULL, VALUES(`$c`), `$c`)", array_diff($pcols, ['source', 'code', 'status'])));
             $values = array_map(fn($b) => '(' . implode(',', array_map(fn($c) => $q($b['product'][$c]), $pcols)) . ')', $fresh);
             $conn->query('INSERT INTO food_products (`' . implode('`,`', $pcols) . '`) VALUES ' . implode(',', $values) . " ON DUPLICATE KEY UPDATE $update");
         }
@@ -537,12 +728,15 @@ if (!function_exists('hl_food_norm')) {
 
         $dcols = array_merge(['product_id'], array_keys($batch[0]['details']), ['fetched_at']);
         $now = $mode === "live" ? date('Y-m-d H:i:s') : null;
-        $values = [];
+        $values = $keepEdited = [];
         foreach ($fresh as $b) {
             if (!isset($ids[$b['product']['code']])) continue;
             $d = ['product_id' => $ids[$b['product']['code']]] + $b['details'] + ['fetched_at' => $now];
-            $values[] = '(' . implode(',', array_map(fn($c) => $q($d[$c]), $dcols)) . ')';
+            $row = '(' . implode(',', array_map(fn($c) => $q($d[$c]), $dcols)) . ')';
+            if (isset($edited[$b['product']['code']])) $keepEdited[] = $row;
+            else $values[] = $row;
         }
+        if ($keepEdited) $conn->query('INSERT IGNORE INTO food_product_details (`' . implode('`,`', $dcols) . '`) VALUES ' . implode(',', $keepEdited));
         if ($values) {
             // wyniki wyszukiwarki OFF nie zawsze mają skład – wtedy nie zerujemy tego, co już wiemy
             $keep = fn($c) => $c === 'fetched_at' || $mode === 'search';

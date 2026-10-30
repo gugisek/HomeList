@@ -34,22 +34,38 @@ $res = $conn->query("SELECT un.id, un.product_id, un.label, un.grams, un.created
                      WHERE un.status = 'pending' ORDER BY un.id LIMIT 200");
 while ($row = $res->fetch_assoc()) $units[] = $row;
 
-// historia: produkty użytkowników + zgłoszone jednostki, najnowsze na górze
+// propozycje zmian dowolnych produktów: porównanie „teraz → propozycja” z aktualnym stanem produktu
+$edits = [];
+$res = $conn->query("SELECT e.*, p.name, p.brand, p.code, p.source, p.per_ml, p.owner_id AS product_owner,
+                            (SELECT COUNT(*) FROM food_log l WHERE l.product_id = e.product_id) AS uses
+                     FROM food_product_edits e JOIN food_products p ON p.id = e.product_id WHERE e.status = 'pending' ORDER BY e.id LIMIT 200");
+while ($row = $res->fetch_assoc()) {
+    $prod = $conn->query('SELECT * FROM food_products WHERE id = ' . (int)$row['product_id'])->fetch_assoc();
+    $row['cur'] = hl_food_edit_values(hl_food_edit_data($conn, $prod));
+    $row['ch'] = json_decode($row['data'], true) ?: [];
+    $edits[] = $row;
+}
+
+// historia: produkty użytkowników + zgłoszone jednostki + propozycje zmian, najnowsze na górze
 $history = [];
 $res = $conn->query("(SELECT IF(p.source = 'dish', 'dish', 'product') AS kind, p.id, p.id AS product_id, p.name, p.brand, NULL AS label, NULL AS grams, p.per_ml, p.kcal, p.status,
                              p.created_at, p.owner_id, p.reviewed_by, p.reviewed_at, p.code, p.review_note, p.label_photo,
-                             (SELECT COUNT(*) FROM food_log l WHERE l.product_id = p.id) AS uses
+                             (SELECT COUNT(*) FROM food_log l WHERE l.product_id = p.id) AS uses, NULL AS edit_data
                       FROM food_products p WHERE p.source = 'user' OR (p.source = 'dish' AND p.public = 1))
                      UNION ALL
                      (SELECT 'unit', un.id, un.product_id, p.name, p.brand, un.label, un.grams, p.per_ml, NULL, un.status,
-                             un.created_at, un.owner_id, un.reviewed_by, un.reviewed_at, p.code, NULL, NULL, NULL
+                             un.created_at, un.owner_id, un.reviewed_by, un.reviewed_at, p.code, NULL, NULL, NULL, NULL
                       FROM food_product_units un JOIN food_products p ON p.id = un.product_id WHERE un.owner_id IS NOT NULL)
+                     UNION ALL
+                     (SELECT 'edit', e.id, e.product_id, p.name, p.brand, NULL, NULL, p.per_ml, p.kcal, e.status,
+                             e.created_at, e.user_id, e.reviewed_by, e.reviewed_at, p.code, e.review_note, NULL, NULL, e.data
+                      FROM food_product_edits e JOIN food_products p ON p.id = e.product_id)
                      ORDER BY created_at DESC, id DESC LIMIT 200");
 while ($row = $res->fetch_assoc()) $history[] = $row;
 
 // autorzy i moderatorzy jednym zapytaniem
-$uids = array_unique(array_filter(array_map('intval', array_merge(array_column($items, 'owner_id'), array_column($units, 'owner_id'),
-                                                                  array_column($history, 'owner_id'), array_column($history, 'reviewed_by')))));
+$uids = array_unique(array_filter(array_map('intval', array_merge(array_column($items, 'owner_id'), array_column($units, 'owner_id'), array_column($edits, 'user_id'),
+                                                                  array_column($edits, 'product_owner'), array_column($history, 'owner_id'), array_column($history, 'reviewed_by')))));
 $people = [];
 if ($uids) {
     $res = $conn->query('SELECT id, name, sur_name, profile_picture FROM users WHERE id IN (' . implode(',', $uids) . ')');
@@ -65,20 +81,22 @@ $fmt = fn($v) => rtrim(rtrim(number_format((float)$v, 1, ',', ''), '0'), ',');
 $icon = fn($d, $cls = 'size-4') => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="' . $cls . ' flex-none"><path stroke-linecap="round" stroke-linejoin="round" d="' . $d . '" /></svg>';
 $check = 'm4.5 12.75 6 6 9-13.5';
 
-$tab = in_array($_GET['tab'] ?? '', ['products', 'units', 'history'], true) ? $_GET['tab'] : ($items ? 'products' : ($units ? 'units' : 'history'));
-$tabs = ['products' => ['Produkty', count($items)], 'units' => ['Jednostki', count($units)], 'history' => ['Historia', null]];
+$tab = in_array($_GET['tab'] ?? '', ['products', 'edits', 'units', 'history'], true) ? $_GET['tab'] : ($items ? 'products' : ($edits ? 'edits' : ($units ? 'units' : 'history')));
+$tabs = ['products' => ['Produkty', count($items)], 'edits' => ['Poprawki', count($edits)], 'units' => ['Jednostki', count($units)], 'history' => ['Historia', null]];
 
 // przyciski decyzji; w historii widoczne zależnie od statusu (data-show), żeby po kliknięciu nie przeładowywać strony
 $actions = function (string $kind, int $id, bool $inHistory, int $productId = 0) use ($can_edit, $can_delete, $icon, $check) {
     if (!$can_edit) return '';
     $t = $kind === 'product' ? '' : ", '$kind'";
     $show = fn($s) => $inHistory ? ' data-show="' . $s . '"' : '';
-    // odrzucenie produktu / dania pyta o powód (autor zobaczy go w „Twój wkład”), jednostki – od razu
+    // odrzucenie produktu / dania / poprawki pyta o powód (autor zobaczy go w „Twój wkład”), jednostki – od razu
     $reject = $kind === 'unit' ? 'foodModerate(' . $id . ", 'reject'$t)" : 'foodReject(' . $id . ", '$kind')";
+    // poprawka: akceptacja zaznaczonych pól; zaakceptowanej nie da się cofnąć (produkt już zmieniony)
+    $approve = $kind === 'edit' ? 'foodEditApprove(' . $id . ')' : 'foodModerate(' . $id . ", 'approve'$t)";
     return '<div class="mt-3 flex flex-wrap gap-2">'
-        . '<button type="button"' . $show('pending rejected') . ' onclick="foodModerate(' . $id . ", 'approve'$t)\" class=\"hl-btn hl-btn-green hl-btn-sm\">" . $icon($check) . 'Akceptuj</button>'
+        . '<button type="button"' . $show('pending rejected') . ' onclick="' . $approve . '" class="hl-btn hl-btn-green hl-btn-sm">' . $icon($check) . ($kind === 'edit' && !$inHistory ? 'Akceptuj zaznaczone' : 'Akceptuj') . '</button>'
         . ($kind === 'product' ? '<button type="button" onclick="foodEdit(' . $id . ')" class="hl-btn hl-btn-soft hl-btn-sm">' . $icon('m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125') . 'Popraw</button>' : '')
-        . '<button type="button"' . $show('pending approved') . ' onclick="' . $reject . '" class="hl-btn hl-btn-ghost hl-btn-sm">' . ($inHistory ? 'Odrzuć / cofnij' : 'Odrzuć') . '</button>'
+        . '<button type="button"' . $show($kind === 'edit' ? 'pending' : 'pending approved') . ' onclick="' . $reject . '" class="hl-btn hl-btn-ghost hl-btn-sm">' . ($inHistory && $kind !== 'edit' ? 'Odrzuć / cofnij' : 'Odrzuć') . '</button>'
         // wszystkie jednostki produktu: poprawki, nowe, decyzje – w jednym oknie
         . ($kind !== 'dish' && $productId ? '<button type="button" onclick="foodUnits(' . $productId . ')" class="hl-btn hl-btn-ghost hl-btn-sm">' . $icon('M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z') . 'Jednostki produktu</button>' : '')
         . ($can_delete && $kind !== 'dish' ? '<button type="button" onclick="foodModerate(' . $id . ", 'delete'$t)\" class=\"hl-btn hl-btn-danger hl-btn-sm\">Usuń</button>" : '')
@@ -194,6 +212,77 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
         <?php endforeach; ?>
     </section>
 
+    <!-- propozycje zmian produktów: porównanie z aktualnym produktem, akceptacja wybranych pól -->
+    <section data-fpanel="edits" class="mt-4 flex flex-col gap-3"<?=$tab !== 'edits' ? ' hidden' : ''?>>
+        <?php if (!$edits) echo $empty('Brak poprawek', 'Gdy ktoś zaproponuje zmianę danych produktu (np. inne wartości z etykiety), pojawi się tutaj.'); ?>
+        <?php
+        $src_label = ['off' => 'Open Food Facts', 'base' => 'produkt podstawowy', 'user' => 'od użytkownika'];
+        $field_labels = hl_food_edit_fields();
+        foreach ($edits as $e):
+            $cur = $e['cur'];
+            $after = array_merge($cur, $e['ch']);
+            $ml = (bool)$cur['per_ml'];
+            $ok = $after['kcal'] !== null && hl_food_macros_match((float)$after['kcal'], (float)$after['protein'], (float)$after['fat'], (float)$after['carbs'], 0.15, 25, 2 * (float)$after['fiber']);
+            $est = round(hl_food_kcal_from_macros((float)$after['protein'], (float)$after['fat'], (float)$after['carbs']));
+            $macro_changed = (bool)array_intersect_key($e['ch'], array_flip(['kcal', 'protein', 'fat', 'carbs', 'fiber']));
+        ?>
+        <div id="fe_<?=(int)$e['id']?>" class="hl-card hl-card-pad duration-300">
+            <div class="flex items-start gap-3">
+                <img class="size-10 flex-none rounded-full object-cover border border-black/10" src="<?=$pic($e['user_id'])?>" alt="">
+                <div class="min-w-0 flex-1">
+                    <p class="text-base font-medium text-gray-900 dark:text-gray-100"><?=hl_e($e['name'])?><?php if ($e['brand']): ?> <span class="text-gray-500 dark:text-gray-400 font-normal">· <?=hl_e($e['brand'])?></span><?php endif; ?></p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Proponuje: <?=hl_e($who($e['user_id']))?> · <?=$when($e['created_at'])?> ·
+                        <?=$src_label[$e['source']] ?? hl_e($e['source'])?><?=$e['source'] === 'user' && $e['product_owner'] ? ' (' . hl_e($who($e['product_owner'])) . ')' : ''?>
+                        <?=$e['code'] ? ' · kod ' . hl_e($e['code']) : ''?> · w dziennikach: <?=(int)$e['uses']?>
+                    </p>
+                    <?php if ($e['note']): ?>
+                    <p class="mt-2 rounded-xl bg-gray-50 dark:bg-white/5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">„<?=hl_e($e['note'])?>”</p>
+                    <?php endif; ?>
+                    <?php if ($e['label_photo']): $lp = hl_e(hl_food_edit_photo_url($e)); ?>
+                    <a href="<?=$lp?>" target="_blank" rel="noopener" class="group relative mt-3 block w-full max-w-sm overflow-hidden rounded-2xl ring-1 ring-black/5 dark:ring-white/10 bg-black">
+                        <img src="<?=$lp?>" alt="Zdjęcie etykiety" loading="lazy" class="w-full max-h-72 object-contain group-hover:opacity-90 duration-150">
+                        <span class="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">Zdjęcie etykiety · otwórz w pełnym rozmiarze</span>
+                    </a>
+                    <?php else: ?>
+                    <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">Bez zdjęcia etykiety</p>
+                    <?php endif; ?>
+                    <div class="mt-3 divide-y divide-black/5 dark:divide-white/10 rounded-2xl ring-1 ring-black/5 dark:ring-white/10 px-3">
+                        <?php foreach ($e['ch'] as $k => $v):
+                            if (!isset($field_labels[$k])) continue;
+                            $same = !hl_food_edit_diff([$k => $cur[$k]], [$k => $v]);
+                            $long = $k === 'ingredients';
+                        ?>
+                        <label class="flex items-start gap-3 py-2.5 cursor-pointer<?=$same ? ' opacity-60' : ''?>">
+                            <input type="checkbox" data-efield="<?=$k?>" <?=$same ? 'disabled' : 'checked'?> class="mt-0.5 size-5 flex-none">
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-xs text-gray-500 dark:text-gray-400"><?=$field_labels[$k]?><?=$same ? ' · produkt ma już tę wartość' : ''?></span>
+                                <?php if ($long): ?>
+                                <span class="mt-1 block text-xs leading-relaxed text-gray-400 dark:text-gray-500 line-through break-words"><?=hl_e(hl_food_edit_text($k, $cur[$k], $ml))?></span>
+                                <span class="mt-1 block text-sm leading-relaxed text-gray-900 dark:text-gray-100 break-words"><?=hl_e(hl_food_edit_text($k, $v, $ml))?></span>
+                                <?php else: ?>
+                                <span class="block text-sm break-words">
+                                    <span class="text-gray-400 dark:text-gray-500 line-through"><?=hl_e(hl_food_edit_text($k, $cur[$k], $ml))?></span>
+                                    <span class="text-gray-400 px-1">→</span>
+                                    <b class="font-semibold text-gray-900 dark:text-gray-100"><?=hl_e(hl_food_edit_text($k, $v, (bool)$after['per_ml']))?></b>
+                                </span>
+                                <?php endif; ?>
+                            </span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if ($macro_changed): ?>
+                    <p class="mt-2 inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium <?=$ok ? 'bg-green-50 text-green-700 dark:bg-green-400/10 dark:text-green-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300'?>">
+                        <?=$ok ? 'Po zmianie kalorie zgadzają się z makro (~' . $est . ' kcal)' : 'Sprawdź: po zmianie z makro wychodzi ~' . $est . ' kcal, a kalorie to ' . $fmt($after['kcal'])?>
+                    </p>
+                    <?php endif; ?>
+                    <?=$actions('edit', (int)$e['id'], false, (int)$e['product_id'])?>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </section>
+
     <!-- jednostki porcji do akceptacji -->
     <section data-fpanel="units" class="mt-4 flex flex-col gap-3"<?=$tab !== 'units' ? ' hidden' : ''?>>
         <?php if (!$units) echo $empty('Brak nowych jednostek', 'Gdy ktoś doda np. wagę opakowania, której nie zna Open Food Facts, pojawi się tutaj.'); ?>
@@ -223,7 +312,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     <section data-fpanel="history" class="mt-4"<?=$tab !== 'history' ? ' hidden' : ''?>>
         <input type="search" id="fa_hq" class="hl-input mb-3" placeholder="Szukaj: nazwa, marka, kod, autor…" autocomplete="off" aria-label="Szukaj w historii">
         <div class="flex flex-wrap gap-2">
-            <?php foreach (['all' => 'Wszystko', 'product' => 'Produkty', 'unit' => 'Jednostki', 'dish' => 'Dania', 'pending' => 'Czeka', 'approved' => 'Zaakceptowane', 'rejected' => 'Odrzucone'] as $k => $label): ?>
+            <?php foreach (['all' => 'Wszystko', 'product' => 'Produkty', 'edit' => 'Poprawki', 'unit' => 'Jednostki', 'dish' => 'Dania', 'pending' => 'Czeka', 'approved' => 'Zaakceptowane', 'rejected' => 'Odrzucone'] as $k => $label): ?>
             <button type="button" data-fhist="<?=$k?>" class="fa-filter rounded-full px-3 py-1.5 text-xs font-medium duration-150"><?=$label?></button>
             <?php endforeach; ?>
         </div>
@@ -238,18 +327,21 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                     <img class="size-9 flex-none rounded-full object-cover border border-black/10" src="<?=$pic($h['owner_id'])?>" alt="">
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span class="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"><?=['unit' => 'Jednostka', 'dish' => 'Danie', 'product' => 'Produkt'][$h['kind']]?></span>
+                            <span class="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"><?=['unit' => 'Jednostka', 'dish' => 'Danie', 'product' => 'Produkt', 'edit' => 'Poprawka'][$h['kind']]?></span>
                             <p class="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0">
                                 <?php if ($h['kind'] === 'unit'): ?><?=hl_e($h['label'])?> = <?=$fmt($h['grams'])?> <?=$u?> <span class="font-normal text-gray-500 dark:text-gray-400">· <?=hl_e($h['name'])?></span>
                                 <?php else: ?><?=hl_e($h['name'])?><?=$h['brand'] ? ' <span class="font-normal text-gray-500 dark:text-gray-400">· ' . hl_e($h['brand']) . '</span>' : ''?> <span class="font-normal text-gray-500 dark:text-gray-400">· <?=$fmt($h['kcal'])?> kcal/100 <?=$u?></span><?php endif; ?>
                             </p>
                             <span data-badge class="fa-badge ml-auto"></span>
                         </div>
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Dodał(a): <?=hl_e($who($h['owner_id']))?> · <?=$when($h['created_at'])?><?=$h['kind'] !== 'unit' ? ' · w dziennikach: ' . (int)$h['uses'] : ''?><?=$h['kind'] !== 'dish' && $h['code'] ? ' · kod ' . hl_e($h['code']) : ''?><?=$h['label_photo'] ? ' · <a class="underline" target="_blank" rel="noopener" href="' . hl_e(hl_food_label_photo_url($h)) . '">etykieta</a>' : ''?></p>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400"><?=$h['kind'] === 'edit' ? 'Proponuje' : 'Dodał(a)'?>: <?=hl_e($who($h['owner_id']))?> · <?=$when($h['created_at'])?><?=!in_array($h['kind'], ['unit', 'edit'], true) ? ' · w dziennikach: ' . (int)$h['uses'] : ''?><?=$h['kind'] !== 'dish' && $h['code'] ? ' · kod ' . hl_e($h['code']) : ''?><?=$h['label_photo'] ? ' · <a class="underline" target="_blank" rel="noopener" href="' . hl_e(hl_food_label_photo_url($h)) . '">etykieta</a>' : ''?></p>
+                        <?php if ($h['kind'] === 'edit'): $hch = json_decode((string)$h['edit_data'], true) ?: []; $hl = hl_food_edit_fields(); ?>
+                        <p class="text-xs text-gray-600 dark:text-gray-300 break-words">Zmiany: <?=hl_e(implode(' · ', array_map(fn($k, $v) => ($hl[$k] ?? $k) . ' → ' . mb_strimwidth(hl_food_edit_text($k, $v, (bool)$h['per_ml']), 0, 60, '…'), array_keys($hch), $hch)))?></p>
+                        <?php endif; ?>
                         <?php if ($h['review_note']): ?><p class="text-xs text-gray-500 dark:text-gray-400">Uwaga: „<?=hl_e($h['review_note'])?>”</p><?php endif; ?>
                         <p data-decision class="text-xs text-gray-500 dark:text-gray-400">
                             <?php if ($h['status'] === 'pending'): ?>Czeka na decyzję
-                            <?php elseif ($self): ?>Dodane przez moderatora – zatwierdzone od razu<?=$h['reviewed_at'] ? ' · ' . $when($h['reviewed_at']) : ''?>
+                            <?php elseif ($self): ?><?=$h['kind'] === 'edit' ? 'Zmiana moderatora – od razu w produkcie' : 'Dodane przez moderatora – zatwierdzone od razu'?><?=$h['reviewed_at'] ? ' · ' . $when($h['reviewed_at']) : ''?>
                             <?php else: ?><?=$h['status'] === 'approved' ? 'Zaakceptował(a)' : 'Odrzucił(a)'?>: <?=$h['reviewed_by'] !== null ? hl_e($who($h['reviewed_by'])) : 'nieznane (przed zapisem historii)'?><?=$h['reviewed_at'] ? ' · ' . $when($h['reviewed_at']) : ''?>
                             <?php endif; ?>
                         </p>
@@ -346,7 +438,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     <dialog id="fa_reject" class="fa-dialog w-[min(460px,calc(100vw-24px))]">
         <form method="dialog" class="p-5">
             <h2 class="hl-popup-title !p-0">Odrzucić?</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Produkt zostanie tylko u autora. Napisz, co poprawić – zobaczy to w „Twój wkład” i będzie mógł wysłać poprawkę.</p>
+            <p id="fa_reject_text" class="mt-1 text-sm text-gray-500 dark:text-gray-400">Produkt zostanie tylko u autora. Napisz, co poprawić – zobaczy to w „Twój wkład” i będzie mógł wysłać poprawkę.</p>
             <div class="mt-3 flex flex-wrap gap-1.5">
                 <?php foreach (['Wartości nie zgadzają się z etykietą', 'Brak zdjęcia etykiety', 'Duplikat produktu', 'Niepełna nazwa'] as $r): ?>
                 <button type="button" data-fa-reason class="rounded-full bg-gray-100 dark:bg-white/[.06] px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300"><?=$r?></button>
@@ -430,23 +522,24 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     }
     function pad(n) { return String(n).padStart(2, '0'); }
 
-    window.foodModerate = function (id, action, type, note) {
-        var kind = type === 'unit' || type === 'dish' ? type : 'product';
-        if (action === 'delete' && !confirm(kind === 'unit' ? 'Usunąć tę jednostkę?' : 'Usunąć ten produkt z bazy?')) return;
+    window.foodModerate = function (id, action, type, note, fields) {
+        var kind = type === 'unit' || type === 'dish' || type === 'edit' ? type : 'product';
+        if (action === 'delete' && !confirm(kind === 'unit' ? 'Usunąć tę jednostkę?' : kind === 'edit' ? 'Usunąć tę propozycję zmiany?' : 'Usunąć ten produkt z bazy?')) return;
         var fd = new FormData();
         fd.append('id', id);
         fd.append('action', action);
-        if (type === 'unit') fd.append('type', type);
+        if (type === 'unit' || type === 'edit') fd.append('type', type);
         if (note) fd.append('note', note);
+        if (fields) fd.append('fields', fields);
         hlJson('scripts/food/moderate.php', fd).then(function (r) {
             showAlert(r.status || 'error', r.message || 'Nieznany status odpowiedzi');
             if (r.status !== 'success') return;
             // karta w kolejce znika po każdej decyzji
-            var card = document.getElementById((kind === 'unit' ? 'fu_' : 'fp_') + id);
+            var card = document.getElementById((kind === 'unit' ? 'fu_' : kind === 'edit' ? 'fe_' : 'fp_') + id);
             if (card && !card.dataset.gone) {
                 card.dataset.gone = '1';
                 fade(card);
-                var c = root.querySelector('[data-fcount="' + (kind === 'unit' ? 'units' : 'products') + '"]');
+                var c = root.querySelector('[data-fcount="' + (kind === 'unit' ? 'units' : kind === 'edit' ? 'edits' : 'products') + '"]');
                 if (c) {
                     c.textContent = Math.max(0, +c.textContent - 1);
                     if (c.textContent === '0') c.className = 'rounded-full px-2 py-0.5 text-[11px] font-semibold bg-black/5 dark:bg-white/10 text-gray-500 dark:text-gray-400';
@@ -465,8 +558,18 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                 }
             }
             var dot = document.getElementById('food_nav_dot');
-            if (dot && !root.querySelector('[id^="fp_"]:not([data-gone]), [id^="fu_"]:not([data-gone])')) dot.remove();
+            if (dot && !root.querySelector('[id^="fp_"]:not([data-gone]), [id^="fu_"]:not([data-gone]), [id^="fe_"]:not([data-gone])')) dot.remove();
         });
+    };
+
+    // poprawka: w kolejce akceptujemy tylko zaznaczone pola, w historii – całość
+    window.foodEditApprove = function (id) {
+        var card = document.getElementById('fe_' + id), fields;
+        if (card) {
+            fields = [].map.call(card.querySelectorAll('[data-efield]:checked'), function (i) { return i.dataset.efield; });
+            if (!fields.length) return showAlert('warning', 'Zaznacz co najmniej jedną zmianę albo odrzuć propozycję');
+        }
+        foodModerate(id, 'approve', 'edit', null, fields ? fields.join(',') : null);
     };
 
     var edit = document.getElementById('fa_edit'), rej = document.getElementById('fa_reject');
@@ -480,6 +583,9 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     window.foodReject = function (id, kind) {
         rejectFor = { id: id, kind: kind };
         document.getElementById('fa_reject_note').value = '';
+        document.getElementById('fa_reject_text').textContent = kind === 'edit'
+            ? 'Produkt zostanie bez zmian. Napisz dlaczego – autor propozycji zobaczy to w „Twój wkład”.'
+            : 'Produkt zostanie tylko u autora. Napisz, co poprawić – zobaczy to w „Twój wkład” i będzie mógł wysłać poprawkę.';
         rej.showModal();
     };
     rej.querySelectorAll('[data-fa-reason]').forEach(function (b) {
@@ -492,7 +598,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
     document.getElementById('fa_reject_ok').addEventListener('click', function () {
         if (!rejectFor) return;
         rej.close();
-        foodModerate(rejectFor.id, 'reject', rejectFor.kind === 'dish' ? 'dish' : undefined, document.getElementById('fa_reject_note').value.trim());
+        foodModerate(rejectFor.id, 'reject', rejectFor.kind === 'dish' || rejectFor.kind === 'edit' ? rejectFor.kind : undefined, document.getElementById('fa_reject_note').value.trim());
     });
 
     // poprawianie produktu: dane z product_edit.php, zapis przez product_save.php (moderator może od razu zaakceptować)

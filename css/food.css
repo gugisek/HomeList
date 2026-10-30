@@ -141,6 +141,8 @@
 .fd-ghost-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--hl-ink); box-shadow: inset 0 0 0 1px var(--hl-ghost-ring); cursor: pointer; }
 .fd-ghost-btn:hover { background: var(--hl-chip); }
 .fd-ghost-btn svg { width: 16px; height: 16px; }
+.fd-suggest { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--hl-ghost-ring); }
+.fd-suggest > span { font-size: 12px; line-height: 1.45; }
 
 /* przycisk „Podsumowanie dnia” pod posiłkami */
 .fd-day-btn { display: flex; align-items: center; gap: 10px; width: 100%; height: 52px; padding: 0 16px; border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--hl-ink); background: var(--hl-card); box-shadow: inset 0 0 0 1px var(--hl-ghost-ring); cursor: pointer; transition: background-color .2s ease; }

@@ -54,7 +54,8 @@ $rail_admin = [
 ];
 $rail_admin = array_filter($rail_admin, fn($k) => hl_can($k, 'read'), ARRAY_FILTER_USE_KEY);
 $rail_food_new = isset($rail_admin['food']) ? (int)$conn->query("SELECT (SELECT COUNT(*) FROM food_products WHERE (source = 'user' OR (source = 'dish' AND public = 1)) AND status = 'pending')
-                                                                 + (SELECT COUNT(*) FROM food_product_units WHERE status = 'pending')")->fetch_row()[0] : 0;
+                                                                 + (SELECT COUNT(*) FROM food_product_units WHERE status = 'pending')
+                                                                 + (SELECT COUNT(*) FROM food_product_edits WHERE status = 'pending')")->fetch_row()[0] : 0;
 $rail_reports_new = isset($rail_admin['reports']) ? (int)$conn->query('SELECT COUNT(*) AS c FROM bug_reports WHERE seen_at IS NULL')->fetch_assoc()['c'] : 0;
 
 // Jedzenie: w pigułce po włączeniu modułu, wcześniej w menu „więcej”

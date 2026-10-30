@@ -17,6 +17,12 @@ $stmt = $conn->prepare('SELECT un.id, un.label, un.grams, un.status, p.name, p.p
 $stmt->bind_param('i', $acc_id);
 $stmt->execute();
 $acc_contrib_units = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+// propozycje zmian produktów z bazy (status, powód odrzucenia)
+$stmt = $conn->prepare('SELECT e.id, e.data, e.status, e.review_note, e.created_at, e.reviewed_at, p.name, p.brand, p.per_ml FROM food_product_edits e
+                        JOIN food_products p ON p.id = e.product_id WHERE e.user_id = ? ORDER BY e.id DESC LIMIT 100');
+$stmt->bind_param('i', $acc_id);
+$stmt->execute();
+$acc_contrib_edits = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $acc_count = fn($status) => count(array_filter($acc_contrib, fn($p) => $p['status'] === $status));
 $acc_uses = array_sum(array_column($acc_contrib, 'uses'));
 $acc_people = 0;
@@ -95,7 +101,7 @@ $acc_sub_btn = 'food-sub flex-none inline-flex items-center gap-2 rounded-full p
         </div>
         <?php endforeach; ?>
     </div>
-    <p class="hl-hint">Zaakceptowanych produktów nie da się już zmienić – jeśli coś się nie zgadza, napisz w „Zgłoś błąd”.</p>
+    <p class="hl-hint">Zaakceptowany produkt zmienisz w Jedzeniu: otwórz go i w „Skład i jakość” wybierz „Zaproponuj zmianę”.</p>
     <?php endif; ?>
 
     <?php if ($acc_contrib_units): ?>
@@ -105,6 +111,26 @@ $acc_sub_btn = 'food-sub flex-none inline-flex items-center gap-2 rounded-full p
         <div class="flex items-center gap-3 px-3 py-2.5">
             <p class="min-w-0 flex-1 text-sm text-gray-800 dark:text-gray-200"><?=$acc_e($un['label'])?> = <?=$acc_num($un['grams'])?> <?=$un['per_ml'] ? 'ml' : 'g'?> <span class="text-gray-500 dark:text-gray-400">· <?=$acc_e($un['name'])?></span></p>
             <span class="flex-none rounded-full px-2 py-0.5 text-[11px] font-semibold <?=$badge_cls?>"><?=$un['status'] === 'approved' ? 'Dla wszystkich' : $badge?></span>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($acc_contrib_edits): $acc_fields = hl_food_edit_fields(); ?>
+    <p class="mt-6 ml-1 text-sm font-medium text-gray-900 dark:text-gray-200">Propozycje zmian</p>
+    <div class="<?=$acc_card?> mt-2 !p-2 flex flex-col divide-y divide-black/5 dark:divide-white/10">
+        <?php foreach ($acc_contrib_edits as $ed): [$badge, $badge_cls] = $acc_badge[$ed['status']]; $ch = json_decode($ed['data'], true) ?: []; ?>
+        <div class="px-3 py-2.5">
+            <div class="flex items-center gap-3">
+                <p class="min-w-0 flex-1 text-sm text-gray-800 dark:text-gray-200"><?=$acc_e($ed['name'])?><?php if ($ed['brand']): ?> <span class="text-gray-500 dark:text-gray-400">· <?=$acc_e($ed['brand'])?></span><?php endif; ?></p>
+                <span class="flex-none rounded-full px-2 py-0.5 text-[11px] font-semibold <?=$badge_cls?>"><?=$ed['status'] === 'approved' ? 'Wprowadzona' : $badge?></span>
+            </div>
+            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 break-words">
+                <?=$acc_e(date('j.m.Y', strtotime($ed['created_at'])))?> · <?=$acc_e(implode(', ', array_map(fn($k) => mb_strtolower($acc_fields[$k] ?? $k), array_keys($ch))))?>
+            </p>
+            <?php if ($ed['status'] === 'rejected'): ?>
+            <p class="mt-1.5 rounded-xl bg-rose-50 dark:bg-rose-400/10 px-3 py-2 text-xs text-rose-700 dark:text-rose-300"><?=$ed['review_note'] ? 'Administrator: „' . $acc_e($ed['review_note']) . '”' : 'Administrator nie wprowadził tej zmiany'?></p>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
     </div>

@@ -31,13 +31,8 @@ $per_ml = (int)!empty($_POST['per_ml']);
 $u = $per_ml ? 'ml' : 'g';
 $package_raw = trim((string)($_POST['package_g'] ?? ''));
 $package_g = hl_food_float($package_raw, 1, 5000);
-if ($name === '') hl_food_json('warning', 'Podaj nazwę produktu');
-if ($kcal === null || $protein === null || $fat === null || $carbs === null) hl_food_json('warning', 'Uzupełnij kalorie i makro na 100 ' . $u);
-if ($protein + $fat + $carbs > 105) hl_food_json('warning', 'Suma białka, tłuszczu i węglowodanów nie może przekraczać 100 g');
-if ($code !== null && (strlen($code) < 6 || strlen($code) > 32)) hl_food_json('warning', 'Nieprawidłowy kod kreskowy');
-if ($package_raw !== '' && $package_g === null) hl_food_json('warning', 'Nieprawidłowa wielkość opakowania');
-if ($sugars !== null && $sugars > $carbs + 0.5) hl_food_json('warning', 'Cukry nie mogą przekraczać węglowodanów');
-if ($sat_fat !== null && $sat_fat > $fat + 0.5) hl_food_json('warning', 'Tłuszcze nasycone nie mogą przekraczać tłuszczu');
+$err = hl_food_product_check($_POST, hl_food_edit_values($_POST));
+if ($err !== null) hl_food_json('warning', $err);
 $details = hl_food_details_from_post($_POST);
 
 $old = null;

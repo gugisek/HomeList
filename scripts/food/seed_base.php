@@ -22,6 +22,8 @@ $upsert = $conn->prepare(
          name_search = VALUES(name_search), popularity = VALUES(popularity)"
 );
 $find = $conn->prepare('SELECT id FROM food_products WHERE seed_key = ?');
+// poprawione w HomeList (zaakceptowana propozycja zmiany) – seed ich nie nadpisuje
+$edited = array_column($conn->query("SELECT seed_key FROM food_products WHERE source = 'base' AND edited_at IS NOT NULL")->fetch_all(MYSQLI_NUM), 0);
 $clear = $conn->prepare('DELETE FROM food_product_units WHERE product_id = ? AND owner_id IS NULL');
 $unit = $conn->prepare('INSERT INTO food_product_units (product_id, label, grams, sort) VALUES (?, ?, ?, ?)');
 
@@ -29,6 +31,7 @@ $count = 0;
 $warn = [];
 foreach ($data as $row) {
     [$key, $name, $kcal, $p, $f, $c, $fiber, $sugars, $units] = $row;
+    if (in_array($key, $edited, true)) { $count++; continue; }
     $perMl = (int)($row[9] ?? 0);
     $search = hl_food_norm($name);
     $pop = HL_FOOD_BASE_POPULARITY;

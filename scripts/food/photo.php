@@ -9,7 +9,11 @@ session_write_close();
 
 $id = (int)($_GET['id'] ?? 0);
 $me = (int)$_SESSION['login_id'];
-if (!empty($_GET['label'])) {
+if (!empty($_GET['edit'])) {
+    // zdjęcie etykiety z propozycji zmiany – autor propozycji i moderatorzy
+    $e = $conn->query('SELECT user_id, label_photo FROM food_product_edits WHERE id = ' . (int)$_GET['edit'])->fetch_assoc();
+    $file = $e && ((int)$e['user_id'] === $me || hl_can('food', 'read')) ? $e['label_photo'] : null;
+} elseif (!empty($_GET['label'])) {
     $p = $conn->query("SELECT * FROM food_products WHERE id = $id")->fetch_assoc();
     if ($p && (int)$p['owner_id'] !== $me && !hl_can('food', 'read')) $p = null;
     $file = $p['label_photo'] ?? null;
