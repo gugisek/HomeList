@@ -130,7 +130,7 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
 <section id="feed" class="mt-2" data-date="<?=$date?>" data-aos="fade-right" data-aos-delay="150">
 
     <div id="feed-celebrate" class="feed-celebrate overflow-hidden" style="max-height:<?=$all_done ? '120px' : '0px'?>;opacity:<?=$all_done ? '1' : '0'?>;margin-top:<?=$all_done ? '0.75rem' : '0px'?>">
-        <div class="flex items-center gap-3 rounded-2xl px-4 py-3 bg-green-400/10 dark:bg-green-400/10 ring-1 ring-green-400/30">
+        <div class="flex items-center gap-3 rounded-2xl px-4 py-3 bg-green-400/10 dark:bg-green-400/10 ring-1 ring-inset ring-green-400/30">
             <div class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-green-400 text-white shadow-lg shadow-green-400/40"><?=hl_icon('check', 'size-5', '2.5')?></div>
             <div>
                 <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Dzień zaliczony!</p>

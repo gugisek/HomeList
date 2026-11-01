@@ -623,7 +623,7 @@ if (!function_exists('hl_bill_types')) {
         // na kartę: pakiet na X dni (od doładowania) albo rozliczenie co miesiąc w stałym dniu
         if ($type === 'prepaid') [$unit, $every] = $unit === 'month' ? ['month', 1] : ['day', $every];
 
-        $reminders = array_values(array_unique(array_filter(array_map('intval', explode(',', (string)($in['reminders'] ?? '1'))), function ($d) { return $d >= 0 && $d <= 60; })));
+        $reminders = array_values(array_unique(array_filter(array_map('intval', array_filter(explode(',', (string)($in['reminders'] ?? '1')), 'strlen')), function ($d) { return $d >= 0 && $d <= 60; })));
         if (!isset($in['reminders'])) $reminders = $existing['reminders'] ?? [1];
         sort($reminders);
 
@@ -882,7 +882,8 @@ if (!function_exists('hl_bill_types')) {
             $n = $days($u['due']);
             $amount = ($u['estimate'] ? '~' : '') . hl_bill_money($u['amount']);
             if ($u['overdue']) {
-                if (in_array(-$n, [1, 3, 7], true)) $add($b, 'late', $u['due'] . '_' . (-$n), 'zaległa od ' . (-$n) . ' ' . (-$n === 1 ? 'dnia' : 'dni') . ' · ' . $amount);
+                // „Nie przypominaj” (puste reminders) wycisza też zaległe
+                if ($b['reminders'] && in_array(-$n, [1, 3, 7], true)) $add($b, 'late', $u['due'] . '_' . (-$n), 'zaległa od ' . (-$n) . ' ' . (-$n === 1 ? 'dnia' : 'dni') . ' · ' . $amount);
                 continue;
             }
             if (!in_array($n, $b['reminders'], true)) continue;

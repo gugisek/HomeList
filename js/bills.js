@@ -600,7 +600,8 @@
     function chips(key, opts, multi) {
         var f = S.sheet.f;
         return '<div class="fd-chips" style="flex-wrap:wrap;margin:0;padding:0">' + opts.map(function (o) {
-            var on = multi ? f[key].indexOf(o[0]) >= 0 : f[key] === o[0];
+            // 'none' w wielokrotnym wyborze = pusta lista (np. „Nie przypominaj”)
+            var on = multi ? (o[0] === 'none' ? !f[key].length : f[key].indexOf(o[0]) >= 0) : f[key] === o[0];
             return '<button type="button" class="fd-chip fd-press' + (on ? ' is-on' : '') + '" data-chip="' + key + '" data-v="' + o[0] + '"' + (multi ? ' data-multi="1"' : '') + ' aria-pressed="' + on + '">' + o[1] + '</button>';
         }).join('') + '</div>';
     }
@@ -689,7 +690,7 @@
 
         html += lbl('Płacę') + chips('pay_mode', [['auto', 'Automatycznie'], ['manual', 'Sam']])
             + '<p class="bl-hint">' + (f.pay_mode === 'auto' ? 'Pobiera się sama (karta, polecenie zapłaty) – tylko informujemy, nic nie trzeba odhaczać.' : 'W dniu płatności pojawi się w „Do zapłaty”, a po zapłaceniu odhaczasz ją jak zadanie.') + '</p>';
-        html += lbl('Przypomnij') + chips('reminders', [[0, 'W dniu płatności'], [1, 'Dzień przed'], [3, '3 dni przed'], [7, 'Tydzień przed']].concat(f.type === 'ins' ? [[30, 'Miesiąc przed']] : []), true);
+        html += lbl('Przypomnij') + chips('reminders', [[0, 'W dniu płatności'], [1, 'Dzień przed'], [3, '3 dni przed'], [7, 'Tydzień przed']].concat(f.type === 'ins' ? [[30, 'Miesiąc przed']] : [], [['none', 'Nie przypominaj']]), true);
 
         box.innerHTML = headHTML(edit ? 'Edytuj opłatę' : 'Nowa opłata') + '<div class="fd-scroll" style="padding:4px 20px 24px">' + html + '</div>'
             + '<div class="fd-foot"><button type="button" class="fd-cta fd-press" data-save>' + (edit ? 'Zapisz' : 'Dodaj') + '</button></div>';
@@ -734,7 +735,8 @@
         box.querySelectorAll('[data-chip]').forEach(function (b) {
             b.onclick = function () {
                 var k = b.dataset.chip, v = k === 'reminders' ? +b.dataset.v : b.dataset.v;
-                if (b.dataset.multi) { var i = f[k].indexOf(v); if (i >= 0) f[k].splice(i, 1); else f[k].push(v); }
+                if (b.dataset.multi && b.dataset.v === 'none') f[k] = [];
+                else if (b.dataset.multi) { var i = f[k].indexOf(v); if (i >= 0) f[k].splice(i, 1); else f[k].push(v); }
                 else f[k] = v;
                 again();
             };
