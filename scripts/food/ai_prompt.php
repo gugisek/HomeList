@@ -9,7 +9,9 @@ require_once 'food_lib.php';
 session_write_close();
 
 $user_id = (int)$_SESSION['login_id'];
-$base = array_column($conn->query("SELECT name FROM food_products WHERE source = 'base' AND status = 'approved' ORDER BY id")->fetch_all(MYSQLI_ASSOC), 'name');
+// bez uzupełnień z USDA (import_usda.php) – to kilkaset rzadszych produktów, a dopasowanie i tak znajdzie je po nazwie
+$base = array_column($conn->query("SELECT name FROM food_products WHERE source = 'base' AND status = 'approved'
+                                   AND (seed_key IS NULL OR seed_key NOT LIKE 'usda\\_%') ORDER BY id")->fetch_all(MYSQLI_ASSOC), 'name');
 $vis = hl_food_visible_sql($conn, $user_id);
 $frequent = array_map(fn($r) => $r['name'] . ($r['brand'] ? ' (' . $r['brand'] . ')' : ''), $conn->query(
     "SELECT p.name, p.brand FROM food_products p

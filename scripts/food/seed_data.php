@@ -28,6 +28,8 @@ return [
     ['nektarynka', 'Nektarynka', 44, 1.1, 0.3, 10.6, 1.7, 7.9, 'sztuka:140'],
     ['morela', 'Morela', 48, 1.4, 0.4, 11.1, 2, 9.2, 'sztuka:40'],
     ['granat', 'Granat', 83, 1.7, 1.2, 18.7, 4, 13.7, 'sztuka:250'],
+    // USDA FNDDS (fdc 2709234) – SR Legacy, z którego bierze import_usda.php, nie ma pitai
+    ['pitaja', 'Pitaja (smoczy owoc)', 68, 0.7, 0.2, 16.2, 1.8, 12, 'sztuka:250|połówka:125'],
     ['daktyle', 'Daktyle suszone', 282, 2.5, 0.4, 75, 8, 63, 'sztuka:8'],
     ['rodzynki', 'Rodzynki', 299, 3.1, 0.5, 79.2, 3.7, 59.2, 'łyżka:15'],
     ['morele_suszone', 'Morele suszone', 241, 3.4, 0.5, 62.6, 7.3, 53.4, 'sztuka:8'],
