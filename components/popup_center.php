@@ -14,7 +14,7 @@
           if(isset($close) and $close == 'true'){
             echo 'onclick="popup'.$name_in_scripts.'OpenClose()"';
           }else{
-            echo 'onclick="popup'.$name_in_scripts.'CloseConfirm()"';
+            echo 'onclick="popup'.$name_in_scripts.'RequestClose()"';
           }
           ?>
  class="popup-center-hidden z-[60] fixed top-0 left-0 w-full h-full transition-[transform,opacity] duration-200" style="opacity:0;pointer-events:none">
@@ -35,7 +35,7 @@
         if(isset($close) and $close == 'true'){
           echo 'onclick="popup'.$name_in_scripts.'OpenClose()"';
         }else{
-          echo 'onclick="popup'.$name_in_scripts.'CloseConfirm()"';
+          echo 'onclick="popup'.$name_in_scripts.'RequestClose()"';
         }
         ?>
         type="button"
@@ -203,6 +203,16 @@
     popupBg.classList.toggle('opacity-0');
     popupBg.classList.toggle('h-0');
     popup.classList.toggle('popup-sheet-hidden');
+  }
+  // zamknięcie z pytaniem o niezapisane zmiany; treść popupu może zgłosić window.hlPopupDirty.<nazwa>() – false = zamknij od razu
+  function popup<?=$name_in_scripts?>RequestClose() {
+    var dirty = window.hlPopupDirty && window.hlPopupDirty['<?=$name_in_scripts?>'];
+    if (typeof dirty === 'function' && !dirty()) {
+      if (document.activeElement) document.activeElement.blur();
+      popup<?=$name_in_scripts?>OpenClose();
+    } else {
+      popup<?=$name_in_scripts?>CloseConfirm();
+    }
   }
 </script>
 <script>

@@ -136,11 +136,12 @@ function hl_long_date($date) {
 }
 
 // krótka data "24.10" / "24.10.2025" (rok tylko gdy inny niż bieżący), z $time: "14:30 24.10"
+// 23:59:59 = termin „do końca dnia” (formularz dodawania bez godziny) – wtedy sama data
 function hl_short_date($date, $time = false) {
     $ts = strtotime($date);
     $s = date('d.m', $ts);
     if (date('Y', $ts) !== date('Y')) $s .= '.'.date('Y', $ts);
-    return $time ? date('H:i', $ts).' '.$s : $s;
+    return $time && date('H:i:s', $ts) !== '23:59:59' ? date('H:i', $ts).' '.$s : $s;
 }
 
 // krótka etykieta planu: "dziś · Rano", "pt 24.10 · Wieczór"

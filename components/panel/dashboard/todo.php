@@ -58,7 +58,7 @@ echo hl_sync_tag($conn, (int)$_SESSION['login_id'], $list == "archive" ? 'archiv
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="size-4 flex-none -ml-1 text-gray-300 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-300 group-hover:translate-y-0.5 duration-150"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
             <?php endif; ?>
         </div>
-        <div onclick="openPopupElementAdd('<?=$list_id?>')" title="Dodaj zadanie" class="<?php if($list == "archive"){echo 'hidden ';}?>hl-icon-btn">
+        <div onclick="hlPrimeKeyboard();openPopupElementAdd('<?=$list_id?>')" title="Dodaj zadanie" class="<?php if($list == "archive"){echo 'hidden ';}?>hl-icon-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -257,7 +257,7 @@ echo hl_sync_tag($conn, (int)$_SESSION['login_id'], $list == "archive" ? 'archiv
                                 <span class="hl-empty-ico">'.hl_icon('check', '', '1.8').'</span>
                                 <h3>Wszystko zrobione!</h3>
                                 <p>Dodaj nowe zadania na tej liście i będą tu widoczne.</p>
-                                <button onclick="openPopupElementAdd(`'.$list_id.'`)" type="button" class="hl-btn hl-btn-primary mt-6">'.hl_icon('plus', '', '2').'Nowe zadanie</button>
+                                <button onclick="hlPrimeKeyboard();openPopupElementAdd(`'.$list_id.'`)" type="button" class="hl-btn hl-btn-primary mt-6">'.hl_icon('plus', '', '2').'Nowe zadanie</button>
                               </li>';
                     }
     }

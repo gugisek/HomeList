@@ -36,7 +36,7 @@ function hl_render_feed_item(array $it, $date, $today, $variant = 'part', array 
     if ($it['deadline'] && $variant !== 'routine_list') {
         $late = $it['deadline'] < date('Y-m-d H:i:s') && !$it['done'];
         $dl_date = substr($it['deadline'], 0, 10);
-        $label = $dl_date === $date ? date('H:i', strtotime($it['deadline'])) : hl_short_date($it['deadline'], true);
+        $label = $dl_date !== $date ? hl_short_date($it['deadline'], true) : (substr($it['deadline'], 11, 8) === '23:59:59' ? ($date === $today ? 'dziś' : hl_short_date($date)) : date('H:i', strtotime($it['deadline'])));
         $meta[] = '<span class="whitespace-nowrap '.($late ? 'text-red-400' : 'text-rose-400').'">Deadline '.$label.'</span>';
     }
     if ($variant === 'overdue' && $it['plan_date']) {

@@ -396,6 +396,15 @@ div:has(> .lds-dual-ring) {
 @keyframes hl-caret { 50% { opacity: 0; } }
 @keyframes hl-shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 
+/* formularz dodawania zadania (dashboard/element_add.php) */
+.hl-add-name { min-height: 52px; padding: 14px 16px; border-radius: 18px; font-size: 17px; line-height: 1.4; overflow-y: auto; }
+.hl-add-field.is-invalid { animation: hl-shake .4s ease; }
+.hl-add-field.is-invalid .hl-input { box-shadow: 0 0 0 2px #fb7185; }
+.hl-add-foot::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 16px; pointer-events: none; background: linear-gradient(to top, #fff, rgba(255, 255, 255, 0)); }
+@media (prefers-color-scheme: dark) {
+  .hl-add-foot::before { background: linear-gradient(to top, #1e1e1e, rgba(30, 30, 30, 0)); }
+}
+
 .hl-scan-cta {
   display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; border-radius: 24px; text-align: left; cursor: pointer;
   color: #fff; background: linear-gradient(135deg, #1c1c1e 0%, #2e2e33 100%);

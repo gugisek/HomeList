@@ -34,7 +34,8 @@ $more_admin = array_filter([
     'settings' => ['Ustawienia aplikacji', 'M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75'],
 ], fn($k) => hl_can($k, 'read'), ARRAY_FILTER_USE_KEY);
 ?>
-<section data-toast-dock class="md:hidden font-[poppins] z-[49] text-white fixed inset-x-0 px-5 sm:bottom-8 bottom-4 flex items-center justify-center">
+<!-- ontouchstart: bez niego iOS Safari nie włącza :active (sprężynka w global.css) -->
+<section data-toast-dock ontouchstart="" class="hl-tabbar md:hidden font-[poppins] z-[49] text-white fixed inset-x-0 px-5 sm:bottom-8 bottom-4 flex items-center justify-center">
     <!-- menu poza paskiem (który ma hover/active scale) – animowana treść pod transformem była rozmyta i na końcu przeskakiwała -->
     <section id="more_menu" class="hl-pop absolute bottom-[4.75rem] z-[49] max-h-[calc(100dvh-7.5rem)] rounded-[26px] origin-bottom flex flex-col gap-2">
         <!-- ramka (::before) na nieprzewijanym kafelku, scroll w środku – inaczej dolna krawędź jedzie z treścią -->
@@ -76,7 +77,7 @@ $more_admin = array_filter([
     <div class="w-full max-w-md flex items-center gap-2.5">
     <div class="liquid-glass liquid-glass-pill flex-1 min-w-0 h-[62px] rounded-full p-1 flex items-center gap-0.5">
     <?php if ($feed_on): ?>
-    <a onclick="moreMenuClose();openDetailTab(`today`,`list=today`)" title="Plan dnia" class="lists_main_nav list_today shrink-0 h-full flex items-center justify-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-4 sm:pl-4 sm:pr-5 hover:bg-white/10 text-white/75 hover:text-white rounded-full text-sm font-medium">
+    <a onclick="moreMenuClose();openDetailTab(`today`,`list=today`)" title="Plan dnia" class="lists_main_nav list_today shrink-0 h-full flex items-center justify-center gap-1.5 cursor-pointer px-4 sm:pl-4 sm:pr-5 [@media(hover:hover)]:hover:bg-white/10 active:bg-white/10 text-white/75 [@media(hover:hover)]:hover:text-white rounded-full text-sm font-medium">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-[22px]">
             <path stroke-linecap="round" stroke-linejoin="round" d="<?=$today_icon?>" />
         </svg>
@@ -84,7 +85,7 @@ $more_admin = array_filter([
     </a>
     <?php endif; ?>
     <?php if ($food_on): ?>
-    <a onclick="moreMenuClose();openDetailTab(`food`,`list=food`)" title="Jedzenie" class="lists_main_nav list_food shrink-0 h-full flex items-center justify-center hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-4 hover:bg-white/10 text-white/75 hover:text-white rounded-full">
+    <a onclick="moreMenuClose();openDetailTab(`food`,`list=food`)" title="Jedzenie" class="lists_main_nav list_food shrink-0 h-full flex items-center justify-center cursor-pointer px-4 [@media(hover:hover)]:hover:bg-white/10 active:bg-white/10 text-white/75 [@media(hover:hover)]:hover:text-white rounded-full">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-[22px]"><path stroke-linecap="round" stroke-linejoin="round" d="<?=$food_icon?>" /></svg>
     </a>
     <?php endif; ?>
@@ -95,17 +96,18 @@ $more_admin = array_filter([
     <?php
     foreach ($nav_lists as $i => $row) {
         echo '
-            <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="lists_main_nav list_'.$row['id'].' block flex-1 basis-0 min-w-0 h-full leading-[54px] text-center hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-3 hover:bg-white/10 text-white/75 hover:text-white rounded-full text-sm font-medium whitespace-nowrap truncate ';
+            <a onclick="moreMenuClose();openDetailTab(`todo`,`list='.$row['id'].'`)" id="nav_button_details" class="lists_main_nav list_'.$row['id'].' block flex-1 basis-0 min-w-0 h-full leading-[54px] text-center cursor-pointer px-3 [@media(hover:hover)]:hover:bg-white/10 active:bg-white/10 text-white/75 [@media(hover:hover)]:hover:text-white rounded-full text-sm font-medium whitespace-nowrap ';
         if ($i >= $nav_max) {
             echo 'hidden';
         }
-        echo '">'.($row['list_type'] === 'routine' ? $routine_icon : '').htmlspecialchars($row['full_name']).'</a>';
+        // truncate na wewnętrznym spanie – overflow:hidden na <a> ucinałby powiększone pole dotyku (::after w global.css)
+        echo '"><span class="block truncate">'.($row['list_type'] === 'routine' ? $routine_icon : '').htmlspecialchars($row['full_name']).'</span></a>';
     }
     ?>
     </div>
     </div>
     </a>
-    <a onclick="moreMenu()" id="more_btn" title="Więcej" class="relative liquid-glass liquid-glass-more rounded-full size-[62px] shrink-0 flex items-center justify-center hover:scale-105 cursor-pointer active:scale-95 text-white/60 hover:text-white duration-150">
+    <a onclick="moreMenu()" id="more_btn" title="Więcej" class="relative liquid-glass liquid-glass-more rounded-full size-[62px] shrink-0 flex items-center justify-center cursor-pointer active:text-white text-white/60 [@media(hover:hover)]:hover:text-white">
         <span class="hl-more-ico">
             <svg class="is-dots" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
             <svg class="is-x" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>

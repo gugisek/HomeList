@@ -955,160 +955,21 @@ function moveElement() {
 }
 </script>
 <script>
-    function addElement() {
-    // Pobranie danych z pól formularza
-    var name = document.getElementById('add_element_name').value;
-    var description = document.getElementById('add_element_description').value;
-    var deadline = document.getElementById('add_element_deadline') ? document.getElementById('add_element_deadline').value : '';
-    var list = document.getElementById('add_element_list_name').value;
-    var link_url = document.getElementById('add_element_link_url') ? document.getElementById('add_element_link_url').value : '';
-    const postData = new FormData();
-    postData.append('name', name);
-    postData.append('description', description);
-    postData.append('deadline', deadline);
-    postData.append('list', list);
-    postData.append('link_url', link_url);
-    // pola rutyny (tylko w formularzu listy rutyn)
-    if (document.getElementById('add_element_recurrence_type')) {
-        var routine_error = rfCollect('add', postData);
-        if (routine_error) {
-            showAlert('warning', routine_error);
-            return;
-        }
-    }
-
-    // Pokazanie kółka ładowania
-    var delivery_loading = document.getElementById('add_element_loading');
-    delivery_loading.innerHTML = "<div class='w-full duartion-150 flex items-center justify-center z-[999]'><div class='z-[30] fixed bg-black/90 p-4 mt-40 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
-
-    // Wysyłanie żądania POST do skryptu PHP
-    fetch('scripts/dashboard/add.php', {
-        method: 'POST',
-        body: postData
-    })
-
-    .then(response => response.text())
-    .then(text => {
-        // Rozbijanie tekstu na fragmenty JSON-owe
-        const rawJsonParts = text.trim().split(/(?<=\})\s*(?=\{)/); // Dzielenie na podstawie zakończenia jednego JSON-a i początku następnego
-
-        const jsonObjects = rawJsonParts.map(jsonString => {
-            try {
-                return JSON.parse(jsonString);  // Parsowanie każdego fragmentu jako JSON
-            } catch (e) {
-                console.error('Błąd parsowania JSON:', e, 'Fragment:', jsonString);
-                return null;
-            }
-        }).filter(obj => obj !== null);
-
-        var i = 1;
-
-        jsonObjects.forEach(data => {
-            if (data.status) {  // Jeśli dane posiadają status
-                switch (data.status) {
-                    case 'success':
-                        showAlert('success', data.message);
-                        if(i==1){
-                          var list = document.getElementById("list_hold").value;
-                          popupElementAddOpenClose();
-                          refreshCurrentTab();
-                        }
-                        break;
-                    case 'error':
-                        showAlert('error', data.message);
-                        break;
-                    case 'warning':
-                        showAlert('warning', data.message);
-                        break;
-                    default:
-                        showAlert('error', 'Nieznany status odpowiedzi');
-                }
-            }
-            i = i+1;
-        });
-    })
-    .catch(error => {
-        showAlert('error', 'Wystąpił problem połączenia z serwerem');
-        console.error('Błąd:', error);
-    })
-
-    .finally(() => {
-        delivery_loading.innerHTML = ""; // Ukrycie kółka ładowania po zakończeniu żądania
-    });
-}
-
-function copyElement() {
-    // Pobranie danych z pól formularza
-    var name = document.getElementById('add_element_name').value;
-    var description = document.getElementById('add_element_description').value;
-    var deadline = document.getElementById('add_element_deadline').value;
-    var list = document.getElementById('add_element_list_name').value;
-    var link_url = document.getElementById('add_element_link_url') ? document.getElementById('add_element_link_url').value : '';
-    const postData = new FormData();
-    postData.append('name', name);
-    postData.append('description', description);
-    postData.append('deadline', deadline);
-    postData.append('list', list);
-    postData.append('link_url', link_url);
-
-    // Pokazanie kółka ładowania
-    var delivery_loading = document.getElementById('add_element_loading');
-    delivery_loading.innerHTML = "<div class='w-full duartion-150 flex items-center justify-center z-[999]'><div class='z-[30] fixed bg-black/90 p-4 mt-40 rounded-2xl'><div class='lds-dual-ring'></div></div></div>";
-
-    // Wysyłanie żądania POST do skryptu PHP
-    fetch('scripts/dashboard/add.php', {
-        method: 'POST',
-        body: postData
-    })
-
-    .then(response => response.text())
-    .then(text => {
-        // Rozbijanie tekstu na fragmenty JSON-owe
-        const rawJsonParts = text.trim().split(/(?<=\})\s*(?=\{)/); // Dzielenie na podstawie zakończenia jednego JSON-a i początku następnego
-
-        const jsonObjects = rawJsonParts.map(jsonString => {
-            try {
-                return JSON.parse(jsonString);  // Parsowanie każdego fragmentu jako JSON
-            } catch (e) {
-                console.error('Błąd parsowania JSON:', e, 'Fragment:', jsonString);
-                return null;
-            }
-        }).filter(obj => obj !== null);
-
-        var i = 1;
-
-        jsonObjects.forEach(data => {
-            if (data.status) {  // Jeśli dane posiadają status
-                switch (data.status) {
-                    case 'success':
-                        showAlert('success', data.message);
-                        if(i==1){
-                          var list = document.getElementById("list_hold").value;
-                          popupCopyElementOpenClose();
-                          refreshCurrentTab();
-                        }
-                        break;
-                    case 'error':
-                        showAlert('error', data.message);
-                        break;
-                    case 'warning':
-                        showAlert('warning', data.message);
-                        break;
-                    default:
-                        showAlert('error', 'Nieznany status odpowiedzi');
-                }
-            }
-            i = i+1;
-        });
-    })
-    .catch(error => {
-        showAlert('error', 'Wystąpił problem połączenia z serwerem');
-        console.error('Błąd:', error);
-    })
-
-    .finally(() => {
-        delivery_loading.innerHTML = ""; // Ukrycie kółka ładowania po zakończeniu żądania
-    });
+// Formularz dodawania zadania (element_add.php) zapisuje się sam – hlAddSave.
+// iOS otwiera klawiaturę tylko przy fokusie w trakcie dotknięcia, a pole nazwy dochodzi dopiero po fetchu:
+// fokus na chwilowym niewidocznym polu w obsłudze kliknięcia, formularz przejmuje go po wczytaniu.
+function hlPrimeKeyboard() {
+    if (!window.matchMedia || !matchMedia('(pointer: coarse)').matches) return;
+    var old = document.getElementById('hl_kb_primer');
+    if (old) old.remove();
+    var input = document.createElement('input');
+    input.id = 'hl_kb_primer';
+    input.setAttribute('aria-hidden', 'true');
+    input.tabIndex = -1;
+    input.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;border:0;padding:0;font-size:16px;pointer-events:none';
+    document.body.appendChild(input);
+    input.focus({ preventScroll: true });
+    setTimeout(function () { input.remove(); }, 4000);
 }
 
 </script>

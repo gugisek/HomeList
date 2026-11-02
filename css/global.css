@@ -310,6 +310,37 @@ section.active > div > span:nth-child(2) {
   }
 }
 
+/* Dolny pasek na telefonie: bez opóźnienia/zoomu po szybkim podwójnym tapnięciu, bez szarego błysku i zaznaczania tekstu. */
+.hl-tabbar {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* Sprężynka przy wciśnięciu: szybkie wgniecenie, powrót z lekkim przestrzeleniem */
+.hl-tabbar .liquid-glass-pill .lists_main_nav,
+.hl-tabbar #more_btn {
+  position: relative;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease, box-shadow 0.25s ease, color 0.2s ease;
+}
+.hl-tabbar .liquid-glass-pill .lists_main_nav:active,
+.hl-tabbar #more_btn:active {
+  transform: scale(0.9);
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+/* Pomniejszony przycisk „uciekał” spod palca na krawędzi i kliknięcie trafiało w kapsułę zamiast w zakładkę.
+   Na czas wciśnięcia niewidoczne pole dotyku wystaje poza przycisk, więc puszczenie palca nadal trafia w niego.
+   Tylko podczas :active – w spoczynku nie nachodzi na sąsiednie zakładki. */
+.hl-tabbar .liquid-glass-pill .lists_main_nav:active::after,
+.hl-tabbar #more_btn:active::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+}
+
 /* Menu „więcej” na telefonie (dashboard/lists.php) – szerokość i marginesy jak pasek (px-5, max-w-md),
    środek wyrównany do środka paska. Leży poza paskiem, więc bez przeliczania skali. */
 #more_menu {
