@@ -24,20 +24,21 @@ include 'components/head.php'; ?>
     <script>
         // wejście treści panelu bez AOS: AOS odpalał animację według pozycji scrolla policzonej w chwili wstawienia,
         // więc po przejściu z długiej, przewiniętej zakładki nagłówek znikał (wracał dopiero w połowie scrolla),
-        // a treść listy potrafiła w ogóle się nie pokazać. Tu animacja (style .hl-enter w app.css) rusza raz, od razu
+        // a treść listy potrafiła w ogóle się nie pokazać. Tu animacja ([data-hl-enter] w app.css) rusza raz, od razu
         // przy wstawieniu – MutationObserver działa przed malowaniem, więc style AOS (opacity: 0) nie zdążą mignąć.
+        // Tylko atrybuty data-* i style, bez zmian class – zmiana class budzi przebudowę Tailwind CDN, a nałożone
+        // przebudowy potrafiły na iOS zgubić CSS właśnie wstawionej treści (lista, dolny pasek bez stylów).
         (function () {
-            var kinds = { 'fade-up': 'hl-enter-up', 'fade-down': 'hl-enter-down', 'fade-right': 'hl-enter-right', 'fade-left': 'hl-enter-left' };
+            var kinds = { 'fade-up': 'up', 'fade-down': 'down', 'fade-right': 'right', 'fade-left': 'left' };
             function enter(el) {
-                var kind = kinds[el.getAttribute('data-aos')] || 'hl-enter-fade';
                 el.style.setProperty('--hl-enter-delay', (parseInt(el.getAttribute('data-aos-delay'), 10) || 0) + 'ms');
+                el.setAttribute('data-hl-enter', kinds[el.getAttribute('data-aos')] || 'fade');
                 el.removeAttribute('data-aos');
                 el.removeAttribute('data-aos-delay');
-                el.classList.add('hl-enter', kind);
                 el.addEventListener('animationend', function done(e) {
                     if (e.target !== el) return;
                     el.removeEventListener('animationend', done);
-                    el.classList.remove('hl-enter', kind);
+                    el.removeAttribute('data-hl-enter');
                     el.style.removeProperty('--hl-enter-delay');
                 });
             }
