@@ -311,7 +311,7 @@ section.active > div > span:nth-child(2) {
 }
 
 /* Menu „więcej” na telefonie (dashboard/lists.php) – na całą szerokość ekranu z marginesem 0.75rem,
-   środek wyrównany do środka paska. Leży poza pomniejszonym (scale-90) paskiem, więc bez przeliczania skali. */
+   środek wyrównany do środka paska. Leży poza paskiem, więc bez przeliczania skali. */
 #more_menu {
   left: 50%;
   width: calc(100vw - 1.5rem);
@@ -329,11 +329,23 @@ section.active > div > span:nth-child(2) {
     font-size: 0.8125rem;
   }
   .liquid-glass.liquid-glass-more {
-    width: 44px;
-    height: 44px;
+    width: 50px;
+    height: 50px;
   }
   #more_menu {
-    bottom: 3.5rem;
+    bottom: 4rem;
+  }
+}
+
+/* iOS Safari (także PWA) zoomuje stronę przy focusie pola z czcionką < 16px.
+   @supports (-webkit-touch-callout) łapie tylko iOS – desktop i Android zostają bez zmian. */
+@supports (-webkit-touch-callout: none) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+  select,
+  textarea,
+  [contenteditable]:not([contenteditable="false"]),
+  .ql-editor {
+    font-size: 16px !important;
   }
 }
 
