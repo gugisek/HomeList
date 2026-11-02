@@ -4,7 +4,7 @@
     <meta name="description" content="Listy ToDo w jednym miejscu. HomeList to darmowy, open source'owy menedżer zadań, który pomoże Ci zorganizować swoje codzienne obowiązki i projekty. Współpracuje z Home Assistant!">
     <title>HomeList - aplikacja internetowa dla list ToDo</title>
     <meta name="theme-color" content="#4ade80" />
-    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/global.css?v=<?=filemtime(__DIR__ . '/../../css/global.css')?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
     <link rel="icon" type="image/x-icon" href="img/favicon.png">
