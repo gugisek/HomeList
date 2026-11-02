@@ -12,6 +12,49 @@ $date = hl_valid_date($_GET['date'] ?? '') ? $_GET['date'] : $today;
 
 include_once __DIR__.'/../../../scripts/sync/sync_lib.php';
 $sync_tag = hl_sync_tag($conn, $user_id, 'today');
+
+// Plan dnia jest opt-in (jak Jedzenie): wyłączony = zachęta z przyciskiem, wyłączenie w Konto i ustawienia → Plan dnia
+$feed_on = (bool)($conn->query('SELECT feed_enabled FROM users WHERE id = '.$user_id)->fetch_row()[0] ?? false);
+if (!$feed_on): ?>
+<?=$sync_tag?>
+<div class="hl-page-head" data-aos="fade-up" data-aos-delay="100">
+    <div class="min-w-0">
+        <h1 class="hl-title">Dziś</h1>
+        <p class="hl-sub">Plan dnia i rutyny</p>
+    </div>
+</div>
+<div class="hl-card hl-card-pad mt-4 max-w-xl" data-aos="fade-up" data-aos-delay="150">
+    <div class="fd-intro-art"><?=hl_icon('sun', '', '1.6')?></div>
+    <h2 class="hl-h2 mt-4">Cały dzień w jednym miejscu</h2>
+    <p class="mt-2 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+        Zaplanuj zadania z różnych list na konkretny dzień i porę, a rutyny same pojawią się wtedy, kiedy trzeba.
+        Rano od razu widzisz, co Cię dziś czeka.
+    </p>
+    <ul class="mt-4 flex flex-col gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <li class="flex gap-2"><span class="fd-dot low mt-1.5"></span>Rano, popołudnie i wieczór – z serią i postępem dnia</li>
+        <li class="flex gap-2"><span class="fd-dot low mt-1.5"></span>Przypomnienia push na początku każdej pory</li>
+        <li class="flex gap-2"><span class="fd-dot low mt-1.5"></span>Możesz to w każdej chwili wyłączyć w ustawieniach konta</li>
+    </ul>
+    <button type="button" onclick="hlFeedEnable(this)" class="hl-btn hl-btn-primary mt-6">Włącz plan dnia</button>
+</div>
+<script>
+function hlFeedEnable(btn) {
+    btn.disabled = true;
+    var fd = new FormData();
+    fd.append('enabled', '1');
+    fetch('scripts/planner/feed_settings.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status !== 'success') { showAlert(res.status, res.message); btn.disabled = false; return; }
+            if (typeof refreshLists === 'function') refreshLists();
+            if (typeof hlRailRefresh === 'function') hlRailRefresh();
+            openDetailTab('today', 'list=today');
+        })
+        .catch(() => { btn.disabled = false; showAlert('error', 'Nie udało się włączyć planu dnia'); });
+}
+</script>
+<?php return; endif;
+
 $feed = hl_feed($conn, $user_id, $date, $today);
 $parts = hl_parts();
 $strip_from = hl_add_days($date, -14);

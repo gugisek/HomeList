@@ -302,7 +302,8 @@ $muted = hl_push_list_muted($conn, $user_id, $list_id);
     // po zmianach: odświeżenie dashboardu (nazwy w nagłówku, pasek list, pigułka nawigacji)
     function listInfoAfter(deleted) {
         if (deleted && localStorage.getItem('current_todo') === 'list=' + listInfoRoot().dataset.id) {
-            localStorage.setItem('current_todo', 'list=today');
+            // bez zapisanej zakładki dashboard otworzy zakładkę startową (plan dnia albo pierwszą listę)
+            localStorage.removeItem('current_todo');
         }
         popupInfoListsOpenClose();
         openPanelSite('dashboard');

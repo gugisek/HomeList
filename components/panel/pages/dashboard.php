@@ -289,11 +289,21 @@ fixRoundedCorners();
 
     var current_todo = localStorage.getItem("current_todo");
     if (!started || current_todo === null) {
-        openDetailTab('today', 'list=today');
+        var home = hlHomeLink();
+        openDetailTab(tabSiteFor(home), home);
     } else {
         openDetailTabReload();
     }
 }
+
+    // zakładka startowa: plan dnia, a gdy jest wyłączony – pierwsza lista z paska (bez list zostaje zachęta planu dnia)
+    function hlHomeLink() {
+        var nav = document.getElementById("todo-nav");
+        if (!nav || nav.dataset.feed !== '0') return 'list=today';
+        var first = nav.querySelector(".lists_main_nav");
+        var id = first && (first.className.match(/\blist_(\d+)\b/) || [])[1];
+        return id ? 'list=' + id : 'list=today';
+    }
 
     // która strona z components/panel/dashboard obsługuje dany link zakładki
     function tabSiteFor(link) {
@@ -465,8 +475,8 @@ fixRoundedCorners();
     function openDetailTabReload() {
     var current_todo = localStorage.getItem("current_todo");
     if (current_todo) {
-        // plan dnia zawsze otwieramy na dziś, a nie na dzień oglądany ostatnio
-        if (tabSiteFor(current_todo) === 'today') current_todo = 'list=today';
+        // plan dnia zawsze otwieramy na dziś, a nie na dzień oglądany ostatnio (wyłączony – zakładka startowa)
+        if (tabSiteFor(current_todo) === 'today') current_todo = hlHomeLink();
         openDetailTab(tabSiteFor(current_todo), current_todo);
     }
 }

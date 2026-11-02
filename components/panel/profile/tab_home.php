@@ -7,7 +7,8 @@ $acc_home_cards = [
     'security' => ['Hasło i weryfikacja dwuetapowa', 'Weryfikacja dwuetapowa ' . ($acc_2fa ? 'włączona' : 'wyłączona')],
     'devices' => ['Zapamiętane logowania', $acc_devices ? count($acc_devices) . ' ' . $acc_plural(count($acc_devices), 'urządzenie', 'urządzenia', 'urządzeń') : 'Brak zapamiętanych urządzeń'],
     'notifications' => ['Przypomnienia push i pory dnia', 'Przypomnienia ' . ($ps['enabled'] ? 'włączone' : 'wyłączone')],
-    'food' => ['Licznik kalorii, posiłki i dzienny cel', !$acc_home_food['enabled'] ? 'Licznik kalorii wyłączony' : ($acc_home_goal ? 'Cel: ' . number_format($acc_home_goal['kcal'], 0, ',', ' ') . ' kcal' : 'Licznik kalorii włączony')],
+    'today' => ['Zakładka Dziś: zadania na dzień i rutyny', 'Plan dnia ' . ($acc['feed_enabled'] ? 'włączony' : 'wyłączony')],
+    'food' => ['Licznik kalorii,posiłki i dzienny cel', !$acc_home_food['enabled'] ? 'Licznik kalorii wyłączony' : ($acc_home_goal ? 'Cel: ' . number_format($acc_home_goal['kcal'], 0, ',', ' ') . ' kcal' : 'Licznik kalorii włączony')],
     'report' => ['Coś nie działa? Daj znać twórcom', 'Krótki opis i zrzut ekranu'],
 ];
 ?>

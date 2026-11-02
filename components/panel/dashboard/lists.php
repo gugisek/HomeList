@@ -10,8 +10,11 @@ $result = mysqli_query($conn, $sql);
 while ($row = mysqli_fetch_assoc($result)) $nav_lists[] = $row;
 // Jedzenie: w pasku tylko po włączeniu modułu (opt-in), wcześniej wejście z menu „więcej”
 $food_on = (bool)($conn->query('SELECT enabled FROM food_settings WHERE user_id = '.(int)$user_id)->fetch_row()[0] ?? false);
+// Plan dnia (Dziś): też opt-in – przed włączeniem wejście z menu „więcej”, wyłączenie w ustawieniach konta
+$feed_on = (bool)($conn->query('SELECT feed_enabled FROM users WHERE id = '.(int)$user_id)->fetch_row()[0] ?? false);
 // z ikoną Jedzenia na pasku mieszczą się dwie listy (reszta w „więcej”)
 $nav_max = $food_on ? 2 : 3;
+$today_icon = 'M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z';
 $food_icon = 'M6 3v6a2 2 0 0 0 4 0V3M8 3v18M17 21V3c-2 1.4-3 4-3 7.5V13h3';
 // Opłaty: zawsze w menu „więcej”; licznik = ręczne płatności na dziś i zaległe (aktualizuje go też js/bills.js)
 require_once __DIR__.'/../../../scripts/bills/bills_lib.php';
@@ -49,6 +52,9 @@ $more_admin = array_filter([
             <a onclick="moreMenuClose();openPopupAddLists();" class="hl-menu-item"><?=$more_icon('M12 4.5v15m7.5-7.5h-15')?>Utwórz nową listę</a>
             <a onclick="moreMenuClose();openPopupCodeLists();" class="hl-menu-item"><?=$more_icon('M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5')?>Wprowadź kod listy</a>
             <a onclick="moreMenuClose();openPopupEditLists()" class="hl-menu-item"><?=$more_icon('M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5')?>Edytuj listy</a>
+            <?php if (!$feed_on): ?>
+            <a onclick="moreMenuClose();openDetailTab(`today`,`list=today`)" class="lists_main_nav list_today hl-menu-item"><?=$more_icon($today_icon)?>Plan dnia</a>
+            <?php endif; ?>
             <?php if (!$food_on): ?>
             <a onclick="moreMenuClose();openDetailTab(`food`,`list=food`)" class="lists_main_nav list_food hl-menu-item"><?=$more_icon($food_icon)?>Licznik kalorii</a>
             <?php endif; ?>
@@ -68,19 +74,23 @@ $more_admin = array_filter([
     </section>
     <div class="scale-90 flex items-center justify-center gap-2">
     <div class="liquid-glass liquid-glass-pill rounded-full p-1.5 flex items-center gap-0.5">
+    <?php if ($feed_on): ?>
     <a onclick="moreMenuClose();openDetailTab(`today`,`list=today`)" title="Plan dnia" class="lists_main_nav list_today flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-3.5 sm:pl-4 sm:pr-5 py-2.5 hover:bg-white/10 text-white/75 hover:text-white rounded-full text-sm font-medium">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="<?=$today_icon?>" />
         </svg>
         <span class="hidden sm:inline">Dziś</span>
     </a>
+    <?php endif; ?>
     <?php if ($food_on): ?>
     <a onclick="moreMenuClose();openDetailTab(`food`,`list=food`)" title="Jedzenie" class="lists_main_nav list_food flex items-center hover:scale-105 active:scale-95 cursor-pointer focus:scale-95 px-3.5 py-2.5 hover:bg-white/10 text-white/75 hover:text-white rounded-full">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="<?=$food_icon?>" /></svg>
     </a>
     <?php endif; ?>
+    <?php if ($feed_on || $food_on): ?>
     <span class="w-px h-5 mx-0.5 bg-white/15"></span>
-    <div id="todo-nav" class="contents" data-max="<?=$nav_max?>">
+    <?php endif; ?>
+    <div id="todo-nav" class="contents" data-max="<?=$nav_max?>" data-feed="<?=$feed_on ? '1' : '0'?>">
     <?php
     foreach ($nav_lists as $i => $row) {
         echo '

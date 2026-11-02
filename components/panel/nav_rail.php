@@ -61,6 +61,8 @@ $rail_reports_new = isset($rail_admin['reports']) ? (int)$conn->query('SELECT CO
 // Jedzenie: w pigułce po włączeniu modułu, wcześniej w menu „więcej”
 $rail_food = (bool)($conn->query('SELECT enabled FROM food_settings WHERE user_id = '.$rail_uid)->fetch_row()[0] ?? false);
 $rail_d['food'] = 'M6 3v6a2 2 0 0 0 4 0V3M8 3v18M17 21V3c-2 1.4-3 4-3 7.5V13h3';
+// Plan dnia (Dziś): tak samo – w pigułce po włączeniu, wcześniej w menu „więcej”
+$rail_feed = (bool)($conn->query('SELECT feed_enabled FROM users WHERE id = '.$rail_uid)->fetch_row()[0] ?? false);
 // Opłaty: zawsze w pigułce; kropka = ręczne płatności na dziś i zaległe
 require_once __DIR__.'/../../scripts/bills/bills_lib.php';
 $rail_bills_due = hl_bill_due_count($conn, (int)$rail_uid);
@@ -70,10 +72,12 @@ $rail_img = !empty($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] 
 ?>
 <nav id="hl_rail" class="hl-rail" aria-label="Nawigacja">
     <div class="hl-rail-pill liquid-glass">
+        <?php if ($rail_feed): ?>
         <a data-rail="list_today" onclick="hlNav('list=today')" class="hl-rail-item" title="Dziś">
             <span class="hl-rail-ico"><?=$rail_icon($rail_d['today'], '1.8')?></span>
             <span class="hl-rail-label">Dziś</span>
         </a>
+        <?php endif; ?>
         <?php if ($rail_food): ?>
         <a data-rail="list_food" onclick="hlNav('list=food')" class="hl-rail-item" title="Jedzenie">
             <span class="hl-rail-ico"><?=$rail_icon($rail_d['food'], '1.8')?></span>
@@ -128,6 +132,9 @@ $rail_img = !empty($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] 
                 <a onclick="hlRailAction('openPopupAddLists')" class="hl-menu-item"><?=$rail_icon($rail_d['new'])?>Utwórz nową listę</a>
                 <a onclick="hlRailAction('openPopupCodeLists')" class="hl-menu-item"><?=$rail_icon($rail_d['code'])?>Wprowadź kod listy</a>
                 <a onclick="hlRailAction('openPopupEditLists')" class="hl-menu-item"><?=$rail_icon($rail_d['order'])?>Edytuj listy</a>
+                <?php if (!$rail_feed): ?>
+                <a onclick="hlNav('list=today')" class="hl-menu-item"><?=$rail_icon($rail_d['today'])?>Plan dnia</a>
+                <?php endif; ?>
                 <?php if (!$rail_food): ?>
                 <a onclick="hlNav('list=food')" class="hl-menu-item"><?=$rail_icon($rail_d['food'])?>Licznik kalorii</a>
                 <?php endif; ?>
