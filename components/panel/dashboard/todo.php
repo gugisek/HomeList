@@ -44,7 +44,7 @@ echo hl_sync_tag($conn, (int)$_SESSION['login_id'], $list == "archive" ? 'archiv
                 <span class="-ml-1.5 inline-flex rounded-full duration-150 hover:-translate-y-0.5 hover:z-[1]" title="<?=hl_e(trim($member['name'].' '.$member['sur_name']))?>"><?=hl_avatar_img($member['profile_picture'], 'size-7 ring-2 ring-[#fdfdfd] dark:ring-[#3d3d3d]')?></span>
                 <?php endforeach; ?>
                 <?php if ($rest > 0): ?>
-                <span class="-ml-1.5 inline-grid place-items-center size-7 rounded-full bg-gray-200 text-[11px] font-semibold text-gray-600 ring-2 ring-[#fdfdfd] dark:bg-[#525252] dark:text-gray-200 dark:ring-[#3d3d3d]">+<?=$rest?></span>
+                <span class="-ml-1.5 inline-grid place-items-center size-7 rounded-full bg-gray-200 text-11px font-semibold text-gray-600 ring-2 ring-[#fdfdfd] dark:bg-[#525252] dark:text-gray-200 dark:ring-[#3d3d3d]">+<?=$rest?></span>
                 <?php endif; ?>
             </span>
             <?php endif; ?>

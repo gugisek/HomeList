@@ -118,7 +118,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
         <button type="button" role="tab" data-ftab="<?=$k?>" aria-selected="<?=$k === $tab ? 'true' : 'false'?>"
                 class="fa-tab flex-none inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium duration-150">
             <?=$label?>
-            <?php if ($count !== null): ?><span data-fcount="<?=$k?>" class="rounded-full px-2 py-0.5 text-[11px] font-semibold <?=$count ? 'bg-amber-400 text-white' : 'bg-black/5 dark:bg-white/10 text-gray-500 dark:text-gray-400'?>"><?=$count?></span><?php endif; ?>
+            <?php if ($count !== null): ?><span data-fcount="<?=$k?>" class="rounded-full px-2 py-0.5 text-11px font-semibold <?=$count ? 'bg-amber-400 text-white' : 'bg-black/5 dark:bg-white/10 text-gray-500 dark:text-gray-400'?>"><?=$count?></span><?php endif; ?>
         </button>
         <?php endforeach; ?>
     </div>
@@ -147,7 +147,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                     <?php if (!empty($p['label_photo'])): ?>
                     <a href="<?=hl_e(hl_food_label_photo_url($p))?>" target="_blank" rel="noopener" class="group relative mt-3 block w-full max-w-sm overflow-hidden rounded-2xl ring-1 ring-black/5 dark:ring-white/10 bg-black">
                         <img src="<?=hl_e(hl_food_label_photo_url($p))?>" alt="Zdjęcie etykiety" loading="lazy" class="w-full max-h-72 object-contain group-hover:opacity-90 duration-150">
-                        <span class="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">Zdjęcie etykiety · otwórz w pełnym rozmiarze</span>
+                        <span class="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-11px font-medium text-white">Zdjęcie etykiety · otwórz w pełnym rozmiarze</span>
                     </a>
                     <?php elseif ($p['source'] === 'user'): ?>
                     <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">Bez zdjęcia etykiety</p>
@@ -173,7 +173,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                         <?php foreach ([['kcal', 'kcal', 'var(--fd-k)'], ['protein', 'białko', 'var(--fd-p)'], ['fat', 'tłuszcz', 'var(--fd-f)'], ['carbs', 'węgle', 'var(--fd-c)']] as [$k, $label, $c]): ?>
                         <div class="rounded-2xl bg-gray-50 dark:bg-[#3d3d3d]/60 py-2">
                             <p class="text-base font-semibold" style="color: <?=$k === 'kcal' ? 'inherit' : $c?>"><?=$fmt($p[$k])?></p>
-                            <p class="text-[11px] text-gray-500 dark:text-gray-400"><?=$label?></p>
+                            <p class="text-11px text-gray-500 dark:text-gray-400"><?=$label?></p>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -242,7 +242,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                     <?php if ($e['label_photo']): $lp = hl_e(hl_food_edit_photo_url($e)); ?>
                     <a href="<?=$lp?>" target="_blank" rel="noopener" class="group relative mt-3 block w-full max-w-sm overflow-hidden rounded-2xl ring-1 ring-black/5 dark:ring-white/10 bg-black">
                         <img src="<?=$lp?>" alt="Zdjęcie etykiety" loading="lazy" class="w-full max-h-72 object-contain group-hover:opacity-90 duration-150">
-                        <span class="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">Zdjęcie etykiety · otwórz w pełnym rozmiarze</span>
+                        <span class="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-11px font-medium text-white">Zdjęcie etykiety · otwórz w pełnym rozmiarze</span>
                     </a>
                     <?php else: ?>
                     <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">Bez zdjęcia etykiety</p>
@@ -327,7 +327,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                     <img class="size-9 flex-none rounded-full object-cover border border-black/10" src="<?=$pic($h['owner_id'])?>" alt="">
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span class="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"><?=['unit' => 'Jednostka', 'dish' => 'Danie', 'product' => 'Produkt', 'edit' => 'Poprawka'][$h['kind']]?></span>
+                            <span class="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-10px font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"><?=['unit' => 'Jednostka', 'dish' => 'Danie', 'product' => 'Produkt', 'edit' => 'Poprawka'][$h['kind']]?></span>
                             <p class="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0">
                                 <?php if ($h['kind'] === 'unit'): ?><?=hl_e($h['label'])?> = <?=$fmt($h['grams'])?> <?=$u?> <span class="font-normal text-gray-500 dark:text-gray-400">· <?=hl_e($h['name'])?></span>
                                 <?php else: ?><?=hl_e($h['name'])?><?=$h['brand'] ? ' <span class="font-normal text-gray-500 dark:text-gray-400">· ' . hl_e($h['brand']) . '</span>' : ''?> <span class="font-normal text-gray-500 dark:text-gray-400">· <?=$fmt($h['kcal'])?> kcal/100 <?=$u?></span><?php endif; ?>
@@ -542,7 +542,7 @@ $empty = fn($title, $text) => '<div class="hl-empty"><div class="hl-empty-ico">'
                 var c = root.querySelector('[data-fcount="' + (kind === 'unit' ? 'units' : kind === 'edit' ? 'edits' : 'products') + '"]');
                 if (c) {
                     c.textContent = Math.max(0, +c.textContent - 1);
-                    if (c.textContent === '0') c.className = 'rounded-full px-2 py-0.5 text-[11px] font-semibold bg-black/5 dark:bg-white/10 text-gray-500 dark:text-gray-400';
+                    if (c.textContent === '0') c.className = 'rounded-full px-2 py-0.5 text-11px font-semibold bg-black/5 dark:bg-white/10 text-gray-500 dark:text-gray-400';
                 }
             }
             // wiersz historii: nowy status i decyzja bez przeładowania

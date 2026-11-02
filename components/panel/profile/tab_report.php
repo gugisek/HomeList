@@ -9,7 +9,7 @@ $acc_version = trim((string)ob_get_clean());
 <form id="acc_report_form" onsubmit="accReportSend(event)" class="<?=$acc_card?>">
     <label for="acc_report_desc" class="<?=$acc_label?>">Co się stało?</label>
     <textarea name="description" id="acc_report_desc" rows="5" maxlength="2000" required oninput="document.getElementById('acc_report_count').textContent = this.value.length" placeholder="Np. po odhaczeniu rutyny wieczorem znika z listy Dziś…" class="<?=str_replace('rounded-xl', 'rounded-2xl', $acc_input)?> resize-none"></textarea>
-    <p class="mt-1 pr-1 text-right text-[11px] text-gray-400"><span id="acc_report_count">0</span>/2000</p>
+    <p class="mt-1 pr-1 text-right text-11px text-gray-400"><span id="acc_report_count">0</span>/2000</p>
 
     <p class="<?=$acc_label?> mt-2">Zrzuty ekranu <span class="font-normal text-gray-400">(opcjonalnie, maks. 3)</span></p>
     <div id="acc_report_shots" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
@@ -60,7 +60,7 @@ function accReportRender() {
         add.onclick = function () { document.getElementById('acc_report_file').click(); };
         add.className = 'aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 text-gray-400 hover:border-green-400 hover:text-green-500 active:scale-95 duration-150';
         add.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>'
-            + '<span class="text-[11px] font-medium">Dodaj</span>';
+            + '<span class="text-11px font-medium">Dodaj</span>';
         box.appendChild(add);
     }
 }

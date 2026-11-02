@@ -361,7 +361,7 @@ section.active > div > span:nth-child(2) {
   .liquid-glass .lists_main_nav {
     padding: 0 0.5rem;
     line-height: 48px;
-    font-size: 0.8125rem;
+    font-size: calc(0.8125rem * var(--hl-fs, 1));
   }
   .liquid-glass.liquid-glass-more {
     width: 56px;
@@ -382,7 +382,7 @@ section.active > div > span:nth-child(2) {
   textarea,
   [contenteditable]:not([contenteditable="false"]),
   .ql-editor {
-    font-size: 16px !important;
+    font-size: calc(16px * var(--hl-fs, 1)) !important;
   }
 }
 

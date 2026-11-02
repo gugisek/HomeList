@@ -30,7 +30,7 @@ foreach ($counts as $d => $c) {
         <button type="button" onclick="monthLoad('<?=$next?>')" class="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 active:scale-90 duration-150"><?=hl_icon('right', 'size-5', '2')?></button>
     </div>
 
-    <div class="mt-4 grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide text-gray-400">
+    <div class="mt-4 grid grid-cols-7 gap-1 text-center text-10px uppercase tracking-wide text-gray-400">
         <span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span><span>Sb</span><span>Nd</span>
     </div>
     <div class="mt-1 grid grid-cols-7 gap-1">

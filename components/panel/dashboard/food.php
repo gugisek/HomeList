@@ -78,12 +78,12 @@ function hlFoodEnable(btn) {
     <div id="fd_body" class="mt-4 md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-5 md:items-start" data-aos="fade-up" data-aos-delay="150">
         <div class="md:sticky md:top-28">
             <div id="fd_hero" class="hl-card"></div>
-            <p class="hidden md:block mt-3 px-2 text-[11px] fd-mut">Część danych: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener" class="underline">Open Food Facts</a> (ODbL)</p>
+            <p class="hidden md:block mt-3 px-2 text-11px fd-mut">Część danych: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener" class="underline">Open Food Facts</a> (ODbL)</p>
         </div>
         <div id="fd_meals" class="mt-4 md:mt-0 flex flex-col gap-3"></div>
     </div>
     </div>
-    <p class="md:hidden mt-5 mb-24 text-center text-[11px] fd-mut">Część danych: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener" class="underline">Open Food Facts</a> (ODbL)</p>
+    <p class="md:hidden mt-5 mb-24 text-center text-11px fd-mut">Część danych: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener" class="underline">Open Food Facts</a> (ODbL)</p>
     <?php /* dane w atrybucie, nie w <script> – loader zakładek wykonuje każdy skrypt z widoku */ ?>
     <div id="fd_data" hidden data-json="<?=htmlspecialchars(json_encode($payload, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8')?>"></div>
 </div>

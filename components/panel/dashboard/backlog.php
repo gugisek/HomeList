@@ -86,7 +86,7 @@ function backlog_group($key, $title, array $items, array $parts, $open, $show_li
 
     <?php if ($count): ?>
     <input id="backlog_search" type="text" oninput="backlogFilter(this.value)" placeholder="Szukaj w <?=$count?> zadaniach..." class="hl-input mt-4 w-full">
-    <div class="mt-3 flex items-center justify-end gap-3 px-1 text-[10px] text-gray-400">
+    <div class="mt-3 flex items-center justify-end gap-3 px-1 text-10px text-gray-400">
         <?php foreach ($parts as $p => $info): ?>
         <span class="flex items-center gap-0.5"><span class="<?=$info['color']?>"><?=hl_icon_use($info['icon'], 'size-3.5')?></span><?=$info['label']?></span>
         <?php endforeach; ?>

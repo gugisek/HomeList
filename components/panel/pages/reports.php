@@ -27,7 +27,7 @@ if ($unseen) $conn->query('UPDATE bug_reports SET seen_at = NOW() WHERE id IN ('
 $unseen_left = (int)$conn->query('SELECT COUNT(*) AS c FROM bug_reports WHERE seen_at IS NULL')->fetch_assoc()['c'];
 
 $card = 'hl-card hl-card-pad';
-$chip = 'inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-[#3d3d3d] px-2.5 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300';
+$chip = 'inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-[#3d3d3d] px-2.5 py-1 text-11px font-medium text-gray-600 dark:text-gray-300';
 $icon = fn($d, $cls = 'size-3.5') => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="' . $cls . ' flex-none"><path stroke-linecap="round" stroke-linejoin="round" d="' . $d . '" /></svg>';
 ?>
 <div id="reports_root" class="max-w-4xl mx-auto mb-28 md:mb-10">
@@ -58,7 +58,7 @@ $icon = fn($d, $cls = 'size-3.5') => '<svg xmlns="http://www.w3.org/2000/svg" fi
                     <div class="flex flex-wrap items-center gap-x-2">
                         <p class="text-sm font-medium text-gray-900 dark:text-gray-200 truncate"><?=hl_e($author)?></p>
                         <?php if ($r['seen_at'] === null): ?>
-                        <span class="rounded-full bg-green-400 px-2 py-0.5 text-[10px] font-semibold text-white">Nowe</span>
+                        <span class="rounded-full bg-green-400 px-2 py-0.5 text-10px font-semibold text-white">Nowe</span>
                         <?php endif; ?>
                     </div>
                     <p class="text-xs text-gray-500 dark:text-gray-400 truncate"><?=hl_e($r['mail'] ?? '')?><?=$r['mail'] ? ' · ' : ''?><?=hl_e(hl_short_date($r['created_at'], true))?></p>

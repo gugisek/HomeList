@@ -1,5 +1,6 @@
 <?php if (!isset($acc)) exit; // część account.php
 require_once __DIR__ . '/../../../scripts/food/food_lib.php';
+require_once __DIR__ . '/../../../scripts/users/text_scale_lib.php';
 $acc_home_food = hl_food_settings($conn, $acc_id);
 $acc_home_goal = $acc_home_food['enabled'] ? hl_food_goal($conn, $acc_id, date('Y-m-d')) : null;
 $acc_home_cards = [
@@ -7,6 +8,7 @@ $acc_home_cards = [
     'security' => ['Hasło i weryfikacja dwuetapowa', 'Weryfikacja dwuetapowa ' . ($acc_2fa ? 'włączona' : 'wyłączona')],
     'devices' => ['Zapamiętane logowania', $acc_devices ? count($acc_devices) . ' ' . $acc_plural(count($acc_devices), 'urządzenie', 'urządzenia', 'urządzeń') : 'Brak zapamiętanych urządzeń'],
     'notifications' => ['Przypomnienia push i pory dnia', 'Przypomnienia ' . ($ps['enabled'] ? 'włączone' : 'wyłączone')],
+    'display' => ['Rozmiar tekstu w całej aplikacji', 'Tekst: ' . mb_strtolower(HL_TEXT_SCALES[(int)$acc['text_scale']] ?? HL_TEXT_SCALES[100])],
     'today' => ['Zakładka Dziś: zadania na dzień i rutyny', 'Plan dnia ' . ($acc['feed_enabled'] ? 'włączony' : 'wyłączony')],
     'food' => ['Licznik kalorii,posiłki i dzienny cel', !$acc_home_food['enabled'] ? 'Licznik kalorii wyłączony' : ($acc_home_goal ? 'Cel: ' . number_format($acc_home_goal['kcal'], 0, ',', ' ') . ' kcal' : 'Licznik kalorii włączony')],
     'report' => ['Coś nie działa? Daj znać twórcom', 'Krótki opis i zrzut ekranu'],

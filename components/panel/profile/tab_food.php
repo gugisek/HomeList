@@ -48,7 +48,7 @@ $acc_sub_btn = 'food-sub flex-none inline-flex items-center gap-2 rounded-full p
 <div role="tablist" class="mb-4 inline-flex max-w-full overflow-x-auto rounded-full bg-gray-100 dark:bg-[#2c2c2e] p-1 gap-1">
     <button type="button" role="tab" data-food-sub="settings" aria-selected="true" class="<?=$acc_sub_btn?>">Ustawienia</button>
     <button type="button" role="tab" data-food-sub="contrib" aria-selected="false" class="<?=$acc_sub_btn?>">
-        Twój wkład<?php if ($acc_contrib): ?><span class="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-black/5 dark:bg-white/10"><?=count($acc_contrib)?></span><?php endif; ?>
+        Twój wkład<?php if ($acc_contrib): ?><span class="rounded-full px-2 py-0.5 text-11px font-semibold bg-black/5 dark:bg-white/10"><?=count($acc_contrib)?></span><?php endif; ?>
     </button>
 </div>
 
@@ -76,7 +76,7 @@ $acc_sub_btn = 'food-sub flex-none inline-flex items-center gap-2 rounded-full p
             <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0"><?=$acc_e($p['name'])?><?php if ($p['brand']): ?> <span class="font-normal text-gray-500 dark:text-gray-400">· <?=$acc_e($p['brand'])?></span><?php endif; ?></p>
-                    <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold <?=$badge_cls?>"><?=$badge?></span>
+                    <span class="rounded-full px-2 py-0.5 text-11px font-semibold <?=$badge_cls?>"><?=$badge?></span>
                 </div>
                 <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                     <?=$acc_num($p['kcal'])?> kcal / 100 <?=$u?><?=$p['quantity'] ? ' · ' . $acc_e($p['quantity']) : ''?> · dodano <?=$acc_e(date('j.m.Y', strtotime($p['created_at'])))?>
@@ -110,7 +110,7 @@ $acc_sub_btn = 'food-sub flex-none inline-flex items-center gap-2 rounded-full p
         <?php foreach ($acc_contrib_units as $un): [$badge, $badge_cls] = $acc_badge[$un['status']]; ?>
         <div class="flex items-center gap-3 px-3 py-2.5">
             <p class="min-w-0 flex-1 text-sm text-gray-800 dark:text-gray-200"><?=$acc_e($un['label'])?> = <?=$acc_num($un['grams'])?> <?=$un['per_ml'] ? 'ml' : 'g'?> <span class="text-gray-500 dark:text-gray-400">· <?=$acc_e($un['name'])?></span></p>
-            <span class="flex-none rounded-full px-2 py-0.5 text-[11px] font-semibold <?=$badge_cls?>"><?=$un['status'] === 'approved' ? 'Dla wszystkich' : $badge?></span>
+            <span class="flex-none rounded-full px-2 py-0.5 text-11px font-semibold <?=$badge_cls?>"><?=$un['status'] === 'approved' ? 'Dla wszystkich' : $badge?></span>
         </div>
         <?php endforeach; ?>
     </div>
@@ -123,7 +123,7 @@ $acc_sub_btn = 'food-sub flex-none inline-flex items-center gap-2 rounded-full p
         <div class="px-3 py-2.5">
             <div class="flex items-center gap-3">
                 <p class="min-w-0 flex-1 text-sm text-gray-800 dark:text-gray-200"><?=$acc_e($ed['name'])?><?php if ($ed['brand']): ?> <span class="text-gray-500 dark:text-gray-400">· <?=$acc_e($ed['brand'])?></span><?php endif; ?></p>
-                <span class="flex-none rounded-full px-2 py-0.5 text-[11px] font-semibold <?=$badge_cls?>"><?=$ed['status'] === 'approved' ? 'Wprowadzona' : $badge?></span>
+                <span class="flex-none rounded-full px-2 py-0.5 text-11px font-semibold <?=$badge_cls?>"><?=$ed['status'] === 'approved' ? 'Wprowadzona' : $badge?></span>
             </div>
             <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 break-words">
                 <?=$acc_e(date('j.m.Y', strtotime($ed['created_at'])))?> · <?=$acc_e(implode(', ', array_map(fn($k) => mb_strtolower($acc_fields[$k] ?? $k), array_keys($ch))))?>

@@ -20,7 +20,7 @@
             <span class="flex-none rounded-full bg-white dark:bg-[#2c2c2c] p-2 text-gray-500 dark:text-gray-400"><?=$acc_icon($acc_tabs['devices'][1])?></span>
             <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate"><?=$acc_e($acc_device_name($d['user_agent']))?>
-                    <?php if ($is_current): ?><span class="ml-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">to urządzenie</span><?php endif; ?></p>
+                    <?php if ($is_current): ?><span class="ml-1 rounded-full bg-green-100 px-2 py-0.5 text-10px font-semibold text-green-700">to urządzenie</span><?php endif; ?></p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Ostatnio: <?=$acc_e(date('d.m.Y H:i', strtotime($d['last_used_at'] ?? $d['created_at'])))?></p>
             </div>
             <?php if (!$is_current): ?>

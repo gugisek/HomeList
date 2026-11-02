@@ -61,7 +61,7 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
         <?php foreach ($parts as $p => $info): ?>
         <button type="button" onclick="todayAddPart(this, <?=$p?>)" class="<?=hl_chip_class($p === $sel_part)?> flex flex-col items-center gap-1 py-2.5 rounded-2xl active:scale-95 duration-150">
             <span class="<?=$info['color']?>"><?=hl_icon($info['icon'], 'size-5')?></span>
-            <span class="text-[11px] font-medium"><?=$info['label']?></span>
+            <span class="text-11px font-medium"><?=$info['label']?></span>
         </button>
         <?php endforeach; ?>
     </div>

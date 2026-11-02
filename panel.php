@@ -1,8 +1,14 @@
-<?php 
+<?php
 include 'scripts/security.php';
+require_once 'scripts/users/text_scale_lib.php';
+// rozmiar tekstu z Konto i ustawienia → Wygląd (mnożnik --hl-fs, patrz components/head.php)
+$stmt = $conn->prepare('SELECT text_scale FROM users WHERE id = ?');
+$stmt->bind_param('i', $_SESSION['login_id']);
+$stmt->execute();
+$hl_fs = hl_text_scale_css($stmt->get_result()->fetch_row()[0] ?? 100);
 ?>
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" style="--hl-fs: <?=$hl_fs?>">
 <head>
 <?php
 $title = "panel";

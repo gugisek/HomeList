@@ -47,12 +47,12 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
         ?>
         <button type="button" onclick="planSheetDate(this, '<?=$d?>')" class="<?=hl_chip_class($d === $sel_date)?> flex-none flex flex-col items-center min-w-[3.5rem] px-2.5 py-2 rounded-2xl active:scale-95 duration-150">
             <span class="text-xs font-semibold"><?=$top?></span>
-            <span class="text-[10px] opacity-60"><?=hl_short_date($d)?></span>
+            <span class="text-10px opacity-60"><?=hl_short_date($d)?></span>
         </button>
         <?php endforeach; ?>
         <label class="<?=hl_chip_class($custom)?> relative flex-none flex flex-col items-center justify-center min-w-[3.5rem] px-2.5 py-2 rounded-2xl active:scale-95 duration-150 cursor-pointer">
             <?=hl_icon('calendar', 'size-4')?>
-            <span id="plan_sheet_custom_label" class="text-[10px] opacity-60"><?=$custom ? hl_short_date($sel_date) : 'Inny'?></span>
+            <span id="plan_sheet_custom_label" class="text-10px opacity-60"><?=$custom ? hl_short_date($sel_date) : 'Inny'?></span>
             <input type="date" value="<?=$sel_date?>" onchange="planSheetCustom(this)" class="absolute inset-0 opacity-0 cursor-pointer">
         </label>
     </div>
@@ -62,7 +62,7 @@ $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 mt-5
         <?php foreach ($parts as $p => $info): ?>
         <button type="button" onclick="planSheetPart(this, <?=$p?>)" class="<?=hl_chip_class($p === $sel_part)?> flex flex-col items-center gap-1 py-2.5 rounded-2xl active:scale-95 duration-150">
             <span class="<?=$info['color']?>"><?=hl_icon($info['icon'], 'size-5')?></span>
-            <span class="text-[11px] font-medium"><?=$info['label']?></span>
+            <span class="text-11px font-medium"><?=$info['label']?></span>
         </button>
         <?php endforeach; ?>
     </div>

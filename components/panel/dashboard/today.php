@@ -115,7 +115,7 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
                     <circle cx="18" cy="18" r="15.9155" fill="none" stroke-width="3" class="stroke-gray-200 dark:stroke-white/10" />
                     <circle id="feed-ring" cx="18" cy="18" r="15.9155" fill="none" stroke-width="3" stroke-linecap="round" class="stroke-green-400 transition-all duration-500" stroke-dasharray="<?=$pct?> 100" />
                 </svg>
-                <span id="feed-ring-text" class="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-gray-700 dark:text-gray-200"><?=$feed['done']?>/<?=$feed['total']?></span>
+                <span id="feed-ring-text" class="absolute inset-0 flex items-center justify-center text-10px font-semibold text-gray-700 dark:text-gray-200"><?=$feed['done']?>/<?=$feed['total']?></span>
             </div>
             <div onclick="openPopupTodayAdd('<?=$date?>')" title="Dodaj zadanie do planu" class="hl-icon-btn">
                 <?=hl_icon('plus', 'size-6', '2')?>
@@ -136,7 +136,7 @@ $pill = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-
             $is_sunday = (int)date('N', strtotime($d)) === 7;
             $name_cls = $is_sunday ? ($sel ? 'text-red-400' : 'text-red-500') : ($sel ? 'opacity-60' : 'text-gray-400');
             echo '<button type="button" onclick="feedGoTo(\''.$d.'\')" data-date="'.$d.'" '.($sel ? 'data-selected="1"' : '').' class="flex-none w-12 flex flex-col items-center gap-0.5 py-2 rounded-2xl duration-150 active:scale-95 '.$cls.'">';
-            echo '<span class="text-[10px] uppercase tracking-wide '.$name_cls.'">'.hl_day_name($d, true).'</span>';
+            echo '<span class="text-10px uppercase tracking-wide '.$name_cls.'">'.hl_day_name($d, true).'</span>';
             echo '<span class="text-base font-semibold leading-none">'.(int)date('j', strtotime($d)).'</span>';
             echo '<span class="flex gap-0.5 h-1 mt-1"><span class="flex gap-0.5" '.($sel ? 'id="strip-selected-dots"' : '').'>';
             $shown = min($c['total'], 4);

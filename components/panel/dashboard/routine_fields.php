@@ -46,7 +46,7 @@ $week_names = [1 => 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
     <?php for ($n = 1; $n <= 31; $n++): $on = in_array($n, $rf_month, true); ?>
     <button type="button" data-day="<?=$n?>" data-on="<?=$on ? '1' : '0'?>" onclick="rfToggle(this)" class="<?=hl_chip_class($on)?> h-8 rounded-lg text-xs font-medium active:scale-90 duration-150"><?=$n?></button>
     <?php endfor; ?>
-    <p class="col-span-7 mt-1 text-[11px] text-gray-400">Dni, których brakuje w krótszym miesiącu (np. 31.), przypadają na jego ostatni dzień.</p>
+    <p class="col-span-7 mt-1 text-11px text-gray-400">Dni, których brakuje w krótszym miesiącu (np. 31.), przypadają na jego ostatni dzień.</p>
 </div>
 
 <label class="<?=$rf_label?>">Pora dnia</label>
@@ -54,7 +54,7 @@ $week_names = [1 => 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
     <?php foreach (hl_parts() as $p => $info): ?>
     <button type="button" onclick="rfPart(this, '<?=$P?>', <?=$p?>)" class="<?=hl_chip_class($p === $rf_part)?> flex flex-col items-center gap-1 py-2.5 rounded-2xl active:scale-95 duration-150">
         <span class="<?=$info['color']?>"><?=hl_icon($info['icon'], 'size-5')?></span>
-        <span class="text-[11px] font-medium"><?=$info['label']?></span>
+        <span class="text-11px font-medium"><?=$info['label']?></span>
     </button>
     <?php endforeach; ?>
 </div>

@@ -39,12 +39,12 @@ $device = function ($ua) {
     <div class="hl-card overflow-x-auto p-2">
     <table class="w-full text-sm">
         <tr class="text-left">
-            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Kiedy</th>
-            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Konto / wpisany login</th>
-            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Metoda</th>
-            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Wynik</th>
-            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold hidden md:table-cell">IP</th>
-            <th class="py-3 px-4 text-[11px] uppercase tracking-wider text-gray-400 font-semibold hidden lg:table-cell">Urządzenie</th>
+            <th class="py-3 px-4 text-11px uppercase tracking-wider text-gray-400 font-semibold">Kiedy</th>
+            <th class="py-3 px-4 text-11px uppercase tracking-wider text-gray-400 font-semibold">Konto / wpisany login</th>
+            <th class="py-3 px-4 text-11px uppercase tracking-wider text-gray-400 font-semibold">Metoda</th>
+            <th class="py-3 px-4 text-11px uppercase tracking-wider text-gray-400 font-semibold">Wynik</th>
+            <th class="py-3 px-4 text-11px uppercase tracking-wider text-gray-400 font-semibold hidden md:table-cell">IP</th>
+            <th class="py-3 px-4 text-11px uppercase tracking-wider text-gray-400 font-semibold hidden lg:table-cell">Urządzenie</th>
         </tr>
         <?php if ($result->num_rows === 0): ?>
         <tr><td colspan="6" class="py-6 px-4 text-center text-gray-500 dark:text-gray-400">Brak wpisów</td></tr>
