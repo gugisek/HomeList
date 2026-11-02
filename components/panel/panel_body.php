@@ -48,8 +48,6 @@
                 scriptElement.classList.add("panel-site-script"); // Dodaj klasę, by łatwiej usuwać
                 document.body.appendChild(scriptElement);
             });
-            // AOS nie zawsze sam zauważa elementy zagnieżdżone głębiej we wstawionej podstronie (np. konto)
-            if (window.AOS) AOS.refreshHard();
             if (typeof after === "function") after();
         });
 

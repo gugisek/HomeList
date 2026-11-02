@@ -22,7 +22,35 @@ include 'components/head.php'; ?>
     <?php include 'components/alert_js.php'; ?>
     <?php include 'components/panel/panel_body.php'; ?>
     <script>
-        AOS.init();
+        // wejście treści panelu bez AOS: AOS odpalał animację według pozycji scrolla policzonej w chwili wstawienia,
+        // więc po przejściu z długiej, przewiniętej zakładki nagłówek znikał (wracał dopiero w połowie scrolla),
+        // a treść listy potrafiła w ogóle się nie pokazać. Tu animacja (style .hl-enter w app.css) rusza raz, od razu
+        // przy wstawieniu – MutationObserver działa przed malowaniem, więc style AOS (opacity: 0) nie zdążą mignąć.
+        (function () {
+            var kinds = { 'fade-up': 'hl-enter-up', 'fade-down': 'hl-enter-down', 'fade-right': 'hl-enter-right', 'fade-left': 'hl-enter-left' };
+            function enter(el) {
+                var kind = kinds[el.getAttribute('data-aos')] || 'hl-enter-fade';
+                el.style.setProperty('--hl-enter-delay', (parseInt(el.getAttribute('data-aos-delay'), 10) || 0) + 'ms');
+                el.removeAttribute('data-aos');
+                el.removeAttribute('data-aos-delay');
+                el.classList.add('hl-enter', kind);
+                el.addEventListener('animationend', function done(e) {
+                    if (e.target !== el) return;
+                    el.removeEventListener('animationend', done);
+                    el.classList.remove('hl-enter', kind);
+                    el.style.removeProperty('--hl-enter-delay');
+                });
+            }
+            function scan(node) {
+                if (node.nodeType !== 1) return;
+                if (node.hasAttribute('data-aos')) enter(node);
+                node.querySelectorAll('[data-aos]').forEach(enter);
+            }
+            new MutationObserver(function (records) {
+                records.forEach(function (r) { r.addedNodes.forEach(scan); });
+            }).observe(document.body, { childList: true, subtree: true });
+            scan(document.body);
+        })();
     </script>
     <script>
         function highlightChanges() {
