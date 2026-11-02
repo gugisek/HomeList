@@ -310,30 +310,36 @@ section.active > div > span:nth-child(2) {
   }
 }
 
-/* Menu „więcej” na telefonie (dashboard/lists.php) – na całą szerokość ekranu z marginesem 0.75rem,
+/* Menu „więcej” na telefonie (dashboard/lists.php) – szerokość i marginesy jak pasek (px-5, max-w-md),
    środek wyrównany do środka paska. Leży poza paskiem, więc bez przeliczania skali. */
 #more_menu {
   left: 50%;
-  width: calc(100vw - 1.5rem);
-  margin-left: calc((100vw - 1.5rem) / -2);
+  width: min(100vw - 2.5rem, 28rem);
+  margin-left: calc(min(100vw - 2.5rem, 28rem) / -2);
 }
 
 /* Bardzo wąskie ekrany (np. zewnętrzny ekran Galaxy Z Fold, ~344px) – zwykłe telefony (od 375px) bez zmian */
 @media (max-width: 360px) {
+  section[data-toast-dock] {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
   .liquid-glass.liquid-glass-pill {
-    padding: 0.25rem;
+    height: 56px;
   }
   .liquid-glass .lists_main_nav {
-    padding: 0.5rem 0.65rem;
-    max-width: 4.75rem;
+    padding: 0 0.5rem;
+    line-height: 48px;
     font-size: 0.8125rem;
   }
   .liquid-glass.liquid-glass-more {
-    width: 50px;
-    height: 50px;
+    width: 56px;
+    height: 56px;
   }
   #more_menu {
-    bottom: 4rem;
+    bottom: 4.25rem;
+    width: calc(100vw - 1.5rem);
+    margin-left: calc((100vw - 1.5rem) / -2);
   }
 }
 
