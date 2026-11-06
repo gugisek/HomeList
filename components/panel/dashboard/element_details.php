@@ -14,6 +14,28 @@ if ($row) {
     // plan dnia zalogowanego użytkownika dla tego zadania
     $plan_row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT plan_date, day_part FROM day_plan WHERE user_id = '".(int)$_SESSION['login_id']."' AND element_id = '".(int)$row['id']."' LIMIT 1"));
 
+    // lista wspólna: kto i kiedy zaczął zadanie oraz oznaczył je jako zrobione
+    $is_shared = hl_list_is_shared($conn, (int)$row['list_id']);
+    $status_lines = [];
+    if ($is_shared) {
+        $steps = [];
+        if (in_array((int)$row['status_id'], [2, 3], true)) {
+            $steps[] = ['W trakcie od', $row['progress_date'], $row['progress_by'], 'text-sky-500 dark:text-sky-400'];
+        }
+        if ((int)$row['status_id'] === 2) {
+            $steps[] = ['Zrobione', $row['done_date'], $row['done_by'], 'text-green-600 dark:text-green-400'];
+        }
+        $stmt = $conn->prepare('SELECT name, sur_name, profile_picture FROM users WHERE id = ?');
+        foreach ($steps as [$label, $date, $user_id, $tone]) {
+            if (!$user_id) continue;
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute();
+            $who = $stmt->get_result()->fetch_assoc();
+            if ($who) $status_lines[] = compact('label', 'date', 'tone', 'who');
+        }
+        $stmt->close();
+    }
+
     // argumenty "Kopiuj" jako bezpieczne literały JS (wcześniej surowy tekst w szablonie `...`)
     $copy_args = hl_e(implode(', ', array_map('json_encode', [$row['title'], (string)$row['description'], (string)$row['deadline_date'], (string)$row['list_id']])));
 
@@ -122,7 +144,12 @@ if ($row) {
     </button>
     <?php endif; ?>
 
-    <a class="mt-6 sm:mt-6 text-xs flex items-center justify-center gap-2 mb-4 w-full text-gray-600 dark:text-gray-400"><?php if (hl_list_is_shared($conn, (int)$row['list_id'])) echo hl_avatar_img($row['profile_picture'], 'size-6'); ?><span>Dodano <?=hl_short_date($row['create_date'], true)?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></span></a>
+    <div class="mt-6 mb-4 flex flex-col gap-2">
+        <a class="text-xs flex items-center justify-center gap-2 w-full text-gray-600 dark:text-gray-400"><?php if ($is_shared) echo hl_avatar_img($row['profile_picture'], 'size-6'); ?><span>Dodano <?=hl_short_date($row['create_date'], true)?> przez <?=hl_e($row['name'].' '.$row['sur_name'])?></span></a>
+        <?php foreach ($status_lines as $line): ?>
+        <p class="text-xs flex items-center justify-center gap-2 w-full <?=$line['tone']?>"><?=hl_avatar_img($line['who']['profile_picture'], 'size-6')?><span><?=$line['label']?> <?=hl_short_date($line['date'], true)?> przez <?=hl_e($line['who']['name'].' '.$line['who']['sur_name'])?></span></p>
+        <?php endforeach; ?>
+    </div>
 
     <?php
     $st = (int)$row['status_id'];

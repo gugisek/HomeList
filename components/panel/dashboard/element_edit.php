@@ -31,8 +31,13 @@ if (!$row) {
     <div class="mt-4 flex md:flex-row flex-col gap-2">
         <div class="w-full">
             <label for="edit_element_deadline" class="hl-label">Deadline</label>
-            <div class="mt-2">
-                <input name="edit_element_deadline" id="edit_element_deadline" type="datetime-local" value="<?=$row['deadline_date']?>" placeholder="" class="hl-input w-full cursor-pointer">
+            <div class="mt-2 hl-input-wrap">
+                <input name="edit_element_deadline" id="edit_element_deadline" type="datetime-local" value="<?=$row['deadline_date']?>" placeholder="" oninput="this.nextElementSibling.hidden = !this.value" onchange="this.nextElementSibling.hidden = !this.value" class="hl-input w-full cursor-pointer">
+                <button type="button" onclick="this.previousElementSibling.value = ''; this.hidden = true" aria-label="Usuń deadline" title="Usuń deadline" class="hl-input-clear" <?=hl_parse_deadline($row['deadline_date']) && strpos((string)$row['deadline_date'], '0000-00-00') !== 0 ? '' : 'hidden'?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>

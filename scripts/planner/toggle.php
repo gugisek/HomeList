@@ -25,9 +25,9 @@ if (!$el) {
 
 if ($type === 'task' && $el['list_type'] === 'normal') {
     if ($done) {
-        $sql = "UPDATE list_elements SET status_id = '2', done_date = NOW() WHERE id = '$element_id'";
+        $sql = "UPDATE list_elements SET status_id = '2', done_date = NOW(), done_by = '$user_id' WHERE id = '$element_id'";
     } else {
-        $sql = "UPDATE list_elements SET status_id = '1' WHERE id = '$element_id'";
+        $sql = "UPDATE list_elements SET status_id = '1', done_by = NULL, progress_date = NULL, progress_by = NULL WHERE id = '$element_id'";
     }
     if (mysqli_query($conn, $sql)) {
         //log

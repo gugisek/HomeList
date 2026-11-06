@@ -12,22 +12,28 @@ $status_id = (int)($_POST['status_id'] ?? 0);
 if (!$element_id || !in_array($status_id, [1, 2, 3, 4], true)) {
     hl_json_exit('warning', 'Brak wymaganych danych');
 }
-if (!hl_element_access($conn, (int)$_SESSION['login_id'], $element_id)) {
+$user_id = (int)$_SESSION['login_id'];
+if (!hl_element_access($conn, $user_id, $element_id)) {
     hl_json_exit('error', 'Nie znaleziono zadania');
 }
 
 if ($status_id == 2 || $status_id == 4) {
     // 4 = zarchiwizowane: done_date to data archiwizacji, zadanie znika z planu dnia
-    $stmt = $conn->prepare('UPDATE list_elements SET status_id = ?, done_date = NOW() WHERE id = ?');
+    $stmt = $conn->prepare('UPDATE list_elements SET status_id = ?, done_date = NOW(), done_by = ? WHERE id = ?');
+    $stmt->bind_param('iii', $status_id, $user_id, $element_id);
     if ($status_id == 4) {
         $cleanup = $conn->prepare('DELETE FROM day_plan WHERE element_id = ?');
         $cleanup->bind_param('i', $element_id);
         $cleanup->execute();
     }
+} elseif ($status_id == 3) {
+    $stmt = $conn->prepare('UPDATE list_elements SET status_id = ?, done_by = NULL, progress_date = NOW(), progress_by = ? WHERE id = ?');
+    $stmt->bind_param('iii', $status_id, $user_id, $element_id);
 } else {
-    $stmt = $conn->prepare('UPDATE list_elements SET status_id = ? WHERE id = ?');
+    // powrót do „Oczekuje” zeruje historię; przejście W trakcie -> Zrobione ją zachowuje
+    $stmt = $conn->prepare('UPDATE list_elements SET status_id = ?, done_by = NULL, progress_date = NULL, progress_by = NULL WHERE id = ?');
+    $stmt->bind_param('ii', $status_id, $element_id);
 }
-$stmt->bind_param('ii', $status_id, $element_id);
 if ($stmt->execute()) {
     //log
     $before = '';

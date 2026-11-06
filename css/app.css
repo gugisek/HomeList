@@ -113,6 +113,22 @@ input[type="datetime-local"].hl-input, input[type="date"].hl-input, input[type="
 @media (prefers-color-scheme: dark) {
   input[type="datetime-local"].hl-input, input[type="date"].hl-input, input[type="time"].hl-input { color-scheme: dark; }
 }
+/* pola daty/godziny: iOS trzyma natywną szerokość i ignoruje width:100%, przez co pole wystaje poza ekran */
+input[type="datetime-local"], input[type="date"], input[type="time"] { box-sizing: border-box; min-width: 0; max-width: 100%; }
+@supports (-webkit-touch-callout: none) {
+  input[type="datetime-local"], input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; }
+  input::-webkit-date-and-time-value { margin: 0; min-height: 1.4em; text-align: inherit; }
+}
+/* pole z własnym przyciskiem czyszczenia (systemowy „Wyzeruj” na iOS nie czyści wartości) */
+.hl-input-wrap { position: relative; }
+.hl-input-wrap .hl-input { padding-right: 44px; }
+.hl-input-clear {
+  position: absolute; top: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center;
+  width: 44px; padding: 0; border: 0; background: transparent; color: var(--hl-muted); cursor: pointer;
+}
+.hl-input-clear[hidden] { display: none; }
+.hl-input-clear svg { width: 18px; height: 18px; }
+.hl-input-clear:active { transform: scale(.9); }
 
 /* checkbox w panelu = przełącznik (nadpisuje kwadrat z global.css) */
 input[type="checkbox"] {
