@@ -7,9 +7,16 @@
         <?php
         include_once __DIR__.'/../../../scripts/session_restore.php'; hl_session_start();
         include '../../../scripts/conn_db.php';
-        $user_id = $_SESSION['login_id'];
-        $sql = "SELECT lists.id, lists.name, lists.full_name, list_invities.id as 'invite_id' FROM `lists` left join list_invities on list_invities.list_id=lists.id where lists.owner_id='$user_id' or list_invities.user_id='$user_id' ORDER BY lists.id asc;";
-        $result = mysqli_query($conn, $sql);
+        $user_id = (int)$_SESSION['login_id'];
+        // jeden wiersz na listę – JOIN z zaproszeniami dawał duplikat za każdą zaproszoną osobę
+        $stmt = $conn->prepare("SELECT lists.id, lists.name, lists.full_name,
+                EXISTS(SELECT 1 FROM list_invities WHERE list_invities.list_id = lists.id) AS shared
+            FROM lists
+            WHERE lists.owner_id = ? OR lists.id IN (SELECT list_id FROM list_invities WHERE user_id = ?)
+            ORDER BY lists.id ASC");
+        $stmt->bind_param('ii', $user_id, $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
         if(mysqli_num_rows($result) > 0)
             {
                 while($row = mysqli_fetch_assoc($result))
@@ -24,7 +31,7 @@
                             <h1 class="font-medium text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">'.htmlspecialchars($row['full_name']).'</h1>
                             <div onclick="openPopupInfoLists(`'.$row['id'].'`)" class="flex-shrink-0 p-2 text-gray-400 dark:text-gray-500 hover:bg-green-400 hover:text-white hover:shadow-lg hover:shadow-green-400/40 active:scale-90 cursor-pointer duration-150 rounded-full">
                         ';
-                        if($row['invite_id'] == null) {
+                        if(!$row['shared']) {
                            echo '
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
